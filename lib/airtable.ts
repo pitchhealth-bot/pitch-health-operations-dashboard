@@ -69,11 +69,11 @@ async function fetchAllAirtableRecords(
 
 export async function getDashboardData(): Promise<DashboardData> {
   const token = process.env.AIRTABLE_PAT;
-  const baseId = process.env.AIRTABLE_BASE_ID;
+  const baseId = "app5eoO1QYp4UAoaU";
   const table = process.env.AIRTABLE_TABLE_ID || process.env.AIRTABLE_AGENTS_TABLE || "tblx66f77FNlyJ3m4";
   const viewId = process.env.AIRTABLE_VIEW_ID || "viwpOLkjUUwe9tviQ";
 
-  if (!token || !baseId) return { agents: sampleAgents, source: "sample" };
+  if (!token) return { agents: sampleAgents, source: "sample" };
 
   try {
     const records = await fetchAllAirtableRecords(baseId, table, token, viewId);

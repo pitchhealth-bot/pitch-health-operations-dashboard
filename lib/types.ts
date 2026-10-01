@@ -21,6 +21,7 @@ export type Agent = {
   hierarchyVerified?: boolean;
   carrierSummary?: string;
   ceDueDate?: string;
+  licensingStatus?: "Licensed" | "Non-licensed" | string;
 };
 
 export type DashboardData = {

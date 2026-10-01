@@ -31,6 +31,7 @@ async function fetchAllAirtableRecords(
   baseId: string,
   table: string,
   token: string,
+  viewId?: string,
 ) {
   const records: Array<{ id: string; fields: Record<string, unknown> }> = [];
   let offset: string | undefined;
@@ -38,7 +39,10 @@ async function fetchAllAirtableRecords(
   do {
     const url = new URL(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}`);
     url.searchParams.set("pageSize", "100");
-    url.searchParams.set("filterByFormula", "{Status}='Active'");
+
+    // Pull from the exact Airtable view the operations team uses.
+    // The dashboard then applies its own Status/Licensing logic locally.
+    if (viewId) url.searchParams.set("view", viewId);
     if (offset) url.searchParams.set("offset", offset);
 
     const response = await fetch(url, {
@@ -67,13 +71,15 @@ export async function getDashboardData(): Promise<DashboardData> {
   const token = process.env.AIRTABLE_PAT;
   const baseId = process.env.AIRTABLE_BASE_ID;
   const table = process.env.AIRTABLE_AGENTS_TABLE || "Agents";
+  const viewId = process.env.AIRTABLE_VIEW_ID || "viwpOLkjUUwe9tviQ";
 
   if (!token || !baseId) return { agents: sampleAgents, source: "sample" };
 
   try {
-    const records = await fetchAllAirtableRecords(baseId, table, token);
+    const records = await fetchAllAirtableRecords(baseId, table, token, viewId);
+    const activeRecords = records.filter(record => asText(record.fields["Status"]).trim().toLowerCase() === "active");
 
-    const agents: Agent[] = records.map(record => {
+    const agents: Agent[] = activeRecords.map(record => {
       const f = record.fields;
       const rawStage = asText(f["Stage"] || f["Pipeline Stage"]) as PipelineStage;
       const stage: PipelineStage = allowedStages.includes(rawStage) ? rawStage : "Pre-Licensing";

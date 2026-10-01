@@ -31,6 +31,8 @@ function AgentRow({ agent }: { agent: Agent }) {
 
 export default async function Home() {
   const { agents, source } = await getDashboardData();
+  const licensed = agents.filter(a => a.licensingStatus === "Licensed");
+  const nonLicensed = agents.filter(a => a.licensingStatus === "Non-licensed");
   const stagnant = agents.filter(a => a.daysInStage >= 7);
   const blocked = agents.filter(a => a.blocker);
   const missing = agents.filter(a => a.missingFields.length);
@@ -52,6 +54,8 @@ export default async function Home() {
 
       <section className="metric-grid">
         <div className="metric"><span>Active agents</span><strong>{agents.length}</strong></div>
+        <div className="metric"><span>Licensed</span><strong>{licensed.length}</strong></div>
+        <div className="metric"><span>Non-licensed</span><strong>{nonLicensed.length}</strong></div>
         <div className="metric"><span>Stuck 7+ days</span><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical</small></div>
         <div className="metric"><span>Active blockers</span><strong>{blocked.length}</strong></div>
         <div className="metric"><span>Missing info</span><strong>{missing.length}</strong></div>

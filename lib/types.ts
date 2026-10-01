@@ -26,5 +26,6 @@ export type Agent = {
 
 export type DashboardData = {
   agents: Agent[];
-  source: "airtable" | "sample";
+  source: "airtable" | "sample" | "error";
+  error?: string;
 };

@@ -70,7 +70,7 @@ async function fetchAllAirtableRecords(
 export async function getDashboardData(): Promise<DashboardData> {
   const token = process.env.AIRTABLE_PAT;
   const baseId = process.env.AIRTABLE_BASE_ID;
-  const table = process.env.AIRTABLE_AGENTS_TABLE || "Agents";
+  const table = process.env.AIRTABLE_TABLE_ID || process.env.AIRTABLE_AGENTS_TABLE || "tblx66f77FNlyJ3m4";
   const viewId = process.env.AIRTABLE_VIEW_ID || "viwpOLkjUUwe9tviQ";
 
   if (!token || !baseId) return { agents: sampleAgents, source: "sample" };
@@ -114,6 +114,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     return { agents, source: "airtable" };
   } catch (error) {
     console.error("Airtable load failed", error);
-    return { agents: sampleAgents, source: "sample" };
+    const message = error instanceof Error ? error.message : "Unknown Airtable error";
+    return { agents: [], source: "error", error: message };
   }
 }

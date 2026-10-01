@@ -30,7 +30,7 @@ function AgentRow({ agent }: { agent: Agent }) {
 }
 
 export default async function Home() {
-  const { agents, source } = await getDashboardData();
+  const { agents, source, error } = await getDashboardData();
   const licensed = agents.filter(a => a.licensingStatus === "Licensed");
   const nonLicensed = agents.filter(a => a.licensingStatus === "Non-licensed");
   const stagnant = agents.filter(a => a.daysInStage >= 7);
@@ -49,8 +49,10 @@ export default async function Home() {
     <main>
       <header className="topbar">
         <div><div className="eyebrow">PITCH HEALTH SOLUTIONS</div><h1>Licensing & Contracting</h1></div>
-        <div className="source"><span className={source === "airtable" ? "dot live" : "dot"} />{source === "airtable" ? "Live Airtable" : "Sample data"}</div>
+        <div className="source"><span className={source === "airtable" ? "dot live" : "dot"} />{source === "airtable" ? "Live Airtable" : source === "error" ? "Airtable error" : "Sample data"}</div>
       </header>
+
+      {source === "error" && <section className="panel"><strong>Airtable connection error</strong><div className="muted" style={{marginTop:8}}>{error}</div></section>}
 
       <section className="metric-grid">
         <div className="metric"><span>Active agents</span><strong>{agents.length}</strong></div>

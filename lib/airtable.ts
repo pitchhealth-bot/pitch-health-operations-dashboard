@@ -19,10 +19,48 @@ function daysSince(value?: string) {
 function missingFromFields(fields: Record<string, unknown>): string[] {
   const explicit = fields["Missing Fields"];
   if (Array.isArray(explicit)) return explicit.map(String);
-  if (typeof explicit === "string" && explicit.trim()) return explicit.split(",").map(v=>v.trim()).filter(Boolean);
+  if (typeof explicit === "string" && explicit.trim()) {
+    return explicit.split(",").map(v => v.trim()).filter(Boolean);
+  }
 
   const checks = ["SSN","DOB","Discord","PDB","NPN"];
   return checks.filter(key => !fields[key]);
+}
+
+async function fetchAllAirtableRecords(
+  baseId: string,
+  table: string,
+  token: string,
+) {
+  const records: Array<{ id: string; fields: Record<string, unknown> }> = [];
+  let offset: string | undefined;
+
+  do {
+    const url = new URL(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}`);
+    url.searchParams.set("pageSize", "100");
+    url.searchParams.set("filterByFormula", "{Status}='Active'");
+    if (offset) url.searchParams.set("offset", offset);
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(`Airtable returned ${response.status}: ${detail}`);
+    }
+
+    const json = await response.json() as {
+      records: Array<{ id: string; fields: Record<string, unknown> }>;
+      offset?: string;
+    };
+
+    records.push(...json.records);
+    offset = json.offset;
+  } while (offset);
+
+  return records;
 }
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -33,22 +71,20 @@ export async function getDashboardData(): Promise<DashboardData> {
   if (!token || !baseId) return { agents: sampleAgents, source: "sample" };
 
   try {
-    const url = new URL(`https://api.airtable.com/v0/${baseId}/${encodeURIComponent(table)}`);
-    url.searchParams.set("pageSize", "100");
+    const records = await fetchAllAirtableRecords(baseId, table, token);
 
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-
-    if (!response.ok) throw new Error(`Airtable returned ${response.status}`);
-    const json = await response.json() as { records: Array<{ id: string; fields: Record<string, unknown> }> };
-
-    const agents: Agent[] = json.records.map(record => {
+    const agents: Agent[] = records.map(record => {
       const f = record.fields;
       const rawStage = asText(f["Stage"] || f["Pipeline Stage"]) as PipelineStage;
       const stage: PipelineStage = allowedStages.includes(rawStage) ? rawStage : "Pre-Licensing";
       const entered = asText(f["Stage Entered Date"]);
+      const licensingStatus = asText(
+        f["Licensing Status"] ||
+        f["License Status"] ||
+        f["Licensed / Non-licensed"] ||
+        f["Licensed/Non-licensed"]
+      );
+
       return {
         id: record.id,
         name: asText(f["Name"] || f["Agent Name"]) || "Unnamed agent",
@@ -65,6 +101,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         hierarchyVerified: Boolean(f["Hierarchy Verified"]),
         carrierSummary: asText(f["Carrier RTS Summary"] || f["RTS Summary"]),
         ceDueDate: asText(f["CE Due Date"]) || undefined,
+        licensingStatus: licensingStatus || undefined,
       };
     });
 

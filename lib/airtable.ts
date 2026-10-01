@@ -9,6 +9,49 @@ function asText(value: unknown): string {
   return "";
 }
 
+
+function normalizeKey(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function findFieldValue(fields: Record<string, unknown>, aliases: string[]): unknown {
+  const normalizedAliases = aliases.map(normalizeKey);
+  for (const [key, value] of Object.entries(fields)) {
+    const nk = normalizeKey(key);
+    if (normalizedAliases.includes(nk)) return value;
+  }
+  return undefined;
+}
+
+function findLicensingStatus(fields: Record<string, unknown>): string {
+  const direct = findFieldValue(fields, [
+    "Licensing Status",
+    "License Status",
+    "Licensed / Non-licensed",
+    "Licensed/Non-licensed",
+    "License Type",
+    "Licensing",
+  ]);
+  const directText = asText(direct).trim();
+  if (directText) return directText;
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (!normalizeKey(key).includes("licens")) continue;
+    const text = asText(value).trim();
+    if (/^licensed$/i.test(text)) return "Licensed";
+    if (/^non[- ]?licensed$/i.test(text)) return "Non-licensed";
+  }
+
+  return "";
+}
+
+function hasAnyField(fields: Record<string, unknown>, aliases: string[]) {
+  const value = findFieldValue(fields, aliases);
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "string") return value.trim().length > 0;
+  return value !== undefined && value !== null && value !== false;
+}
+
 function daysSince(value?: string) {
   if (!value) return 0;
   const entered = new Date(value);
@@ -17,14 +60,23 @@ function daysSince(value?: string) {
 }
 
 function missingFromFields(fields: Record<string, unknown>): string[] {
-  const explicit = fields["Missing Fields"];
+  const explicit = findFieldValue(fields, ["Missing Fields", "Missing Info", "Missing Information"]);
   if (Array.isArray(explicit)) return explicit.map(String);
   if (typeof explicit === "string" && explicit.trim()) {
     return explicit.split(",").map(v => v.trim()).filter(Boolean);
   }
 
-  const checks = ["SSN","DOB","Discord","PDB","NPN"];
-  return checks.filter(key => !fields[key]);
+  const required: Array<[string, string[]]> = [
+    ["SSN", ["SSN", "Social Security Number", "Social Security #"]],
+    ["DOB", ["DOB", "Date of Birth", "Birth Date", "Birthday"]],
+    ["Discord", ["Discord", "Discord Username", "Discord Name"]],
+    ["PDB", ["PDB", "PDB Report", "PDB Status", "NIPR PDB"]],
+    ["NPN", ["NPN", "National Producer Number"]],
+  ];
+
+  return required
+    .filter(([, aliases]) => !hasAnyField(fields, aliases))
+    .map(([label]) => label);
 }
 
 async function fetchAllAirtableRecords(
@@ -84,12 +136,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       const rawStage = asText(f["Stage"] || f["Pipeline Stage"]) as PipelineStage;
       const stage: PipelineStage = allowedStages.includes(rawStage) ? rawStage : "Pre-Licensing";
       const entered = asText(f["Stage Entered Date"]);
-      const licensingStatus = asText(
-        f["Licensing Status"] ||
-        f["License Status"] ||
-        f["Licensed / Non-licensed"] ||
-        f["Licensed/Non-licensed"]
-      );
+      const licensingStatus = findLicensingStatus(f);
 
       return {
         id: record.id,

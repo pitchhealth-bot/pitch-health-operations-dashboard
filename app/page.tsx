@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getDashboardData } from "@/lib/airtable";
 import type { Agent, PipelineStage } from "@/lib/types";
 

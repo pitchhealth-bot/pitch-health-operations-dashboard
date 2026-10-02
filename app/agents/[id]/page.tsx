@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDashboardData } from "@/lib/airtable";
+import { getAhip2027ForAgent } from "@/lib/contracting";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +74,7 @@ export default async function AgentProfilePage({
 
   if (!agent) notFound();
 
-  const ahip = agent.ahip2027 || [];
+  const ahip = await getAhip2027ForAgent(agent.email);
 
   return (
     <main>

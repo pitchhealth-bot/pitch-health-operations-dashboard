@@ -25,12 +25,12 @@ function findFieldValue(fields: Record<string, unknown>, aliases: string[]): unk
 
 function findLicensingStatus(fields: Record<string, unknown>): string {
   const direct = findFieldValue(fields, [
+    "Licensing",
     "Licensing Status",
     "License Status",
     "Licensed / Non-licensed",
     "Licensed/Non-licensed",
     "License Type",
-    "Licensing",
   ]);
   const directText = asText(direct).trim();
   if (directText) return directText;
@@ -142,6 +142,9 @@ export async function getDashboardData(): Promise<DashboardData> {
         id: record.id,
         name: asText(f["Name"] || f["Agent Name"]) || "Unnamed agent",
         email: asText(f["Email"] || f["Personal email"] || f["PHS Email"]),
+        status: asText(findFieldValue(f, ["Status"])),
+        role: asText(findFieldValue(f, ["Role", "Position", "Job Role"])),
+        currentStage: asText(findFieldValue(f, ["Current Stage", "Stage", "Pipeline Stage"])),
         stage,
         subStage: asText(f["Sub-Stage"] || f["Sub Stage"]),
         stageEnteredDate: entered || undefined,

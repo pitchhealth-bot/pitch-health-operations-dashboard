@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
 import { getContractingSources } from "@/lib/contracting";
 import type { Agent, PipelineStage } from "@/lib/types";
@@ -56,7 +57,7 @@ export default async function Home() {
       {source === "error" && <section className="panel"><strong>Airtable connection error</strong><div className="muted" style={{marginTop:8}}>{error}</div></section>}
 
       <section className="metric-grid">
-        <div className="metric"><span>Active agents</span><strong>{agents.length}</strong></div>
+        <Link href="/agents" className="metric metric-link"><span>Active agents</span><strong>{agents.length}</strong><small>View all →</small></Link>
         <div className="metric"><span>Licensed</span><strong>{licensed.length}</strong></div>
         <div className="metric"><span>Non-licensed</span><strong>{nonLicensed.length}</strong></div>
         <div className="metric"><span>Stuck 7+ days</span><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical</small></div>

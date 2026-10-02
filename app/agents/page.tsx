@@ -1,25 +1,101 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
+import type { Agent } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+type SortKey =
+  | "name"
+  | "status"
+  | "role"
+  | "licensingStatus"
+  | "currentStage"
+  | "contractingDesignation"
+  | "startDate";
+
+const columns: Array<{ key: SortKey; label: string }> = [
+  { key: "name", label: "Name" },
+  { key: "status", label: "Status" },
+  { key: "role", label: "Role" },
+  { key: "licensingStatus", label: "Licensing Status" },
+  { key: "currentStage", label: "Current Stage" },
+  { key: "contractingDesignation", label: "Contracting Designation" },
+  { key: "startDate", label: "Start Date" },
+];
+
+function valueForSort(agent: Agent, key: SortKey) {
+  return String(agent[key] || "").trim();
+}
+
+function sortAgents(agents: Agent[], key: SortKey, dir: "asc" | "desc") {
+  return [...agents].sort((a, b) => {
+    const av = valueForSort(a, key);
+    const bv = valueForSort(b, key);
+
+    if (key === "startDate") {
+      const at = av ? new Date(av).getTime() : 0;
+      const bt = bv ? new Date(bv).getTime() : 0;
+      return dir === "asc" ? at - bt : bt - at;
+    }
+
+    const result = av.localeCompare(bv, undefined, {
+      numeric: true,
+      sensitivity: "base",
+    });
+    return dir === "asc" ? result : -result;
+  });
+}
+
+function sortHref(
+  key: SortKey,
+  currentSort: SortKey,
+  currentDir: "asc" | "desc",
+  q: string,
+  licensing: string,
+) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  if (licensing) params.set("licensing", licensing);
+  params.set("sort", key);
+  params.set("dir", currentSort === key && currentDir === "asc" ? "desc" : "asc");
+  return `/agents?${params.toString()}`;
+}
 
 export default async function AgentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; licensing?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    licensing?: string;
+    sort?: string;
+    dir?: string;
+  }>;
 }) {
-  const { q = "", licensing = "" } = await searchParams;
+  const params = await searchParams;
+  const q = params.q || "";
+  const licensing = params.licensing || "";
+  const sort = columns.some(c => c.key === params.sort)
+    ? (params.sort as SortKey)
+    : "name";
+  const dir: "asc" | "desc" = params.dir === "desc" ? "desc" : "asc";
+
   const { agents, source, error } = await getDashboardData();
 
   const query = q.trim().toLowerCase();
   const filtered = agents.filter(agent => {
     const matchesQuery =
       !query ||
-      agent.name.toLowerCase().includes(query) ||
-      (agent.status || "").toLowerCase().includes(query) ||
-      (agent.role || "").toLowerCase().includes(query) ||
-      (agent.licensingStatus || "").toLowerCase().includes(query) ||
-      (agent.currentStage || "").toLowerCase().includes(query);
+      [
+        agent.name,
+        agent.status,
+        agent.role,
+        agent.licensingStatus,
+        agent.currentStage,
+        agent.contractingDesignation,
+        agent.startDate,
+      ]
+        .filter(Boolean)
+        .some(value => String(value).toLowerCase().includes(query));
 
     const matchesLicensing =
       !licensing ||
@@ -28,13 +104,15 @@ export default async function AgentsPage({
     return matchesQuery && matchesLicensing;
   });
 
+  const sorted = sortAgents(filtered, sort, dir);
+
   return (
     <main>
       <header className="topbar">
         <div>
           <div className="eyebrow">PITCH HEALTH SOLUTIONS</div>
           <h1>Active Agents</h1>
-          <div className="muted">{filtered.length} of {agents.length} active agents</div>
+          <div className="muted">{sorted.length} of {agents.length} active agents</div>
         </div>
         <Link className="back-link" href="/">← Dashboard</Link>
       </header>
@@ -51,7 +129,7 @@ export default async function AgentsPage({
           <input
             name="q"
             defaultValue={q}
-            placeholder="Search name, status, role, licensing, or stage..."
+            placeholder="Search active agents..."
             className="search-input"
           />
           <select name="licensing" defaultValue={licensing} className="filter-select">
@@ -59,26 +137,37 @@ export default async function AgentsPage({
             <option value="Licensed">Licensed</option>
             <option value="Non-licensed">Non-licensed</option>
           </select>
+          <input type="hidden" name="sort" value={sort} />
+          <input type="hidden" name="dir" value={dir} />
           <button type="submit" className="filter-button">Filter</button>
           {(q || licensing) && <Link href="/agents" className="clear-link">Clear</Link>}
         </form>
       </section>
 
       <section className="panel agents-list-panel">
-        <div className="agents-table-head active-agents-five">
-          <span>Name</span>
-          <span>Status</span>
-          <span>Role</span>
-          <span>Licensing Status</span>
-          <span>Current Stage</span>
+        <div className="agents-table-head active-agents-seven">
+          {columns.map(column => (
+            <Link
+              key={column.key}
+              href={sortHref(column.key, sort, dir, q, licensing)}
+              className="sort-header"
+            >
+              <span>{column.label}</span>
+              {sort === column.key && (
+                <span className="sort-arrow">{dir === "asc" ? "↑" : "↓"}</span>
+              )}
+            </Link>
+          ))}
         </div>
 
-        {filtered.length ? filtered.map(agent => (
-          <div className="agents-table-row active-agents-five" key={agent.id}>
-            <div><strong>{agent.name}</strong></div>
+        {sorted.length ? sorted.map(agent => (
+          <div className="agents-table-row active-agents-seven" key={agent.id}>
             <div>
-              <span className="pill success">{agent.status || "Active"}</span>
+              <Link href={`/agents/${agent.id}`} className="agent-name-link">
+                <strong>{agent.name}</strong>
+              </Link>
             </div>
+            <div><span className="pill success">{agent.status || "Active"}</span></div>
             <div>{agent.role || "—"}</div>
             <div>
               <span className={
@@ -92,6 +181,8 @@ export default async function AgentsPage({
               </span>
             </div>
             <div>{agent.currentStage || "—"}</div>
+            <div>{agent.contractingDesignation || "—"}</div>
+            <div>{agent.startDate || "—"}</div>
           </div>
         )) : (
           <div className="empty" style={{ minHeight: 140 }}>No active agents match these filters.</div>

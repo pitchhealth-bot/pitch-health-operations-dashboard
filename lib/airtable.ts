@@ -54,6 +54,32 @@ function hasAnyField(fields: Record<string, unknown>, aliases: string[]) {
   return value !== undefined && value !== null && value !== false;
 }
 
+function asAttachments(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map(item => {
+      if (!item || typeof item !== "object") return null;
+      const attachment = item as Record<string, unknown>;
+      const url = typeof attachment.url === "string" ? attachment.url : "";
+      const filename = typeof attachment.filename === "string" ? attachment.filename : "Attachment";
+      if (!url) return null;
+      return {
+        id: typeof attachment.id === "string" ? attachment.id : undefined,
+        url,
+        filename,
+        size: typeof attachment.size === "number" ? attachment.size : undefined,
+        type: typeof attachment.type === "string" ? attachment.type : undefined,
+      };
+    })
+    .filter(Boolean) as Array<{
+      id?: string;
+      url: string;
+      filename: string;
+      size?: number;
+      type?: string;
+    }>;
+}
+
 function daysSince(value?: string) {
   if (!value) return 0;
   const entered = new Date(value);
@@ -148,6 +174,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         phoneNumber: asText(findFieldValue(f, ["Phone Number", "Phone", "Mobile Number", "Mobile"])),
         dateOfBirth: asText(findFieldValue(f, ["Date of Birth", "DOB", "Birth Date", "Birthday"])),
         npn: asText(f["NPN"]),
+        ahip2027: asAttachments(f["AHIP 2027"]),
         status: asText(findFieldValue(f, ["Status"])),
         role: asText(findFieldValue(f, ["Role", "Position", "Job Role"])),
         currentStage: asText(findFieldValue(f, ["Current Stage", "Stage", "Pipeline Stage"])),

@@ -2,14 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
+import type { AppRole } from "@/lib/access";
 
-const items = [
-  { href: "/", label: "Dashboard", icon: "⌂" },
-  { href: "/agents", label: "Active Agents", icon: "◎" },
-];
-
-export default function Sidebar() {
+export default function Sidebar({
+  user,
+}: {
+  user?: { name?: string | null; email?: string | null; role: AppRole } | null;
+}) {
   const pathname = usePathname();
+
+  const items = [
+    { href: "/", label: "Dashboard", icon: "⌂" },
+    { href: "/agents", label: "Active Agents", icon: "◎" },
+    ...(user?.role === "superadmin"
+      ? [{ href: "/audit", label: "Audit Log", icon: "≡" }]
+      : []),
+  ];
 
   return (
     <aside className="app-sidebar">
@@ -48,13 +57,24 @@ export default function Sidebar() {
         <span>Connected to Airtable</span>
       </div>
 
-      <div className="sidebar-footer">
-        <span className="sidebar-dot" />
-        <div>
-          <strong>Pitch Health Solutions</strong>
-          <span>Licensing & Contracting</span>
+      {user && (
+        <div className="sidebar-user">
+          <div className="sidebar-user-avatar">
+            {(user.name || user.email || "U").slice(0, 1).toUpperCase()}
+          </div>
+          <div className="sidebar-user-copy">
+            <strong>{user.name || user.email}</strong>
+            <span>{user.role}</span>
+          </div>
+          <button
+            className="sidebar-signout"
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            title="Sign out"
+          >
+            ↗
+          </button>
         </div>
-      </div>
+      )}
     </aside>
   );
 }

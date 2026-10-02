@@ -145,7 +145,7 @@ export async function getDashboardData(): Promise<DashboardData> {
         personalEmail: asText(findFieldValue(f, ["Personal Email", "Personal email", "Personal E-mail"])),
         phoneNumber: asText(findFieldValue(f, ["Phone Number", "Phone", "Mobile Number", "Mobile"])),
         dateOfBirth: asText(findFieldValue(f, ["Date of Birth", "DOB", "Birth Date", "Birthday"])),
-        npn: asText(findFieldValue(f, ["NPN", "National Producer Number"])),
+        npn: asText(f["NPN"]),
         status: asText(findFieldValue(f, ["Status"])),
         role: asText(findFieldValue(f, ["Role", "Position", "Job Role"])),
         currentStage: asText(findFieldValue(f, ["Current Stage", "Stage", "Pipeline Stage"])),

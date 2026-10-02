@@ -217,3 +217,12 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .attachment-icon{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;background:#fff0ef;color:#b42318;font-size:9px;font-weight:900}.attachment-copy{min-width:0}.attachment-copy strong{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.attachment-copy span{display:block;color:var(--muted);font-size:8px;margin-top:3px}.attachment-open{color:var(--purple);font-weight:900}.attachment-empty{padding:14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:10px;background:#fafafe}
 @media(max-width:1000px){.employee-layout{grid-template-columns:1fr}.employee-hero{grid-template-columns:auto 1fr}.employee-hero-stat{grid-column:1/-1}.record-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.employee-hero{grid-template-columns:1fr;text-align:left}.employee-avatar{width:58px;height:58px;border-radius:16px}.record-grid{grid-template-columns:1fr}}
+
+.carrier-section{margin-top:0}
+.carrier-status-list{border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.carrier-status-head,.carrier-status-row{display:grid;grid-template-columns:1.2fr .9fr 1fr;gap:14px;align-items:center}
+.carrier-status-head{padding:11px 14px;background:#faf9fd;color:#918b9d;font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:850;border-bottom:1px solid var(--line)}
+.carrier-status-row{padding:13px 14px;border-bottom:1px solid var(--line);font-size:11px;background:#fff}
+.carrier-status-row:last-child{border-bottom:0}.carrier-status-row:hover{background:#fbfaff}
+.carrier-status-row strong{font-size:12px}.carrier-writing{color:var(--ink);font-weight:700}
+@media(max-width:620px){.carrier-status-head,.carrier-status-row{grid-template-columns:1fr .8fr 1fr;gap:8px}.carrier-status-row{padding:12px 10px}}

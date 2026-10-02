@@ -12,7 +12,7 @@ export default function LoginPage() {
         <p>Sign in with your authorized Google account to access employee and licensing records.</p>
         <button
           className="google-login"
-          onClick={() => signIn("google", { callbackUrl: "/" })}
+          onClick={() => signIn("google", { redirectTo: "/" })}
         >
           Continue with Google
         </button>

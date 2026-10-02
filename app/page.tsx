@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { getDashboardData } from "@/lib/airtable";
+import { getContractingSources } from "@/lib/contracting";
 import type { Agent, PipelineStage } from "@/lib/types";
 
 const stages: PipelineStage[] = ["Pre-Licensing","Exam","Pre-Contracting","Contracting","RTS"];
@@ -30,7 +31,7 @@ function AgentRow({ agent }: { agent: Agent }) {
 }
 
 export default async function Home() {
-  const { agents, source, error } = await getDashboardData();
+  const [{ agents, source, error }, contractingSources] = await Promise.all([getDashboardData(), getContractingSources()]);
   const licensed = agents.filter(a => a.licensingStatus === "Licensed");
   const nonLicensed = agents.filter(a => a.licensingStatus === "Non-licensed");
   const stagnant = agents.filter(a => a.daysInStage >= 7);
@@ -62,6 +63,23 @@ export default async function Home() {
         <div className="metric"><span>Active blockers</span><strong>{blocked.length}</strong></div>
         <div className="metric"><span>Missing info</span><strong>{missing.length}</strong></div>
         <div className="metric"><span>Licenses ≤30d</span><strong>{expiring.length}</strong></div>
+      </section>
+
+      <section className="panel">
+        <div className="panel-title"><div><span className="eyebrow">CONTRACTING DATA</span><h2>Connected Airtable tables</h2></div></div>
+        <div className="contracting-grid">
+          {contractingSources.map(source => (
+            <div className="contracting-source" key={source.key}>
+              <div>
+                <strong>{source.key}</strong>
+                <div className="muted">{source.ok ? "Connected" : source.error}</div>
+              </div>
+              <div className={source.ok ? "pill success" : "pill critical"}>
+                {source.ok ? `${source.count} records` : "Error"}
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="panel">

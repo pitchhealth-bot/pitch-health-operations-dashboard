@@ -12,6 +12,12 @@ export type Agent = {
   status?: string;
   role?: string;
   currentStage?: string;
+  contractingDesignation?: string;
+  startDate?: string;
+  personalEmail?: string;
+  phoneNumber?: string;
+  dateOfBirth?: string;
+  npn?: string;
   stage: PipelineStage;
   subStage?: string;
   stageEnteredDate?: string;

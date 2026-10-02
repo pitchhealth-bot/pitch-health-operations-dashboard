@@ -240,3 +240,64 @@ export async function getCarrierStatusesForAgent(email?: string): Promise<Carrie
     };
   });
 }
+
+
+export async function getSunFireReportForAgent(email?: string) {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_3;
+
+  if (!token || !baseId || !tableId || !email) return [];
+
+  const records: Array<{ id: string; fields: Record<string, unknown> }> = [];
+  let offset: string | undefined;
+
+  do {
+    const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableId}`);
+    url.searchParams.set("pageSize", "100");
+    if (offset) url.searchParams.set("offset", offset);
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (!response.ok) return [];
+
+    const json = await response.json() as {
+      records: Array<{ id: string; fields: Record<string, unknown> }>;
+      offset?: string;
+    };
+
+    records.push(...json.records);
+    offset = json.offset;
+  } while (offset);
+
+  const target = email.trim().toLowerCase();
+  const match = records.find(record => {
+    const candidates = [
+      textValue(record.fields["PHS Email"]),
+      textValue(record.fields["Work Email"]),
+      textValue(record.fields["Email"]),
+    ].map(v => v.toLowerCase()).filter(Boolean);
+
+    return candidates.includes(target);
+  });
+
+  const value = match?.fields["SunFire Report copy"];
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap(item => {
+    if (!item || typeof item !== "object") return [];
+    const a = item as Record<string, unknown>;
+    if (typeof a.url !== "string") return [];
+
+    return [{
+      id: typeof a.id === "string" ? a.id : undefined,
+      url: a.url,
+      filename: typeof a.filename === "string" ? a.filename : "SunFire Report",
+      size: typeof a.size === "number" ? a.size : undefined,
+      type: typeof a.type === "string" ? a.type : undefined,
+    }];
+  });
+}

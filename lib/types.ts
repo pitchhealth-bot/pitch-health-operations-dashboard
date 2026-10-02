@@ -1,3 +1,11 @@
+export type AirtableAttachment = {
+  id?: string;
+  url: string;
+  filename: string;
+  size?: number;
+  type?: string;
+};
+
 export type PipelineStage =
   | "Pre-Licensing"
   | "Exam"
@@ -18,6 +26,7 @@ export type Agent = {
   phoneNumber?: string;
   dateOfBirth?: string;
   npn?: string;
+  ahip2027?: AirtableAttachment[];
   stage: PipelineStage;
   subStage?: string;
   stageEnteredDate?: string;

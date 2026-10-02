@@ -16,9 +16,10 @@ export default async function AgentsPage({
     const matchesQuery =
       !query ||
       agent.name.toLowerCase().includes(query) ||
-      (agent.email || "").toLowerCase().includes(query) ||
-      (agent.owner || "").toLowerCase().includes(query) ||
-      (agent.stage || "").toLowerCase().includes(query);
+      (agent.status || "").toLowerCase().includes(query) ||
+      (agent.role || "").toLowerCase().includes(query) ||
+      (agent.licensingStatus || "").toLowerCase().includes(query) ||
+      (agent.currentStage || "").toLowerCase().includes(query);
 
     const matchesLicensing =
       !licensing ||
@@ -50,7 +51,7 @@ export default async function AgentsPage({
           <input
             name="q"
             defaultValue={q}
-            placeholder="Search name, email, owner, stage..."
+            placeholder="Search name, status, role, licensing, or stage..."
             className="search-input"
           />
           <select name="licensing" defaultValue={licensing} className="filter-select">
@@ -64,23 +65,21 @@ export default async function AgentsPage({
       </section>
 
       <section className="panel agents-list-panel">
-        <div className="agents-table-head">
-          <span>Agent</span>
-          <span>Licensing</span>
-          <span>Stage</span>
-          <span>Sub-stage</span>
-          <span>Owner</span>
-          <span>Days in stage</span>
-          <span>Blocker</span>
-          <span>Missing info</span>
+        <div className="agents-table-head active-agents-five">
+          <span>Name</span>
+          <span>Status</span>
+          <span>Role</span>
+          <span>Licensing Status</span>
+          <span>Current Stage</span>
         </div>
 
         {filtered.length ? filtered.map(agent => (
-          <div className="agents-table-row" key={agent.id}>
+          <div className="agents-table-row active-agents-five" key={agent.id}>
+            <div><strong>{agent.name}</strong></div>
             <div>
-              <strong>{agent.name}</strong>
-              <div className="muted">{agent.email || "No email"}</div>
+              <span className="pill success">{agent.status || "Active"}</span>
             </div>
+            <div>{agent.role || "—"}</div>
             <div>
               <span className={
                 agent.licensingStatus === "Licensed"
@@ -89,29 +88,10 @@ export default async function AgentsPage({
                     ? "pill warning"
                     : "pill"
               }>
-                {agent.licensingStatus || "Unknown"}
+                {agent.licensingStatus || "—"}
               </span>
             </div>
-            <div>{agent.stage}</div>
-            <div className="muted">{agent.subStage || "—"}</div>
-            <div>{agent.owner || "Unassigned"}</div>
-            <div>
-              <span className={
-                agent.daysInStage >= 14
-                  ? "pill critical"
-                  : agent.daysInStage >= 7
-                    ? "pill warning"
-                    : "pill"
-              }>
-                {agent.daysInStage}d
-              </span>
-            </div>
-            <div className="muted">{agent.blocker || "—"}</div>
-            <div>
-              {agent.missingFields.length
-                ? <span className="pill warning">{agent.missingFields.length} missing</span>
-                : <span className="pill success">Complete</span>}
-            </div>
+            <div>{agent.currentStage || "—"}</div>
           </div>
         )) : (
           <div className="empty" style={{ minHeight: 140 }}>No active agents match these filters.</div>

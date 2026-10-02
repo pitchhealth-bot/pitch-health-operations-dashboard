@@ -9,6 +9,9 @@ export type Agent = {
   id: string;
   name: string;
   email?: string;
+  status?: string;
+  role?: string;
+  currentStage?: string;
   stage: PipelineStage;
   subStage?: string;
   stageEnteredDate?: string;

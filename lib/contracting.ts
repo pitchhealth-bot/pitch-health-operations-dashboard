@@ -131,3 +131,112 @@ export async function getAhip2027ForAgent(email?: string) {
     }];
   });
 }
+
+
+export type CarrierStatus = {
+  carrier: string;
+  status: string;
+  writingNumber?: string;
+};
+
+function normalizeFieldName(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function textValue(value: unknown) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value).trim();
+  }
+  if (Array.isArray(value)) return value.map(String).join(", ").trim();
+  return "";
+}
+
+function findWritingNumber(fields: Record<string, unknown>, carrier: string) {
+  const carrierKey = normalizeFieldName(carrier);
+
+  for (const [key, value] of Object.entries(fields)) {
+    const normalized = normalizeFieldName(key);
+    const looksLikeWritingNumber =
+      normalized.includes(carrierKey) &&
+      (
+        normalized.includes("writingnumber") ||
+        normalized.includes("writingno") ||
+        normalized.includes("writingnum") ||
+        normalized.includes("writing")
+      );
+
+    if (looksLikeWritingNumber) {
+      const text = textValue(value);
+      if (text) return text;
+    }
+  }
+
+  return "";
+}
+
+export async function getCarrierStatusesForAgent(email?: string): Promise<CarrierStatus[]> {
+  const carriers = ["Aetna","Humana","Cigna","UHC","Zing","Devoted","UNL","Wellcare","Heartland"];
+
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_3;
+
+  if (!token || !baseId || !tableId || !email) {
+    return carriers.map(carrier => ({ carrier, status: "None" }));
+  }
+
+  const records: Array<{ id: string; fields: Record<string, unknown> }> = [];
+  let offset: string | undefined;
+
+  do {
+    const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableId}`);
+    url.searchParams.set("pageSize", "100");
+    if (offset) url.searchParams.set("offset", offset);
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return carriers.map(carrier => ({ carrier, status: "None" }));
+    }
+
+    const json = await response.json() as {
+      records: Array<{ id: string; fields: Record<string, unknown> }>;
+      offset?: string;
+    };
+
+    records.push(...json.records);
+    offset = json.offset;
+  } while (offset);
+
+  const target = email.trim().toLowerCase();
+  const match = records.find(record => {
+    const candidates = [
+      textValue(record.fields["PHS Email"]),
+      textValue(record.fields["Work Email"]),
+      textValue(record.fields["Email"]),
+    ].map(v => v.toLowerCase()).filter(Boolean);
+
+    return candidates.includes(target);
+  });
+
+  if (!match) {
+    return carriers.map(carrier => ({ carrier, status: "None" }));
+  }
+
+  return carriers.map(carrier => {
+    const status = textValue(match.fields[carrier]) || "None";
+    const writingNumber = /^rts$/i.test(status)
+      ? findWritingNumber(match.fields, carrier)
+      : "";
+
+    return {
+      carrier,
+      status,
+      writingNumber: writingNumber || undefined,
+    };
+  });
+}

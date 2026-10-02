@@ -4,7 +4,9 @@ import { sampleAgents } from "./mock-data";
 const allowedStages: PipelineStage[] = ["Pre-Licensing","Exam","Pre-Contracting","Contracting","RTS"];
 
 function asText(value: unknown): string {
+  if (value === null || value === undefined) return "";
   if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
   if (Array.isArray(value)) return value.map(String).join(", ");
   return "";
 }

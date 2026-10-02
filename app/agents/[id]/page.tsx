@@ -105,6 +105,7 @@ export default async function AgentProfilePage({
           <strong>{agent.npn || "—"}</strong>
         </div>
       </section>
+      <div className="employee-hero-spacer" aria-hidden="true" />
 
       <div className="employee-layout">
         <div>

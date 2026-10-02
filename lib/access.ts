@@ -41,3 +41,12 @@ export function canEdit(role: AppRole) {
 export function isSuperadmin(role: AppRole) {
   return role === "superadmin";
 }
+
+
+export function isAuthConfigured() {
+  return Boolean(
+    process.env.AUTH_SECRET &&
+    process.env.AUTH_GOOGLE_ID &&
+    process.env.AUTH_GOOGLE_SECRET
+  );
+}

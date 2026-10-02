@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDashboardData } from "@/lib/airtable";
 import { getAhip2027ForAgent, getCarrierStatusesForAgent, getSunFireReportForAgent } from "@/lib/contracting";
+import { requireUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +69,7 @@ export default async function AgentProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireUser();
   const { id } = await params;
   const { agents } = await getDashboardData();
   const agent = agents.find(a => a.id === id);

@@ -68,7 +68,7 @@ export default function Sidebar({
           </div>
           <button
             className="sidebar-signout"
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ redirectTo: "/login" })}
             title="Sign out"
           >
             ↗

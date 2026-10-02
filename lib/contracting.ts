@@ -76,3 +76,58 @@ export async function getContractingSources(): Promise<ContractingSource[]> {
     }),
   );
 }
+
+
+export async function getAhip2027ForAgent(email?: string) {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_1;
+
+  if (!token || !baseId || !tableId || !email) return [];
+
+  const records: Array<{ id: string; fields: Record<string, unknown> }> = [];
+  let offset: string | undefined;
+
+  do {
+    const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableId}`);
+    url.searchParams.set("pageSize", "100");
+    if (offset) url.searchParams.set("offset", offset);
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (!response.ok) return [];
+
+    const json = await response.json() as {
+      records: Array<{ id: string; fields: Record<string, unknown> }>;
+      offset?: string;
+    };
+
+    records.push(...json.records);
+    offset = json.offset;
+  } while (offset);
+
+  const target = email.trim().toLowerCase();
+  const match = records.find(record => {
+    const value = record.fields["PHS Email"];
+    return typeof value === "string" && value.trim().toLowerCase() === target;
+  });
+
+  const value = match?.fields["2027 AHIP Document"];
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap(item => {
+    if (!item || typeof item !== "object") return [];
+    const a = item as Record<string, unknown>;
+    if (typeof a.url !== "string") return [];
+    return [{
+      id: typeof a.id === "string" ? a.id : undefined,
+      url: a.url,
+      filename: typeof a.filename === "string" ? a.filename : "AHIP 2027",
+      size: typeof a.size === "number" ? a.size : undefined,
+      type: typeof a.type === "string" ? a.type : undefined,
+    }];
+  });
+}

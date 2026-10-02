@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDashboardData } from "@/lib/airtable";
-import { getAhip2027ForAgent, getCarrierStatusesForAgent } from "@/lib/contracting";
+import { getAhip2027ForAgent, getCarrierStatusesForAgent, getSunFireReportForAgent } from "@/lib/contracting";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +74,7 @@ export default async function AgentProfilePage({
 
   if (!agent) notFound();
 
-  const [ahip, carrierStatuses] = await Promise.all([getAhip2027ForAgent(agent.email), getCarrierStatusesForAgent(agent.email)]);
+  const [ahip, carrierStatuses, sunFireReports] = await Promise.all([getAhip2027ForAgent(agent.email), getCarrierStatusesForAgent(agent.email), getSunFireReportForAgent(agent.email)]);
 
   return (
     <main>
@@ -179,6 +179,34 @@ export default async function AgentProfilePage({
               )) : (
                 <div className="attachment-empty">
                   <span>No AHIP 2027 attachment found in Airtable.</span>
+                </div>
+              )}
+
+              <div className="attachment-label" style={{ marginTop: 12 }}>
+                <div>
+                  <strong>SunFire Report</strong>
+                  <span>{sunFireReports.length ? `${sunFireReports.length} attachment${sunFireReports.length > 1 ? "s" : ""}` : "No attachment"}</span>
+                </div>
+              </div>
+
+              {sunFireReports.length ? sunFireReports.map((file, index) => (
+                <a
+                  className="attachment-card"
+                  href={file.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  key={file.id || `sunfire-${file.filename}-${index}`}
+                >
+                  <div className="attachment-icon">PDF</div>
+                  <div className="attachment-copy">
+                    <strong>{file.filename}</strong>
+                    <span>{file.type || "Attachment"}{file.size ? ` · ${fileSize(file.size)}` : ""}</span>
+                  </div>
+                  <div className="attachment-open">↗</div>
+                </a>
+              )) : (
+                <div className="attachment-empty">
+                  <span>No SunFire Report attachment found in Airtable.</span>
                 </div>
               )}
             </div>

@@ -50,20 +50,20 @@ export default async function Home() {
   return (
     <main>
       <header className="topbar">
-        <div><div className="eyebrow">PITCH HEALTH SOLUTIONS</div><h1>Licensing & Contracting</h1></div>
+        <div><div className="eyebrow">OPERATIONS DASHBOARD</div><h1>Licensing & Contracting</h1><p className="page-subtitle">Track agent readiness, licensing progress, blockers, and contracting health.</p></div>
         <div className="source"><span className={source === "airtable" ? "dot live" : "dot"} />{source === "airtable" ? "Live Airtable" : source === "error" ? "Airtable error" : "Sample data"}</div>
       </header>
 
       {source === "error" && <section className="panel"><strong>Airtable connection error</strong><div className="muted" style={{marginTop:8}}>{error}</div></section>}
 
       <section className="metric-grid">
-        <Link href="/agents" className="metric metric-link"><span>Active agents</span><strong>{agents.length}</strong><small>View all →</small></Link>
-        <div className="metric"><span>Licensed</span><strong>{licensed.length}</strong></div>
-        <div className="metric"><span>Non-licensed</span><strong>{nonLicensed.length}</strong></div>
-        <div className="metric"><span>Stuck 7+ days</span><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical</small></div>
-        <div className="metric"><span>Active blockers</span><strong>{blocked.length}</strong></div>
-        <div className="metric"><span>Missing info</span><strong>{missing.length}</strong></div>
-        <div className="metric"><span>Licenses ≤30d</span><strong>{expiring.length}</strong></div>
+        <Link href="/agents" className="metric metric-link"><div className="metric-top"><span>Active agents</span><i>↗</i></div><strong>{agents.length}</strong><small>View all agents →</small></Link>
+        <div className="metric"><div className="metric-top"><span>Licensed</span><i>✓</i></div><strong>{licensed.length}</strong><small>Ready for contracting</small></div>
+        <div className="metric"><div className="metric-top"><span>Non-licensed</span><i>◷</i></div><strong>{nonLicensed.length}</strong><small>Licensing in progress</small></div>
+        <div className="metric"><div className="metric-top"><span>Stuck 7+ days</span><i>!</i></div><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical</small></div>
+        <div className="metric"><div className="metric-top"><span>Active blockers</span><i>⚑</i></div><strong>{blocked.length}</strong><small>Needs attention</small></div>
+        <div className="metric"><div className="metric-top"><span>Missing info</span><i>?</i></div><strong>{missing.length}</strong><small>Incomplete profiles</small></div>
+        <div className="metric"><div className="metric-top"><span>Licenses ≤30d</span><i>⌁</i></div><strong>{expiring.length}</strong><small>Upcoming expirations</small></div>
       </section>
 
       <section className="panel">

@@ -226,3 +226,9 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .carrier-status-row:last-child{border-bottom:0}.carrier-status-row:hover{background:#fbfaff}
 .carrier-status-row strong{font-size:12px}.carrier-writing{color:var(--ink);font-weight:700}
 @media(max-width:620px){.carrier-status-head,.carrier-status-row{grid-template-columns:1fr .8fr 1fr;gap:8px}.carrier-status-row{padding:12px 10px}}
+
+.carrier-completed{background:#e8f8ef!important;color:#087443!important}
+.carrier-requested{background:#fff3d6!important;color:#9b6500!important}
+.carrier-ineligible{background:#efeff3!important;color:#62606b!important}
+.carrier-rts{background:#efe9ff!important;color:#5b3fd0!important}
+.carrier-none{background:#f3f2f6!important;color:#7a7684!important}

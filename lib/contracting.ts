@@ -42,9 +42,9 @@ export async function getContractingSources(): Promise<ContractingSource[]> {
   const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
 
   const tables = [
-    { key: "Table 1", tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_1 },
-    { key: "Table 2", tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_2 },
-    { key: "Table 3", tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_3 },
+    { key: "Contracting Documents & Information", tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_1 },
+    { key: "Licensing Stages (Tracker)", tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_2 },
+    { key: "Contracting and RTS Tracker", tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_3 },
   ];
 
   if (!token || !baseId) {

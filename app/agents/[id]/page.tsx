@@ -208,10 +208,14 @@ export default async function AgentProfilePage({
               <div>
                 <span className={
                   item.status.toLowerCase() === "rts"
-                    ? "pill success"
-                    : item.status === "None"
-                      ? "pill"
-                      : "pill warning"
+                    ? "pill carrier-rts"
+                    : item.status.toLowerCase() === "completed"
+                      ? "pill carrier-completed"
+                      : item.status.toLowerCase() === "requested"
+                        ? "pill carrier-requested"
+                        : item.status.toLowerCase() === "ineligible"
+                          ? "pill carrier-ineligible"
+                          : "pill carrier-none"
                 }>
                   {item.status}
                 </span>

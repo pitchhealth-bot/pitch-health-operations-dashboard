@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDashboardData } from "@/lib/airtable";
-import { getAhip2027ForAgent } from "@/lib/contracting";
+import { getAhip2027ForAgent, getCarrierStatusesForAgent } from "@/lib/contracting";
 
 export const dynamic = "force-dynamic";
 
@@ -74,7 +74,7 @@ export default async function AgentProfilePage({
 
   if (!agent) notFound();
 
-  const ahip = await getAhip2027ForAgent(agent.email);
+  const [ahip, carrierStatuses] = await Promise.all([getAhip2027ForAgent(agent.email), getCarrierStatusesForAgent(agent.email)]);
 
   return (
     <main>
@@ -186,6 +186,44 @@ export default async function AgentProfilePage({
           </section>
         </aside>
       </div>
+
+      <section className="panel employee-section carrier-section">
+        <div className="section-heading">
+          <div>
+            <div className="eyebrow">CARRIER READINESS</div>
+            <h2>Carrier Status</h2>
+          </div>
+        </div>
+
+        <div className="carrier-status-list">
+          <div className="carrier-status-head">
+            <span>Carrier</span>
+            <span>Status</span>
+            <span>Writing Number</span>
+          </div>
+
+          {carrierStatuses.map(item => (
+            <div className="carrier-status-row" key={item.carrier}>
+              <strong>{item.carrier}</strong>
+              <div>
+                <span className={
+                  item.status.toLowerCase() === "rts"
+                    ? "pill success"
+                    : item.status === "None"
+                      ? "pill"
+                      : "pill warning"
+                }>
+                  {item.status}
+                </span>
+              </div>
+              <span className="carrier-writing">
+                {item.status.toLowerCase() === "rts" ? (item.writingNumber || "None") : "None"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
     </main>
   );
 }

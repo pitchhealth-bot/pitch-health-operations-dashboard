@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { auth } from "@/auth";
-import { getRoleForEmail } from "@/lib/access";
+import { getRoleForEmail, isAuthConfigured } from "@/lib/access";
 import AppShell from "./components/AppShell";
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const session = await auth();
+  const session = isAuthConfigured() ? await auth() : null;
   const user = session?.user?.email
     ? {
         name: session.user.name,

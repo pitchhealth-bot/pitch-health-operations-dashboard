@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import type { Agent, DashboardData, PipelineStage } from "./types";
 import { sampleAgents } from "./mock-data";
 import { getLicenseRecords, daysUntil } from "./licenses";
@@ -148,7 +149,7 @@ async function fetchAllAirtableRecords(
   return records;
 }
 
-export async function getDashboardData(): Promise<DashboardData> {
+async function loadDashboardData(): Promise<DashboardData> {
   const token = process.env.AIRTABLE_PAT;
   const baseId = "app5eoO1QYp4UAoaU";
   const table = process.env.AIRTABLE_TABLE_ID || process.env.AIRTABLE_AGENTS_TABLE || "tblx66f77FNlyJ3m4";
@@ -230,3 +231,10 @@ export async function getDashboardData(): Promise<DashboardData> {
     return { agents: [], source: "error", error: message };
   }
 }
+
+
+export const getDashboardData = unstable_cache(
+  loadDashboardData,
+  ["pitch-dashboard-data-v3"],
+  { revalidate: 30, tags: ["dashboard-data"] },
+);

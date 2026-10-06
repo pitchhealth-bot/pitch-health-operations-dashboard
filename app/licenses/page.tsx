@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
 import { daysUntil, getLicenseRecords, residentStateFromValue, displayLicenseState, type LicenseRecord } from "@/lib/licenses";
 import { requireUser } from "@/lib/session";
+import LicenseSummaryTable from "./LicenseSummaryTable";
 
 export const dynamic = "force-dynamic";
 
@@ -14,19 +15,6 @@ function formatDate(value?: string) {
     day: "numeric",
     year: "numeric",
   }).format(d);
-}
-
-function sortHref(key: string, currentSort: string, currentDir: string, q: string) {
-  const params = new URLSearchParams();
-  if (q) params.set("q", q);
-  params.set("sort", key);
-  params.set("dir", currentSort === key && currentDir === "asc" ? "desc" : "asc");
-  return `/licenses?${params.toString()}`;
-}
-
-function sortArrow(key: string, currentSort: string, currentDir: string) {
-  if (key !== currentSort) return "";
-  return currentDir === "asc" ? "↑" : "↓";
 }
 
 function normalize(value?: string) {
@@ -58,20 +46,13 @@ function groupKey(license: LicenseRecord, agentId?: string) {
   return agentId || license.npn || normalize(license.email) || normalize(license.agentName) || license.id;
 }
 
-export default async function LicensesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string; sort?: string; dir?: string }>;
-}) {
+export default async function LicensesPage() {
   await requireUser();
-
-  const { q = "", sort = "name", dir = "asc" } = await searchParams;
   const [{ records, error }, { agents }] = await Promise.all([
     getLicenseRecords(),
     getDashboardData(),
   ]);
 
-  const query = q.trim().toLowerCase();
 
   const expiring = records
     .map(license => {
@@ -130,57 +111,22 @@ export default async function LicensesPage({
           .map(row => displayLicenseState(row.license.state))
           .filter(Boolean)
       )] as string[];
+
       return {
-        ...group,
-        licenses: sorted,
-        states,
+        key: group.key,
+        agentId: group.agentId,
+        name: group.name,
+        status: group.status,
+        role: group.role,
+        npn: group.npn,
+        email: group.email,
+        licenseCount: sorted.length,
         residentState,
-        nearest: sorted[0],
+        states,
+        nearestExpiration: sorted[0]?.license.expirationDate,
+        nearestDays: sorted[0]?.days ?? 99999,
         expiredCount: sorted.filter(row => row.expired).length,
       };
-    })
-    .filter(group => {
-      if (!query) return true;
-      return [
-        group.name,
-        group.status,
-        group.role,
-        group.npn,
-        group.email,
-        ...group.states,
-      ]
-        .filter(Boolean)
-        .some(value => String(value).toLowerCase().includes(query));
-    })
-    .sort((a, b) => {
-      const direction = dir === "desc" ? -1 : 1;
-      const av =
-        sort === "status" ? (a.status || "") :
-        sort === "role" ? (a.role || "") :
-        sort === "count" ? a.licenses.length :
-        sort === "resident" ? (a.residentState || "") :
-        sort === "states" ? a.states.join(",") :
-        sort === "expiration" ? (a.nearest.days ?? 99999) :
-        sort === "expired" ? a.expiredCount :
-        a.name;
-      const bv =
-        sort === "status" ? (b.status || "") :
-        sort === "role" ? (b.role || "") :
-        sort === "count" ? b.licenses.length :
-        sort === "resident" ? (b.residentState || "") :
-        sort === "states" ? b.states.join(",") :
-        sort === "expiration" ? (b.nearest.days ?? 99999) :
-        sort === "expired" ? b.expiredCount :
-        b.name;
-
-      if (typeof av === "number" && typeof bv === "number") {
-        return (av - bv) * direction;
-      }
-
-      return String(av).localeCompare(String(bv), undefined, {
-        numeric: true,
-        sensitivity: "base",
-      }) * direction;
     });
 
   return (
@@ -203,82 +149,7 @@ export default async function LicensesPage({
         </section>
       )}
 
-      <section className="panel">
-        <form className="agents-filters">
-          <input
-            name="q"
-            defaultValue={q}
-            placeholder="Search name, role, state, NPN..."
-            className="search-input"
-          />
-          <input type="hidden" name="sort" value={sort} />
-          <input type="hidden" name="dir" value={dir} />
-          <button type="submit" className="filter-button">Search</button>
-          {q && <Link href="/licenses" className="clear-link">Clear</Link>}
-        </form>
-      </section>
-
-      <section className="panel agents-list-panel">
-        <div className="license-summary-head">
-          <Link className="sort-header" href={sortHref("name", sort, dir, q)}>Name <span className="sort-arrow">{sortArrow("name", sort, dir)}</span></Link>
-          <Link className="sort-header" href={sortHref("status", sort, dir, q)}>Status <span className="sort-arrow">{sortArrow("status", sort, dir)}</span></Link>
-          <Link className="sort-header" href={sortHref("role", sort, dir, q)}>Role <span className="sort-arrow">{sortArrow("role", sort, dir)}</span></Link>
-          <Link className="sort-header" href={sortHref("count", sort, dir, q)}>Licenses Expiring <span className="sort-arrow">{sortArrow("count", sort, dir)}</span></Link>
-          <Link className="sort-header" href={sortHref("resident", sort, dir, q)}>Resident State <span className="sort-arrow">{sortArrow("resident", sort, dir)}</span></Link>
-          <Link className="sort-header" href={sortHref("states", sort, dir, q)}>States <span className="sort-arrow">{sortArrow("states", sort, dir)}</span></Link>
-          <Link className="sort-header" href={sortHref("expiration", sort, dir, q)}>Nearest Expiration <span className="sort-arrow">{sortArrow("expiration", sort, dir)}</span></Link>
-          <Link className="sort-header" href={sortHref("expired", sort, dir, q)}>Expired? <span className="sort-arrow">{sortArrow("expired", sort, dir)}</span></Link>
-        </div>
-
-        {rows.length ? rows.map(group => {
-          const detailParams = new URLSearchParams();
-          if (group.agentId) detailParams.set("agentId", group.agentId);
-          if (group.npn) detailParams.set("npn", group.npn);
-          if (group.email) detailParams.set("email", group.email);
-          detailParams.set("name", group.name);
-
-          return (
-            <div className="license-summary-row" key={group.key}>
-              <div>
-                <Link className="agent-name-link" href={`/licenses/detail?${detailParams.toString()}`}>
-                  <strong>{group.name}</strong>
-                </Link>
-              </div>
-              <div>
-                <span className={group.status === "Active" ? "pill success" : "pill"}>
-                  {group.status || "—"}
-                </span>
-              </div>
-              <div>{group.role || "—"}</div>
-              <div>
-                <span className="license-count-pill">{group.licenses.length}</span>
-              </div>
-              <div><strong>{group.residentState || "—"}</strong></div>
-              <div className="state-badges">
-                {group.states.slice(0, 5).map(state => <span key={state}>{state}</span>)}
-                {group.states.length > 5 && <span>+{group.states.length - 5}</span>}
-              </div>
-              <div>
-                <strong>{formatDate(group.nearest.license.expirationDate)}</strong>
-                <div className="muted">
-                  {group.nearest.expired
-                    ? `${Math.abs(group.nearest.days ?? 0)}d expired`
-                    : `${group.nearest.days ?? 0}d remaining`}
-                </div>
-              </div>
-              <div>
-                <span className={group.expiredCount ? "pill critical" : "pill warning"}>
-                  {group.expiredCount ? `Yes · ${group.expiredCount}` : "No"}
-                </span>
-              </div>
-            </div>
-          );
-        }) : (
-          <div className="empty" style={{ minHeight: 180 }}>
-            No licenses expiring within 30 days.
-          </div>
-        )}
-      </section>
+      <LicenseSummaryTable rows={rows} />
     </main>
   );
 }

@@ -66,7 +66,7 @@ export default async function Home() {
         <Link href="/agents?filter=stuck" className="metric metric-link"><div className="metric-top"><span>Stuck 7+ days</span><i>!</i></div><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical →</small></Link>
         <Link href="/agents?filter=blocked" className="metric metric-link"><div className="metric-top"><span>Active blockers</span><i>⚑</i></div><strong>{blocked.length}</strong><small>Needs attention →</small></Link>
         <Link href="/agents?filter=missing" className="metric metric-link"><div className="metric-top"><span>Missing info</span><i>?</i></div><strong>{missing.length}</strong><small>Incomplete profiles →</small></Link>
-        <Link href="/agents?filter=expiring" className="metric metric-link"><div className="metric-top"><span>Licenses ≤30d</span><i>⌁</i></div><strong>{expiring.length}</strong><small>Upcoming expirations →</small></Link>
+        <Link href="/licenses" className="metric metric-link"><div className="metric-top"><span>Licenses ≤30d</span><i>⌁</i></div><strong>{expiring.length}</strong><small>Upcoming expirations →</small></Link>
       </section>
 
       <section className="panel">

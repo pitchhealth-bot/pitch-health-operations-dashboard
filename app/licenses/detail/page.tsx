@@ -167,7 +167,14 @@ export default async function LicenseDetailPage({
             Expired and expiring licenses are separated into priority and non-priority states.
           </p>
         </div>
-        <Link className="back-link" href="/licenses">← License Expirations</Link>
+        <div className="license-detail-actions">
+          {agent?.id && (
+            <Link className="record-link-button" href={`/agents/${agent.id}`}>
+              Go to Agent Record →
+            </Link>
+          )}
+          <Link className="back-link" href="/licenses">← License Expirations</Link>
+        </div>
       </header>
 
       {error && (

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
 import { daysUntil, getLicenseRecords, residentStateFromValue, displayLicenseState, type LicenseRecord } from "@/lib/licenses";
-import { requireUser } from "@/lib/session";
+import { requireRole } from "@/lib/session";
 import LicenseSummaryTable from "./LicenseSummaryTable";
 
 export const dynamic = "force-dynamic";
@@ -47,7 +47,7 @@ function groupKey(license: LicenseRecord, agentId?: string) {
 }
 
 export default async function LicensesPage() {
-  await requireUser();
+  await requireRole(["admin", "super_admin"]);
   const [{ records, error }, { agents }] = await Promise.all([
     getLicenseRecords(),
     getDashboardData(),

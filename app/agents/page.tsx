@@ -70,12 +70,14 @@ export default async function AgentsPage({
     licensing?: string;
     sort?: string;
     dir?: string;
+    filter?: string;
   }>;
 }) {
   await requireUser();
   const params = await searchParams;
   const q = params.q || "";
   const licensing = params.licensing || "";
+  const specialFilter = params.filter || "";
   const sort = columns.some(c => c.key === params.sort)
     ? (params.sort as SortKey)
     : "name";
@@ -103,7 +105,21 @@ export default async function AgentsPage({
       !licensing ||
       (agent.licensingStatus || "").toLowerCase() === licensing.toLowerCase();
 
-    return matchesQuery && matchesLicensing;
+    const licenseDays = (() => {
+      if (!agent.licenseExpiry) return null;
+      const date = new Date(agent.licenseExpiry);
+      if (Number.isNaN(date.getTime())) return null;
+      return Math.ceil((date.getTime() - Date.now()) / 86400000);
+    })();
+
+    const matchesSpecial =
+      !specialFilter ||
+      (specialFilter === "stuck" && agent.daysInStage >= 7) ||
+      (specialFilter === "blocked" && Boolean(agent.blocker)) ||
+      (specialFilter === "missing" && agent.missingFields.length > 0) ||
+      (specialFilter === "expiring" && licenseDays !== null && licenseDays <= 30);
+
+    return matchesQuery && matchesLicensing && matchesSpecial;
   });
 
   const sorted = sortAgents(filtered, sort, dir);
@@ -140,9 +156,10 @@ export default async function AgentsPage({
             <option value="Non-licensed">Non-licensed</option>
           </select>
           <input type="hidden" name="sort" value={sort} />
+          {specialFilter && <input type="hidden" name="filter" value={specialFilter} />}
           <input type="hidden" name="dir" value={dir} />
           <button type="submit" className="filter-button">Filter</button>
-          {(q || licensing) && <Link href="/agents" className="clear-link">Clear</Link>}
+          {(q || licensing || specialFilter) && <Link href="/agents" className="clear-link">Clear</Link>}
         </form>
       </section>
 

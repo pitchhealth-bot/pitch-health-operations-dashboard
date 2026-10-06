@@ -16,7 +16,7 @@ function fmt(value: string) {
 }
 
 export default async function AuditPage() {
-  await requireRole(["superadmin"]);
+  await requireRole(["super_admin"]);
   const { entries, error } = await getAuditEntries(100);
 
   return (

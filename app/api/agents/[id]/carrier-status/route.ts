@@ -94,7 +94,7 @@ export async function PATCH(
         if (oldWriting !== newWriting) {
           entries.push(writeAuditEntry({
             userEmail: email,
-            userName: session.user?.name || "",
+            userName: dashboardUser.name || "",
             role,
             action: "Updated writing number",
             entityType: "Agent",

@@ -107,3 +107,15 @@ export function daysUntil(date?: string) {
   if (Number.isNaN(parsed.getTime())) return null;
   return Math.ceil((parsed.getTime() - Date.now()) / 86400000);
 }
+
+
+export function residentStateFromValue(value?: string) {
+  if (!value) return "";
+  const match = value.trim().match(/^resident\s*[-:]?\s*(.+)$/i);
+  return match ? match[1].trim() : "";
+}
+
+export function displayLicenseState(value?: string) {
+  if (!value) return "";
+  return residentStateFromValue(value) || value.trim();
+}

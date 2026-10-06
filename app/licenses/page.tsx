@@ -41,6 +41,10 @@ function findAgent(
   return undefined;
 }
 
+function groupKey(license: LicenseRecord, agentId?: string) {
+  return agentId || license.npn || normalize(license.email) || normalize(license.agentName) || license.id;
+}
+
 export default async function LicensesPage({
   searchParams,
 }: {
@@ -56,33 +60,72 @@ export default async function LicensesPage({
 
   const query = q.trim().toLowerCase();
 
-  const rows = records
+  const expiring = records
     .map(license => {
       const agent = findAgent(license, agents);
       const days = daysUntil(license.expirationDate);
+      return { license, agent, days, expired: days !== null ? days < 0 : false };
+    })
+    .filter(row => row.days !== null && row.days <= 30);
+
+  const grouped = new Map<string, {
+    key: string;
+    agentId?: string;
+    name: string;
+    status?: string;
+    role?: string;
+    npn?: string;
+    email?: string;
+    licenses: typeof expiring;
+  }>();
+
+  for (const row of expiring) {
+    const key = groupKey(row.license, row.agent?.id);
+    const current = grouped.get(key);
+
+    if (current) {
+      current.licenses.push(row);
+      continue;
+    }
+
+    grouped.set(key, {
+      key,
+      agentId: row.agent?.id,
+      name: row.agent?.name || row.license.agentName || "Unknown agent",
+      status: row.agent?.status,
+      role: row.agent?.role,
+      npn: row.agent?.npn || row.license.npn,
+      email: row.agent?.email || row.license.email,
+      licenses: [row],
+    });
+  }
+
+  const rows = [...grouped.values()]
+    .map(group => {
+      const sorted = [...group.licenses].sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
+      const states = [...new Set(sorted.map(row => row.license.state).filter(Boolean))] as string[];
       return {
-        license,
-        agent,
-        days,
-        expired: days !== null ? days < 0 : false,
+        ...group,
+        licenses: sorted,
+        states,
+        nearest: sorted[0],
+        expiredCount: sorted.filter(row => row.expired).length,
       };
     })
-    .filter(row => row.days !== null && row.days <= 30)
-    .filter(row => {
+    .filter(group => {
       if (!query) return true;
       return [
-        row.license.agentName,
-        row.agent?.name,
-        row.agent?.status,
-        row.agent?.role,
-        row.license.state,
-        row.license.licenseNumber,
-        row.license.expirationDate,
+        group.name,
+        group.status,
+        group.role,
+        group.npn,
+        group.email,
+        ...group.states,
       ]
         .filter(Boolean)
         .some(value => String(value).toLowerCase().includes(query));
     })
-    .sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
+    .sort((a, b) => (a.nearest.days ?? 99999) - (b.nearest.days ?? 99999));
 
   return (
     <main>
@@ -91,7 +134,7 @@ export default async function LicensesPage({
           <div className="eyebrow">LICENSING</div>
           <h1>License Expirations</h1>
           <p className="page-subtitle">
-            Licenses expiring within 30 days, including already expired licenses from the configured Airtable view.
+            One entry per agent. Open an agent to review every license that is expired or expiring within 30 days.
           </p>
         </div>
         <Link className="back-link" href="/">← Dashboard</Link>
@@ -109,7 +152,7 @@ export default async function LicensesPage({
           <input
             name="q"
             defaultValue={q}
-            placeholder="Search name, role, state, license number..."
+            placeholder="Search name, role, state, NPN..."
             className="search-input"
           />
           <button type="submit" className="filter-button">Search</button>
@@ -118,42 +161,59 @@ export default async function LicensesPage({
       </section>
 
       <section className="panel agents-list-panel">
-        <div className="license-table-head">
+        <div className="license-summary-head">
           <span>Name</span>
           <span>Status</span>
           <span>Role</span>
-          <span>State</span>
-          <span>License Number</span>
-          <span>Expiration Date</span>
+          <span>Licenses Expiring</span>
+          <span>States</span>
+          <span>Nearest Expiration</span>
           <span>Expired?</span>
         </div>
 
-        {rows.length ? rows.map(({ license, agent, days, expired }) => (
-          <div className="license-table-row" key={license.id}>
-            <div>
-              <strong>{agent?.name || license.agentName || "—"}</strong>
-            </div>
-            <div>
-              <span className={agent?.status === "Active" ? "pill success" : "pill"}>
-                {agent?.status || "—"}
-              </span>
-            </div>
-            <div>{agent?.role || "—"}</div>
-            <div>{license.state || "—"}</div>
-            <div>{license.licenseNumber || "—"}</div>
-            <div>
-              <strong>{formatDate(license.expirationDate)}</strong>
-              <div className="muted">
-                {days === null ? "—" : expired ? `${Math.abs(days)}d expired` : `${days}d remaining`}
+        {rows.length ? rows.map(group => {
+          const detailParams = new URLSearchParams();
+          if (group.agentId) detailParams.set("agentId", group.agentId);
+          if (group.npn) detailParams.set("npn", group.npn);
+          if (group.email) detailParams.set("email", group.email);
+          detailParams.set("name", group.name);
+
+          return (
+            <div className="license-summary-row" key={group.key}>
+              <div>
+                <Link className="agent-name-link" href={`/licenses/detail?${detailParams.toString()}`}>
+                  <strong>{group.name}</strong>
+                </Link>
+              </div>
+              <div>
+                <span className={group.status === "Active" ? "pill success" : "pill"}>
+                  {group.status || "—"}
+                </span>
+              </div>
+              <div>{group.role || "—"}</div>
+              <div>
+                <span className="license-count-pill">{group.licenses.length}</span>
+              </div>
+              <div className="state-badges">
+                {group.states.slice(0, 5).map(state => <span key={state}>{state}</span>)}
+                {group.states.length > 5 && <span>+{group.states.length - 5}</span>}
+              </div>
+              <div>
+                <strong>{formatDate(group.nearest.license.expirationDate)}</strong>
+                <div className="muted">
+                  {group.nearest.expired
+                    ? `${Math.abs(group.nearest.days ?? 0)}d expired`
+                    : `${group.nearest.days ?? 0}d remaining`}
+                </div>
+              </div>
+              <div>
+                <span className={group.expiredCount ? "pill critical" : "pill warning"}>
+                  {group.expiredCount ? `Yes · ${group.expiredCount}` : "No"}
+                </span>
               </div>
             </div>
-            <div>
-              <span className={expired ? "pill critical" : "pill warning"}>
-                {expired ? "Yes" : "No"}
-              </span>
-            </div>
-          </div>
-        )) : (
+          );
+        }) : (
           <div className="empty" style={{ minHeight: 180 }}>
             No licenses expiring within 30 days.
           </div>

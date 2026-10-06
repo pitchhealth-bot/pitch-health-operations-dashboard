@@ -6,8 +6,8 @@ import { getDashboardUserByEmail } from "./users";
 export async function requireUser() {
   if (!isAuthConfigured()) {
     return {
-      user: { name: "Authentication not configured", email: null },
-      role: "agent" as AppRole,
+      user: { name: "Setup Admin", email: null },
+      role: "super_admin" as AppRole,
       dashboardUser: null,
       authConfigured: false,
     };
@@ -34,16 +34,20 @@ export async function requireUser() {
 }
 
 export async function requireRole(roles: AppRole[]) {
-  if (!isAuthConfigured()) {
-    redirect("/");
-  }
-
   const current = await requireUser();
 
+  if (!current.authConfigured) {
+    return current;
+  }
+
   if (!roles.includes(current.role)) {
-    if (current.role === "agent" && current.dashboardUser?.airtableAgentRecordId) {
+    if (
+      current.role === "agent" &&
+      current.dashboardUser?.airtableAgentRecordId
+    ) {
       redirect(`/agents/${current.dashboardUser.airtableAgentRecordId}`);
     }
+
     redirect("/");
   }
 

@@ -36,7 +36,7 @@ export async function getLicenseRecords(): Promise<{
   const token = process.env.AIRTABLE_PAT;
   const baseId = process.env.AIRTABLE_LICENSE_BASE_ID || "appkh89p5kYTMEWwQ";
   const tableId = process.env.AIRTABLE_LICENSE_TABLE_ID || "tblOYpNBFudPnDxM1";
-  const viewId = process.env.AIRTABLE_LICENSE_VIEW_ID || "viwrnaWlp0jnxr5pC";
+  const viewId = process.env.AIRTABLE_LICENSE_VIEW_ID || "viwsB328f5JKitgxH";
 
   if (!token) return { records: [], error: "AIRTABLE_PAT missing" };
 

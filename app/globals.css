@@ -314,3 +314,24 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .carrier-save-message.success{background:var(--okbg);color:var(--ok)}
 .carrier-save-message.error{background:var(--critbg);color:var(--crit)}
 .carrier-readonly-note{margin-top:10px;color:var(--muted);font-size:9px}
+
+.carrier-pencil-button{
+  width:34px;
+  height:34px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  display:grid;
+  place-items:center;
+  background:#fff;
+  color:var(--purple);
+  font-size:17px;
+  font-weight:900;
+  cursor:pointer;
+  box-shadow:0 5px 14px rgba(40,29,76,.06);
+  transition:.16s ease;
+}
+.carrier-pencil-button:hover{
+  background:var(--purple-soft);
+  border-color:#cfc4f7;
+  transform:translateY(-1px);
+}

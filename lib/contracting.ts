@@ -247,3 +247,156 @@ export async function getSunFireReportForAgent(email?: string) {
     return [];
   }
 }
+
+
+export type CarrierStatusUpdate = {
+  carrier: string;
+  status: string;
+  writingNumber?: string;
+};
+
+type AirtableFieldSchema = {
+  id: string;
+  name: string;
+  type: string;
+};
+
+async function getTable3Schema(): Promise<AirtableFieldSchema[]> {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_3;
+
+  if (!token || !baseId || !tableId) return [];
+
+  const response = await fetch(`https://api.airtable.com/v0/meta/bases/${baseId}/tables`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) return [];
+
+  const json = await response.json() as {
+    tables?: Array<{
+      id: string;
+      fields?: AirtableFieldSchema[];
+    }>;
+  };
+
+  return json.tables?.find(table => table.id === tableId)?.fields || [];
+}
+
+function findWritingFieldName(
+  fields: Record<string, unknown>,
+  schema: AirtableFieldSchema[],
+  carrier: string,
+) {
+  const carrierKey = normalizeFieldName(carrier);
+  const matches = (name: string) => {
+    const normalized = normalizeFieldName(name);
+    return normalized.includes(carrierKey) && normalized.includes("writing");
+  };
+
+  const schemaField = schema.find(field => matches(field.name));
+  if (schemaField) return schemaField.name;
+
+  return Object.keys(fields).find(matches) || "";
+}
+
+function airtableValueForField(
+  fieldName: string,
+  schema: AirtableFieldSchema[],
+  value: string,
+) {
+  if (!value) return null;
+  const field = schema.find(item => item.name === fieldName);
+
+  if (field?.type === "number" || field?.type === "currency" || field?.type === "percent") {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : value;
+  }
+
+  return value;
+}
+
+export async function updateCarrierStatusesForAgent(
+  email: string,
+  updates: CarrierStatusUpdate[],
+) {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_3;
+
+  if (!token || !baseId || !tableId) {
+    throw new Error("Contracting Airtable configuration is incomplete.");
+  }
+
+  const allowedCarriers = new Set([
+    "Aetna","Humana","Cigna","UHC","Zing","Devoted","UNL","Wellcare","Heartland",
+  ]);
+  const allowedStatuses = new Set(["None","Requested","Completed","Ineligible","RTS"]);
+
+  const records = await getTable3Records();
+  const match = records.find(record => emailMatches(record, email));
+
+  if (!match) {
+    throw new Error("No Contracting and RTS Tracker record matched this agent.");
+  }
+
+  const schema = await getTable3Schema();
+  const fields: Record<string, unknown> = {};
+
+  for (const update of updates) {
+    if (!allowedCarriers.has(update.carrier)) {
+      throw new Error(`Unsupported carrier: ${update.carrier}`);
+    }
+    if (!allowedStatuses.has(update.status)) {
+      throw new Error(`Unsupported carrier status: ${update.status}`);
+    }
+
+    fields[update.carrier] = update.status === "None" ? null : update.status;
+
+    const writingField = findWritingFieldName(match.fields, schema, update.carrier);
+
+    if (update.status === "RTS" && update.writingNumber?.trim()) {
+      if (!writingField) {
+        throw new Error(
+          `Could not find the Airtable writing-number field for ${update.carrier}.`,
+        );
+      }
+      fields[writingField] = airtableValueForField(
+        writingField,
+        schema,
+        update.writingNumber.trim(),
+      );
+    } else if (writingField) {
+      fields[writingField] = null;
+    }
+  }
+
+  const response = await fetch(
+    `https://api.airtable.com/v0/${baseId}/${tableId}/${match.id}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields }),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Airtable update failed (${response.status}): ${detail}`);
+  }
+
+  return {
+    recordId: match.id,
+    previous: updates.map(update => ({
+      carrier: update.carrier,
+      status: textValue(match.fields[update.carrier]) || "None",
+      writingNumber: findWritingNumber(match.fields, update.carrier) || "",
+    })),
+  };
+}

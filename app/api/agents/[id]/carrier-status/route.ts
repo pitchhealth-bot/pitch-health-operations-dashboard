@@ -6,11 +6,8 @@ import {
   updateCarrierStatusesForAgent,
   type CarrierStatusUpdate,
 } from "@/lib/contracting";
-import {
-  canEdit,
-  getRoleForEmail,
-  isAuthConfigured,
-} from "@/lib/access";
+import { canEdit, isAuthConfigured } from "@/lib/access";
+import { getDashboardUserByEmail } from "@/lib/users";
 import { writeAuditEntry } from "@/lib/audit";
 
 export async function PATCH(
@@ -31,8 +28,10 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const role = getRoleForEmail(email);
-  if (!canEdit(role)) {
+  const dashboardUser = await getDashboardUserByEmail(email);
+  const role = dashboardUser?.role;
+
+  if (!dashboardUser || dashboardUser.status !== "active" || !canEdit(role)) {
     return NextResponse.json(
       { error: "Your account is read-only." },
       { status: 403 },

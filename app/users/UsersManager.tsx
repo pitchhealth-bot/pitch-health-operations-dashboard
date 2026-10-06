@@ -32,6 +32,7 @@ export default function UsersManager({
   const [message, setMessage] = useState("");
   const [savingId, setSavingId] = useState("");
   const [adding, setAdding] = useState(false);
+  const [invitingEmail, setInvitingEmail] = useState("");
 
   async function saveUser(user: DashboardUser) {
     setSavingId(user.id);
@@ -60,6 +61,28 @@ export default function UsersManager({
       setMessage(error instanceof Error ? error.message : "Could not save user.");
     } finally {
       setSavingId("");
+    }
+  }
+
+  async function sendInvite(email: string) {
+    setInvitingEmail(email);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/users/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error || "Could not send invite.");
+
+      setMessage(`Invite sent to ${email}.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not send invite.");
+    } finally {
+      setInvitingEmail("");
     }
   }
 
@@ -201,14 +224,24 @@ export default function UsersManager({
             <span className="muted">
               {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "Never"}
             </span>
-            <button
-              className="user-save-button"
-              type="button"
-              disabled={savingId === user.id}
-              onClick={() => saveUser(user)}
-            >
-              {savingId === user.id ? "Saving..." : "Save"}
-            </button>
+            <div className="user-row-actions">
+              <button
+                className="user-invite-button"
+                type="button"
+                disabled={invitingEmail === user.email}
+                onClick={() => sendInvite(user.email)}
+              >
+                {invitingEmail === user.email ? "Sending..." : "Send Invite"}
+              </button>
+              <button
+                className="user-save-button"
+                type="button"
+                disabled={savingId === user.id}
+                onClick={() => saveUser(user)}
+              >
+                {savingId === user.id ? "Saving..." : "Save"}
+              </button>
+            </div>
           </div>
         ))}
       </section>

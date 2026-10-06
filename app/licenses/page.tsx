@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
-import { daysUntil, getLicenseRecords, type LicenseRecord } from "@/lib/licenses";
+import { daysUntil, getLicenseRecords, residentStateFromValue, displayLicenseState, type LicenseRecord } from "@/lib/licenses";
 import { requireUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +14,19 @@ function formatDate(value?: string) {
     day: "numeric",
     year: "numeric",
   }).format(d);
+}
+
+function sortHref(key: string, currentSort: string, currentDir: string, q: string) {
+  const params = new URLSearchParams();
+  if (q) params.set("q", q);
+  params.set("sort", key);
+  params.set("dir", currentSort === key && currentDir === "asc" ? "desc" : "asc");
+  return `/licenses?${params.toString()}`;
+}
+
+function sortArrow(key: string, currentSort: string, currentDir: string) {
+  if (key !== currentSort) return "";
+  return currentDir === "asc" ? "↑" : "↓";
 }
 
 function normalize(value?: string) {
@@ -48,11 +61,11 @@ function groupKey(license: LicenseRecord, agentId?: string) {
 export default async function LicensesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: Promise<{ q?: string; sort?: string; dir?: string }>;
 }) {
   await requireUser();
 
-  const { q = "" } = await searchParams;
+  const { q = "", sort = "name", dir = "asc" } = await searchParams;
   const [{ records, error }, { agents }] = await Promise.all([
     getLicenseRecords(),
     getDashboardData(),
@@ -103,11 +116,25 @@ export default async function LicensesPage({
   const rows = [...grouped.values()]
     .map(group => {
       const sorted = [...group.licenses].sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
-      const states = [...new Set(sorted.map(row => row.license.state).filter(Boolean))] as string[];
+      const relatedRecords = records.filter(license => {
+        if (group.npn && license.npn && license.npn === group.npn) return true;
+        if (group.email && license.email && normalize(license.email) === normalize(group.email)) return true;
+        return Boolean(group.name && license.agentName && normalize(license.agentName) === normalize(group.name));
+      });
+      const residentState =
+        relatedRecords
+          .map(license => residentStateFromValue(license.state))
+          .find(Boolean) || "";
+      const states = [...new Set(
+        sorted
+          .map(row => displayLicenseState(row.license.state))
+          .filter(Boolean)
+      )] as string[];
       return {
         ...group,
         licenses: sorted,
         states,
+        residentState,
         nearest: sorted[0],
         expiredCount: sorted.filter(row => row.expired).length,
       };
@@ -125,7 +152,36 @@ export default async function LicensesPage({
         .filter(Boolean)
         .some(value => String(value).toLowerCase().includes(query));
     })
-    .sort((a, b) => (a.nearest.days ?? 99999) - (b.nearest.days ?? 99999));
+    .sort((a, b) => {
+      const direction = dir === "desc" ? -1 : 1;
+      const av =
+        sort === "status" ? (a.status || "") :
+        sort === "role" ? (a.role || "") :
+        sort === "count" ? a.licenses.length :
+        sort === "resident" ? (a.residentState || "") :
+        sort === "states" ? a.states.join(",") :
+        sort === "expiration" ? (a.nearest.license.expirationDate || "") :
+        sort === "expired" ? a.expiredCount :
+        a.name;
+      const bv =
+        sort === "status" ? (b.status || "") :
+        sort === "role" ? (b.role || "") :
+        sort === "count" ? b.licenses.length :
+        sort === "resident" ? (b.residentState || "") :
+        sort === "states" ? b.states.join(",") :
+        sort === "expiration" ? (b.nearest.license.expirationDate || "") :
+        sort === "expired" ? b.expiredCount :
+        b.name;
+
+      if (typeof av === "number" && typeof bv === "number") {
+        return (av - bv) * direction;
+      }
+
+      return String(av).localeCompare(String(bv), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      }) * direction;
+    });
 
   return (
     <main>
@@ -155,6 +211,8 @@ export default async function LicensesPage({
             placeholder="Search name, role, state, NPN..."
             className="search-input"
           />
+          <input type="hidden" name="sort" value={sort} />
+          <input type="hidden" name="dir" value={dir} />
           <button type="submit" className="filter-button">Search</button>
           {q && <Link href="/licenses" className="clear-link">Clear</Link>}
         </form>
@@ -162,13 +220,14 @@ export default async function LicensesPage({
 
       <section className="panel agents-list-panel">
         <div className="license-summary-head">
-          <span>Name</span>
-          <span>Status</span>
-          <span>Role</span>
-          <span>Licenses Expiring</span>
-          <span>States</span>
-          <span>Nearest Expiration</span>
-          <span>Expired?</span>
+          <Link className="sort-header" href={sortHref("name", sort, dir, q)}>Name <span className="sort-arrow">{sortArrow("name", sort, dir)}</span></Link>
+          <Link className="sort-header" href={sortHref("status", sort, dir, q)}>Status <span className="sort-arrow">{sortArrow("status", sort, dir)}</span></Link>
+          <Link className="sort-header" href={sortHref("role", sort, dir, q)}>Role <span className="sort-arrow">{sortArrow("role", sort, dir)}</span></Link>
+          <Link className="sort-header" href={sortHref("count", sort, dir, q)}>Licenses Expiring <span className="sort-arrow">{sortArrow("count", sort, dir)}</span></Link>
+          <Link className="sort-header" href={sortHref("resident", sort, dir, q)}>Resident State <span className="sort-arrow">{sortArrow("resident", sort, dir)}</span></Link>
+          <Link className="sort-header" href={sortHref("states", sort, dir, q)}>States <span className="sort-arrow">{sortArrow("states", sort, dir)}</span></Link>
+          <Link className="sort-header" href={sortHref("expiration", sort, dir, q)}>Nearest Expiration <span className="sort-arrow">{sortArrow("expiration", sort, dir)}</span></Link>
+          <Link className="sort-header" href={sortHref("expired", sort, dir, q)}>Expired? <span className="sort-arrow">{sortArrow("expired", sort, dir)}</span></Link>
         </div>
 
         {rows.length ? rows.map(group => {
@@ -194,6 +253,7 @@ export default async function LicensesPage({
               <div>
                 <span className="license-count-pill">{group.licenses.length}</span>
               </div>
+              <div><strong>{group.residentState || "—"}</strong></div>
               <div className="state-badges">
                 {group.states.slice(0, 5).map(state => <span key={state}>{state}</span>)}
                 {group.states.length > 5 && <span>+{group.states.length - 5}</span>}

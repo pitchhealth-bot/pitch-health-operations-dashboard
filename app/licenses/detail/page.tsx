@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
-import { daysUntil, getLicenseRecords, residentStateFromValue, displayLicenseState, isTrackedLicenseState } from "@/lib/licenses";
+import {
+  daysUntil,
+  getLicenseRecords,
+  residentStateFromValue,
+  displayLicenseState,
+  isTrackedLicenseState,
+} from "@/lib/licenses";
 import { requireUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +24,72 @@ function formatDate(value?: string) {
     day: "numeric",
     year: "numeric",
   }).format(d);
+}
+
+type ExpiringLicenseRow = {
+  license: {
+    id: string;
+    state?: string;
+    licenseNumber?: string;
+    expirationDate?: string;
+  };
+  days: number | null;
+  expired: boolean;
+};
+
+function LicenseSection({
+  title,
+  eyebrow,
+  rows,
+  emptyMessage,
+}: {
+  title: string;
+  eyebrow: string;
+  rows: ExpiringLicenseRow[];
+  emptyMessage: string;
+}) {
+  return (
+    <section className="panel agents-list-panel license-priority-section">
+      <div className="license-section-title">
+        <div>
+          <div className="eyebrow">{eyebrow}</div>
+          <h2>{title}</h2>
+        </div>
+        <span className="license-count-pill">{rows.length}</span>
+      </div>
+
+      <div className="license-detail-head">
+        <span>State</span>
+        <span>License Number</span>
+        <span>Expiration Date</span>
+        <span>Expired?</span>
+      </div>
+
+      {rows.length ? rows.map(({ license, days, expired }) => (
+        <div className="license-detail-row" key={license.id}>
+          <strong>{displayLicenseState(license.state) || "—"}</strong>
+          <span>{license.licenseNumber || "—"}</span>
+          <div>
+            <strong>{formatDate(license.expirationDate)}</strong>
+            <div className="muted">
+              {expired
+                ? `${Math.abs(days ?? 0)}d expired`
+                : `${days ?? 0}d remaining`}
+            </div>
+          </div>
+          <div>
+            <span className={expired ? "pill critical" : "pill warning"}>
+              {expired ? "Yes" : "No"}
+            </span>
+          </div>
+        </div>
+      )) : (
+        <div className="empty" style={{ minHeight: 110 }}>
+          {emptyMessage}
+        </div>
+      )}
+    </section>
+  );
 }
 
 export default async function LicenseDetailPage({
@@ -46,7 +118,7 @@ export default async function LicenseDetailPage({
         (params.name && normalize(a.name) === normalize(params.name))
       );
 
-  const allAgentLicenses = records.filter(license => isTrackedLicenseState(license.state)).filter(license => {
+  const allAgentLicenses = records.filter(license => {
     if (params.npn && license.npn && license.npn === params.npn) return true;
     if (params.email && license.email && normalize(license.email) === normalize(params.email)) return true;
     if (params.name && license.agentName && normalize(license.agentName) === normalize(params.name)) return true;
@@ -58,7 +130,7 @@ export default async function LicenseDetailPage({
       .map(license => residentStateFromValue(license.state))
       .find(Boolean) || "";
 
-  const filtered = allAgentLicenses
+  const expiring = allAgentLicenses
     .map(license => {
       const days = daysUntil(license.expirationDate);
       return {
@@ -70,7 +142,10 @@ export default async function LicenseDetailPage({
     .filter(row => row.days !== null && row.days <= 30)
     .sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
 
-  const displayName = agent?.name || params.name || filtered[0]?.license.agentName || "Agent";
+  const priority = expiring.filter(row => isTrackedLicenseState(row.license.state));
+  const nonPriority = expiring.filter(row => !isTrackedLicenseState(row.license.state));
+
+  const displayName = agent?.name || params.name || expiring[0]?.license.agentName || "Agent";
 
   return (
     <main>
@@ -79,7 +154,7 @@ export default async function LicenseDetailPage({
           <div className="eyebrow">LICENSE EXPIRATIONS</div>
           <h1>{displayName}</h1>
           <p className="page-subtitle">
-            Consolidated state licenses that are expired or expiring within 30 days.
+            Expired and expiring licenses are separated into priority and non-priority states.
           </p>
         </div>
         <Link className="back-link" href="/licenses">← License Expirations</Link>
@@ -111,42 +186,25 @@ export default async function LicenseDetailPage({
         </div>
         <div>
           <span>Expiring licenses</span>
-          <strong>{filtered.length}</strong>
+          <strong>{expiring.length}</strong>
         </div>
       </section>
 
-      <section className="panel agents-list-panel">
-        <div className="license-detail-head">
-          <span>State</span>
-          <span>License Number</span>
-          <span>Expiration Date</span>
-          <span>Expired?</span>
-        </div>
+      <div className="license-priority-grid">
+        <LicenseSection
+          eyebrow="PRIORITY STATES"
+          title="Priority Licenses"
+          rows={priority}
+          emptyMessage="No priority-state licenses are expired or expiring within 30 days."
+        />
 
-        {filtered.length ? filtered.map(({ license, days, expired }) => (
-          <div className="license-detail-row" key={license.id}>
-            <strong>{displayLicenseState(license.state) || "—"}</strong>
-            <span>{license.licenseNumber || "—"}</span>
-            <div>
-              <strong>{formatDate(license.expirationDate)}</strong>
-              <div className="muted">
-                {expired
-                  ? `${Math.abs(days ?? 0)}d expired`
-                  : `${days ?? 0}d remaining`}
-              </div>
-            </div>
-            <div>
-              <span className={expired ? "pill critical" : "pill warning"}>
-                {expired ? "Yes" : "No"}
-              </span>
-            </div>
-          </div>
-        )) : (
-          <div className="empty" style={{ minHeight: 180 }}>
-            No expiring licenses found for this agent.
-          </div>
-        )}
-      </section>
+        <LicenseSection
+          eyebrow="NON-PRIORITY STATES"
+          title="Non-Priority Licenses"
+          rows={nonPriority}
+          emptyMessage="No non-priority-state licenses are expired or expiring within 30 days."
+        />
+      </div>
     </main>
   );
 }

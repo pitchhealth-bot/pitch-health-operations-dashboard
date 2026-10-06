@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import type { Agent, DashboardData, PipelineStage } from "./types";
 import { sampleAgents } from "./mock-data";
-import { getLicenseRecords, daysUntil, isTrackedLicenseState } from "./licenses";
+import { getLicenseRecords, daysUntil } from "./licenses";
 
 const allowedStages: PipelineStage[] = ["Pre-Licensing","Exam","Pre-Contracting","Contracting","RTS"];
 
@@ -206,7 +206,6 @@ async function loadDashboardData(): Promise<DashboardData> {
         const agentName = agent.name.trim().toLowerCase();
 
         const matches = licenseData.records
-          .filter(license => isTrackedLicenseState(license.state))
           .filter(license => {
           if (agentNpn && license.npn && license.npn.trim() === agentNpn) return true;
           if (agentEmail && license.email && license.email.trim().toLowerCase() === agentEmail) return true;

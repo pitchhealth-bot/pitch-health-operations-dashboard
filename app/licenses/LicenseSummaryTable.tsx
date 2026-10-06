@@ -183,8 +183,18 @@ export default function LicenseSummaryTable({ rows }: { rows: LicenseSummaryRow[
                 </div>
               </div>
               <div>
-                <span className={group.expiredCount ? "pill critical" : "pill warning"}>
-                  {group.expiredCount ? `Yes · ${group.expiredCount}` : "No"}
+                <span className={
+                  group.expiredCount
+                    ? "pill critical"
+                    : group.nearestDays >= 0 && group.nearestDays <= 30
+                      ? "pill warning"
+                      : "pill"
+                }>
+                  {group.expiredCount
+                    ? `Yes · ${group.expiredCount}`
+                    : group.nearestDays >= 0 && group.nearestDays <= 30
+                      ? "Almost"
+                      : "No"}
                 </span>
               </div>
             </div>

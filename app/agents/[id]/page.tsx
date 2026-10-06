@@ -73,6 +73,13 @@ export default async function AgentProfilePage({
 }) {
   const current = await requireUser();
   const { id } = await params;
+
+  if (
+    current.role === "agent" &&
+    current.dashboardUser?.airtableAgentRecordId !== id
+  ) {
+    notFound();
+  }
   const { agents } = await getDashboardData();
   const agent = agents.find(a => a.id === id);
 

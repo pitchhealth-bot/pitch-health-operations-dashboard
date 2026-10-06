@@ -1,3 +1,5 @@
+import { unstable_cache } from "next/cache";
+
 export type LicenseRecord = {
   id: string;
   agentName?: string;
@@ -30,7 +32,7 @@ function findField(fields: Record<string, unknown>, aliases: string[]) {
   return undefined;
 }
 
-export async function getLicenseRecords(): Promise<{
+async function loadLicenseRecords(): Promise<{
   records: LicenseRecord[];
   error?: string;
 }> {
@@ -119,3 +121,10 @@ export function displayLicenseState(value?: string) {
   if (!value) return "";
   return residentStateFromValue(value) || value.trim();
 }
+
+
+export const getLicenseRecords = unstable_cache(
+  loadLicenseRecords,
+  ["pitch-license-records-v2"],
+  { revalidate: 30, tags: ["licenses-data"] },
+);

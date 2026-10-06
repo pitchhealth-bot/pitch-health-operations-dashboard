@@ -158,10 +158,7 @@ export default function LicenseSummaryTable({ rows }: { rows: LicenseSummaryRow[
           return (
             <div className="license-summary-row" key={group.key}>
               <div>
-                <Link
-                  className="agent-name-link"
-                  href={group.agentId ? `/agents/${group.agentId}` : `/licenses/detail?${params.toString()}`}
-                >
+                <Link className="agent-name-link" href={`/licenses/detail?${params.toString()}`}>
                   <strong>{group.name}</strong>
                 </Link>
               </div>

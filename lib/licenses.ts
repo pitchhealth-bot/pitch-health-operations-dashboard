@@ -128,3 +128,19 @@ export const getLicenseRecords = unstable_cache(
   ["pitch-license-records-v2"],
   { revalidate: 30, tags: ["licenses-data"] },
 );
+
+
+export const TRACKED_LICENSE_STATES = new Set([
+  "IA","FL","AL","AZ","GA","IL","IN","LA","MI","MO",
+  "MS","NC","NM","OH","OK","PA","SC","TN","VA","TX",
+]);
+
+export function normalizedLicenseState(value?: string) {
+  if (!value) return "";
+  return (residentStateFromValue(value) || value).trim().toUpperCase();
+}
+
+export function isTrackedLicenseState(value?: string) {
+  const state = normalizedLicenseState(value);
+  return Boolean(state && TRACKED_LICENSE_STATES.has(state));
+}

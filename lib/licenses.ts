@@ -4,6 +4,7 @@ export type LicenseRecord = {
   email?: string;
   npn?: string;
   state?: string;
+  licenseNumber?: string;
   expirationDate?: string;
   status?: string;
 };
@@ -79,6 +80,7 @@ export async function getLicenseRecords(): Promise<{
           email: asText(findField(f, ["PHS Email","Work Email","Email","Personal Email"])),
           npn: asText(findField(f, ["NPN","National Producer Number"])),
           state: asText(findField(f, ["State","License State","Licensed State"])),
+          licenseNumber: asText(findField(f, ["License Number","License #","License No","License No.","State License Number"])),
           expirationDate: asText(findField(f, [
             "Expiration Date",
             "License Expiration",

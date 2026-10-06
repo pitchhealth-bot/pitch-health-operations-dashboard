@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
-import { daysUntil, getLicenseRecords, residentStateFromValue, displayLicenseState, type LicenseRecord } from "@/lib/licenses";
+import { daysUntil, getLicenseRecords, residentStateFromValue, displayLicenseState, isTrackedLicenseState, type LicenseRecord } from "@/lib/licenses";
 import { requireUser } from "@/lib/session";
 import LicenseSummaryTable from "./LicenseSummaryTable";
 
@@ -55,6 +55,7 @@ export default async function LicensesPage() {
 
 
   const expiring = records
+    .filter(license => isTrackedLicenseState(license.state))
     .map(license => {
       const agent = findAgent(license, agents);
       const days = daysUntil(license.expirationDate);
@@ -97,7 +98,7 @@ export default async function LicensesPage() {
   const rows = [...grouped.values()]
     .map(group => {
       const sorted = [...group.licenses].sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
-      const relatedRecords = records.filter(license => {
+      const relatedRecords = records.filter(license => isTrackedLicenseState(license.state)).filter(license => {
         if (group.npn && license.npn && license.npn === group.npn) return true;
         if (group.email && license.email && normalize(license.email) === normalize(group.email)) return true;
         return Boolean(group.name && license.agentName && normalize(license.agentName) === normalize(group.name));

@@ -29,9 +29,17 @@ export async function PATCH(
   }
 
   const dashboardUser = await getDashboardUserByEmail(email);
-  const role = dashboardUser?.role;
 
-  if (!dashboardUser || dashboardUser.status !== "active" || !canEdit(role)) {
+  if (!dashboardUser || dashboardUser.status !== "active") {
+    return NextResponse.json(
+      { error: "Your account is not active." },
+      { status: 403 },
+    );
+  }
+
+  const role = dashboardUser.role;
+
+  if (!canEdit(role)) {
     return NextResponse.json(
       { error: "Your account is read-only." },
       { status: 403 },

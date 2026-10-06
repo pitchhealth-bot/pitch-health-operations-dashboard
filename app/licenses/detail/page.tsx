@@ -7,7 +7,7 @@ import {
   displayLicenseState,
   isTrackedLicenseState,
 } from "@/lib/licenses";
-import { requireUser } from "@/lib/session";
+import { requireRole } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -112,7 +112,7 @@ export default async function LicenseDetailPage({
     name?: string;
   }>;
 }) {
-  await requireUser();
+  await requireRole(["admin", "super_admin"]);
 
   const params = await searchParams;
   const [{ records, error }, { agents }] = await Promise.all([

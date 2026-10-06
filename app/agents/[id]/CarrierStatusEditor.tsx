@@ -227,7 +227,7 @@ export default function CarrierStatusEditor({
 
       {!editable && (
         <div className="carrier-readonly-note">
-          Carrier changes are available to Editor and Superadmin accounts.
+          Carrier changes are available to Admin and Super Admin accounts.
         </div>
       )}
     </section>

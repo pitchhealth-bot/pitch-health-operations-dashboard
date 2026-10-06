@@ -349,3 +349,11 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .user-save-button{border:0;border-radius:9px;padding:8px 11px;background:var(--purple);color:#fff;font-size:9px;font-weight:850;cursor:pointer}
 .user-save-button:hover{background:var(--purple-dark)}.user-save-button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:1100px){.user-create-grid{grid-template-columns:1fr 1fr}.user-create-grid .filter-button{width:100%}}
+
+.user-row-actions{display:flex;gap:6px;align-items:center}
+.user-invite-button{border:1px solid #d9d0fb;border-radius:9px;padding:8px 10px;background:#f4f0ff;color:var(--purple);font-size:9px;font-weight:850;cursor:pointer;white-space:nowrap}
+.user-invite-button:hover{background:#ebe4ff}.user-invite-button:disabled{opacity:.5;cursor:not-allowed}
+.login-email-input{width:100%;border:1px solid var(--line);background:#fafafe;border-radius:11px;padding:12px 13px;margin-bottom:10px;font-size:12px;outline:none}
+.login-email-input:focus{border-color:#bbaaf8;box-shadow:0 0 0 3px var(--purple-soft);background:#fff}
+.google-login:disabled{opacity:.55;cursor:not-allowed}
+.login-message{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--purple-softer);color:var(--purple);font-size:10px;font-weight:750}

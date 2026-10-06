@@ -11,19 +11,29 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const session = isAuthConfigured() ? await auth() : null;
+  const authConfigured = isAuthConfigured();
+  const session = authConfigured ? await auth() : null;
   const dashboardUser = session?.user?.email
     ? await getDashboardUserByEmail(session.user.email).catch(() => null)
     : null;
 
-  const user = session?.user?.email && dashboardUser
-    ? {
-        name: session.user.name || dashboardUser.name,
-        email: session.user.email,
-        role: dashboardUser.role,
-        airtableAgentRecordId: dashboardUser.airtableAgentRecordId,
-      }
-    : null;
+  const user = authConfigured
+    ? (
+        session?.user?.email && dashboardUser
+          ? {
+              name: session.user.name || dashboardUser.name,
+              email: session.user.email,
+              role: dashboardUser.role,
+              airtableAgentRecordId: dashboardUser.airtableAgentRecordId,
+            }
+          : null
+      )
+    : {
+        name: "Setup Admin",
+        email: null,
+        role: "super_admin" as const,
+        airtableAgentRecordId: undefined,
+      };
 
   return (
     <html lang="en">

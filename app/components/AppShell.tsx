@@ -9,7 +9,7 @@ export default function AppShell({
   user,
 }: {
   children: React.ReactNode;
-  user?: { name?: string | null; email?: string | null; role: AppRole } | null;
+  user?: { name?: string | null; email?: string | null; role: AppRole; airtableAgentRecordId?: string } | null;
 }) {
   const pathname = usePathname();
 

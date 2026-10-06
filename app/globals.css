@@ -274,3 +274,14 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .license-detail-head{padding:13px 18px;color:#8d8798;font-size:9px;text-transform:uppercase;letter-spacing:.08em;background:#faf9fd;border-bottom:1px solid var(--line);font-weight:850}
 .license-detail-row{padding:13px 18px;border-bottom:1px solid var(--line);font-size:11px}.license-detail-row:last-child{border-bottom:0}.license-detail-row:hover{background:#fbfaff}
 @media(max-width:800px){.license-agent-summary{grid-template-columns:repeat(2,1fr)}}
+
+.route-loading-head{display:grid;gap:9px;margin-bottom:26px}
+.loading-card-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+.loading-card{height:132px;border:1px solid var(--line);border-radius:18px;background:#fff;padding:18px;box-shadow:var(--shadow)}
+.loading-line{position:relative;overflow:hidden;background:#eceaf2;border-radius:999px}
+.loading-line:after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);animation:loading-shimmer 1.1s infinite}
+.loading-eyebrow{width:160px;height:9px}.loading-title{width:330px;max-width:70%;height:32px}.loading-subtitle{width:520px;max-width:90%;height:12px}
+.loading-label{width:45%;height:10px}.loading-number{width:58px;height:34px;margin-top:20px}.loading-small{width:55%;height:9px;margin-top:13px}
+.loading-panel{display:grid;gap:14px}.loading-wide{height:14px;width:100%}
+@keyframes loading-shimmer{100%{transform:translateX(100%)}}
+@media(max-width:950px){.loading-card-grid{grid-template-columns:repeat(2,1fr)}}

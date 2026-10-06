@@ -295,3 +295,7 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .license-section-title{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 12px}
 .license-section-title h2{margin:4px 0 0}
 .license-priority-section{padding:0}
+
+.license-detail-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.record-link-button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:var(--purple);color:#fff;padding:9px 13px;border-radius:10px;font-size:11px;font-weight:850;box-shadow:0 8px 18px rgba(79,43,200,.16)}
+.record-link-button:hover{background:var(--purple-dark)}

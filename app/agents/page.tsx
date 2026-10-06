@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
 import type { Agent } from "@/lib/types";
-import { requireUser } from "@/lib/session";
+import { requireRole } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
@@ -73,7 +73,7 @@ export default async function AgentsPage({
     filter?: string;
   }>;
 }) {
-  await requireUser();
+  await requireRole(["admin", "super_admin"]);
   const params = await searchParams;
   const q = params.q || "";
   const licensing = params.licensing || "";

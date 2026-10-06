@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getDashboardData } from "@/lib/airtable";
 import { getAhip2027ForAgent, getCarrierStatusesForAgent, getSunFireReportForAgent } from "@/lib/contracting";
 import { requireUser } from "@/lib/session";
+import { canEdit } from "@/lib/access";
+import CarrierStatusEditor from "./CarrierStatusEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -69,7 +71,7 @@ export default async function AgentProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireUser();
+  const current = await requireUser();
   const { id } = await params;
   const { agents } = await getDashboardData();
   const agent = agents.find(a => a.id === id);
@@ -216,46 +218,11 @@ export default async function AgentProfilePage({
         </aside>
       </div>
 
-      <section className="panel employee-section carrier-section">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow">CARRIER READINESS</div>
-            <h2>Carrier Status</h2>
-          </div>
-        </div>
-
-        <div className="carrier-status-list">
-          <div className="carrier-status-head">
-            <span>Carrier</span>
-            <span>Status</span>
-            <span>Writing Number</span>
-          </div>
-
-          {carrierStatuses.map(item => (
-            <div className="carrier-status-row" key={item.carrier}>
-              <strong>{item.carrier}</strong>
-              <div>
-                <span className={
-                  item.status.toLowerCase() === "rts"
-                    ? "pill carrier-rts"
-                    : item.status.toLowerCase() === "completed"
-                      ? "pill carrier-completed"
-                      : item.status.toLowerCase() === "requested"
-                        ? "pill carrier-requested"
-                        : item.status.toLowerCase() === "ineligible"
-                          ? "pill carrier-ineligible"
-                          : "pill carrier-none"
-                }>
-                  {item.status}
-                </span>
-              </div>
-              <span className="carrier-writing">
-                {item.status.toLowerCase() === "rts" ? (item.writingNumber || "None") : "None"}
-              </span>
-            </div>
-          ))}
-        </div>
-      </section>
+      <CarrierStatusEditor
+        agentId={agent.id}
+        initialStatuses={carrierStatuses}
+        editable={canEdit(current.role)}
+      />
 
     </main>
   );

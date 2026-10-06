@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
-import { daysUntil, getLicenseRecords } from "@/lib/licenses";
+import { daysUntil, getLicenseRecords, residentStateFromValue, displayLicenseState } from "@/lib/licenses";
 import { requireUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -46,13 +46,19 @@ export default async function LicenseDetailPage({
         (params.name && normalize(a.name) === normalize(params.name))
       );
 
-  const filtered = records
-    .filter(license => {
-      if (params.npn && license.npn && license.npn === params.npn) return true;
-      if (params.email && license.email && normalize(license.email) === normalize(params.email)) return true;
-      if (params.name && license.agentName && normalize(license.agentName) === normalize(params.name)) return true;
-      return false;
-    })
+  const allAgentLicenses = records.filter(license => {
+    if (params.npn && license.npn && license.npn === params.npn) return true;
+    if (params.email && license.email && normalize(license.email) === normalize(params.email)) return true;
+    if (params.name && license.agentName && normalize(license.agentName) === normalize(params.name)) return true;
+    return false;
+  });
+
+  const residentState =
+    allAgentLicenses
+      .map(license => residentStateFromValue(license.state))
+      .find(Boolean) || "";
+
+  const filtered = allAgentLicenses
     .map(license => {
       const days = daysUntil(license.expirationDate);
       return {
@@ -100,6 +106,10 @@ export default async function LicenseDetailPage({
           <strong>{agent?.npn || params.npn || "—"}</strong>
         </div>
         <div>
+          <span>Resident State</span>
+          <strong>{residentState || "—"}</strong>
+        </div>
+        <div>
           <span>Expiring licenses</span>
           <strong>{filtered.length}</strong>
         </div>
@@ -115,7 +125,7 @@ export default async function LicenseDetailPage({
 
         {filtered.length ? filtered.map(({ license, days, expired }) => (
           <div className="license-detail-row" key={license.id}>
-            <strong>{license.state || "—"}</strong>
+            <strong>{displayLicenseState(license.state) || "—"}</strong>
             <span>{license.licenseNumber || "—"}</span>
             <div>
               <strong>{formatDate(license.expirationDate)}</strong>

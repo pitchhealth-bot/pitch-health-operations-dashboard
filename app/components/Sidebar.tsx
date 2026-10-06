@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import type { AppRole } from "@/lib/access";
 
 export default function Sidebar({
@@ -16,6 +15,11 @@ export default function Sidebar({
   } | null;
 }) {
   const pathname = usePathname();
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/login";
+  }
 
   const adminItems = [
     { href: "/", label: "Dashboard", icon: "⌂" },
@@ -87,7 +91,7 @@ export default function Sidebar({
           </div>
           <button
             className="sidebar-signout"
-            onClick={() => signOut({ redirectTo: "/login" })}
+            onClick={logout}
             title="Sign out"
           >
             ↗

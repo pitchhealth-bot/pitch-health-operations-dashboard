@@ -160,7 +160,7 @@ export default async function LicensesPage({
         sort === "count" ? a.licenses.length :
         sort === "resident" ? (a.residentState || "") :
         sort === "states" ? a.states.join(",") :
-        sort === "expiration" ? (a.nearest.license.expirationDate || "") :
+        sort === "expiration" ? (a.nearest.days ?? 99999) :
         sort === "expired" ? a.expiredCount :
         a.name;
       const bv =
@@ -169,7 +169,7 @@ export default async function LicensesPage({
         sort === "count" ? b.licenses.length :
         sort === "resident" ? (b.residentState || "") :
         sort === "states" ? b.states.join(",") :
-        sort === "expiration" ? (b.nearest.license.expirationDate || "") :
+        sort === "expiration" ? (b.nearest.days ?? 99999) :
         sort === "expired" ? b.expiredCount :
         b.name;
 

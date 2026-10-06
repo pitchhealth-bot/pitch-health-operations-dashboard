@@ -1,3 +1,10 @@
+import { unstable_cache } from "next/cache";
+
+type AirtableRecord = {
+  id: string;
+  fields: Record<string, unknown>;
+};
+
 type ContractingSource = {
   key: string;
   tableId?: string;
@@ -6,9 +13,33 @@ type ContractingSource = {
   error?: string;
 };
 
-async function fetchCount(baseId: string, tableId: string, token: string) {
+export type CarrierStatus = {
+  carrier: string;
+  status: string;
+  writingNumber?: string;
+};
+
+function textValue(value: unknown) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value).trim();
+  }
+  if (Array.isArray(value)) return value.map(String).join(", ").trim();
+  return "";
+}
+
+function normalizeFieldName(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+async function fetchAllRecords(tableId?: string): Promise<AirtableRecord[]> {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
+
+  if (!token || !baseId || !tableId) return [];
+
+  const records: AirtableRecord[] = [];
   let offset: string | undefined;
-  let count = 0;
 
   do {
     const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableId}`);
@@ -26,30 +57,61 @@ async function fetchCount(baseId: string, tableId: string, token: string) {
     }
 
     const json = await response.json() as {
-      records: Array<{ id: string }>;
+      records: AirtableRecord[];
       offset?: string;
     };
 
-    count += json.records.length;
+    records.push(...json.records);
     offset = json.offset;
   } while (offset);
 
-  return count;
+  return records;
 }
+
+const getTable1Records = unstable_cache(
+  async () => fetchAllRecords(process.env.AIRTABLE_TABLE_ID_CONTRACTING_1),
+  ["pitch-contracting-table-1-v2"],
+  { revalidate: 30, tags: ["contracting-data", "contracting-table-1"] },
+);
+
+const getTable2Records = unstable_cache(
+  async () => fetchAllRecords(process.env.AIRTABLE_TABLE_ID_CONTRACTING_2),
+  ["pitch-contracting-table-2-v2"],
+  { revalidate: 30, tags: ["contracting-data", "contracting-table-2"] },
+);
+
+const getTable3Records = unstable_cache(
+  async () => fetchAllRecords(process.env.AIRTABLE_TABLE_ID_CONTRACTING_3),
+  ["pitch-contracting-table-3-v2"],
+  { revalidate: 30, tags: ["contracting-data", "contracting-table-3"] },
+);
 
 export async function getContractingSources(): Promise<ContractingSource[]> {
   const token = process.env.AIRTABLE_PAT;
   const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
 
   const tables = [
-    { key: "Contracting Documents & Information", tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_1 },
-    { key: "Licensing Stages (Tracker)", tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_2 },
-    { key: "Contracting and RTS Tracker", tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_3 },
+    {
+      key: "Contracting Documents & Information",
+      tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_1,
+      loader: getTable1Records,
+    },
+    {
+      key: "Licensing Stages (Tracker)",
+      tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_2,
+      loader: getTable2Records,
+    },
+    {
+      key: "Contracting and RTS Tracker",
+      tableId: process.env.AIRTABLE_TABLE_ID_CONTRACTING_3,
+      loader: getTable3Records,
+    },
   ];
 
   if (!token || !baseId) {
-    return tables.map(t => ({
-      ...t,
+    return tables.map(({ key, tableId }) => ({
+      key,
+      tableId,
       count: 0,
       ok: false,
       error: !token ? "AIRTABLE_PAT missing" : "AIRTABLE_BASE_ID_CONTRACTING missing",
@@ -57,17 +119,18 @@ export async function getContractingSources(): Promise<ContractingSource[]> {
   }
 
   return Promise.all(
-    tables.map(async t => {
-      if (!t.tableId) {
-        return { ...t, count: 0, ok: false, error: `${t.key} ID missing` };
+    tables.map(async ({ key, tableId, loader }) => {
+      if (!tableId) {
+        return { key, tableId, count: 0, ok: false, error: `${key} ID missing` };
       }
 
       try {
-        const count = await fetchCount(baseId, t.tableId, token);
-        return { ...t, count, ok: true };
+        const records = await loader();
+        return { key, tableId, count: records.length, ok: true };
       } catch (error) {
         return {
-          ...t,
+          key,
+          tableId,
           count: 0,
           ok: false,
           error: error instanceof Error ? error.message : "Unknown Airtable error",
@@ -77,79 +140,45 @@ export async function getContractingSources(): Promise<ContractingSource[]> {
   );
 }
 
-
-export async function getAhip2027ForAgent(email?: string) {
-  const token = process.env.AIRTABLE_PAT;
-  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
-  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_1;
-
-  if (!token || !baseId || !tableId || !email) return [];
-
-  const records: Array<{ id: string; fields: Record<string, unknown> }> = [];
-  let offset: string | undefined;
-
-  do {
-    const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableId}`);
-    url.searchParams.set("pageSize", "100");
-    if (offset) url.searchParams.set("offset", offset);
-
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-
-    if (!response.ok) return [];
-
-    const json = await response.json() as {
-      records: Array<{ id: string; fields: Record<string, unknown> }>;
-      offset?: string;
-    };
-
-    records.push(...json.records);
-    offset = json.offset;
-  } while (offset);
-
-  const target = email.trim().toLowerCase();
-  const match = records.find(record => {
-    const value = record.fields["PHS Email"];
-    return typeof value === "string" && value.trim().toLowerCase() === target;
-  });
-
-  const value = match?.fields["2027 AHIP Document"];
+function attachmentList(value: unknown, fallbackName: string) {
   if (!Array.isArray(value)) return [];
 
   return value.flatMap(item => {
     if (!item || typeof item !== "object") return [];
-    const a = item as Record<string, unknown>;
-    if (typeof a.url !== "string") return [];
+    const attachment = item as Record<string, unknown>;
+    if (typeof attachment.url !== "string") return [];
+
     return [{
-      id: typeof a.id === "string" ? a.id : undefined,
-      url: a.url,
-      filename: typeof a.filename === "string" ? a.filename : "AHIP 2027",
-      size: typeof a.size === "number" ? a.size : undefined,
-      type: typeof a.type === "string" ? a.type : undefined,
+      id: typeof attachment.id === "string" ? attachment.id : undefined,
+      url: attachment.url,
+      filename: typeof attachment.filename === "string" ? attachment.filename : fallbackName,
+      size: typeof attachment.size === "number" ? attachment.size : undefined,
+      type: typeof attachment.type === "string" ? attachment.type : undefined,
     }];
   });
 }
 
+function emailMatches(record: AirtableRecord, email: string) {
+  const target = email.trim().toLowerCase();
+  const candidates = [
+    textValue(record.fields["PHS Email"]),
+    textValue(record.fields["Work Email"]),
+    textValue(record.fields["Email"]),
+  ].map(value => value.toLowerCase()).filter(Boolean);
 
-export type CarrierStatus = {
-  carrier: string;
-  status: string;
-  writingNumber?: string;
-};
-
-function normalizeFieldName(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return candidates.includes(target);
 }
 
-function textValue(value: unknown) {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-    return String(value).trim();
+export async function getAhip2027ForAgent(email?: string) {
+  if (!email) return [];
+
+  try {
+    const records = await getTable1Records();
+    const match = records.find(record => emailMatches(record, email));
+    return attachmentList(match?.fields["2027 AHIP Document"], "AHIP 2027");
+  } catch {
+    return [];
   }
-  if (Array.isArray(value)) return value.map(String).join(", ").trim();
-  return "";
 }
 
 function findWritingNumber(fields: Record<string, unknown>, carrier: string) {
@@ -167,8 +196,8 @@ function findWritingNumber(fields: Record<string, unknown>, carrier: string) {
       );
 
     if (looksLikeWritingNumber) {
-      const text = textValue(value);
-      if (text) return text;
+      const valueText = textValue(value);
+      if (valueText) return valueText;
     }
   }
 
@@ -178,126 +207,43 @@ function findWritingNumber(fields: Record<string, unknown>, carrier: string) {
 export async function getCarrierStatusesForAgent(email?: string): Promise<CarrierStatus[]> {
   const carriers = ["Aetna","Humana","Cigna","UHC","Zing","Devoted","UNL","Wellcare","Heartland"];
 
-  const token = process.env.AIRTABLE_PAT;
-  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
-  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_3;
-
-  if (!token || !baseId || !tableId || !email) {
+  if (!email) {
     return carriers.map(carrier => ({ carrier, status: "None" }));
   }
 
-  const records: Array<{ id: string; fields: Record<string, unknown> }> = [];
-  let offset: string | undefined;
+  try {
+    const records = await getTable3Records();
+    const match = records.find(record => emailMatches(record, email));
 
-  do {
-    const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableId}`);
-    url.searchParams.set("pageSize", "100");
-    if (offset) url.searchParams.set("offset", offset);
-
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
+    if (!match) {
       return carriers.map(carrier => ({ carrier, status: "None" }));
     }
 
-    const json = await response.json() as {
-      records: Array<{ id: string; fields: Record<string, unknown> }>;
-      offset?: string;
-    };
+    return carriers.map(carrier => {
+      const status = textValue(match.fields[carrier]) || "None";
+      const writingNumber = /^rts$/i.test(status)
+        ? findWritingNumber(match.fields, carrier)
+        : "";
 
-    records.push(...json.records);
-    offset = json.offset;
-  } while (offset);
-
-  const target = email.trim().toLowerCase();
-  const match = records.find(record => {
-    const candidates = [
-      textValue(record.fields["PHS Email"]),
-      textValue(record.fields["Work Email"]),
-      textValue(record.fields["Email"]),
-    ].map(v => v.toLowerCase()).filter(Boolean);
-
-    return candidates.includes(target);
-  });
-
-  if (!match) {
+      return {
+        carrier,
+        status,
+        writingNumber: writingNumber || undefined,
+      };
+    });
+  } catch {
     return carriers.map(carrier => ({ carrier, status: "None" }));
   }
-
-  return carriers.map(carrier => {
-    const status = textValue(match.fields[carrier]) || "None";
-    const writingNumber = /^rts$/i.test(status)
-      ? findWritingNumber(match.fields, carrier)
-      : "";
-
-    return {
-      carrier,
-      status,
-      writingNumber: writingNumber || undefined,
-    };
-  });
 }
 
-
 export async function getSunFireReportForAgent(email?: string) {
-  const token = process.env.AIRTABLE_PAT;
-  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
-  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_3;
+  if (!email) return [];
 
-  if (!token || !baseId || !tableId || !email) return [];
-
-  const records: Array<{ id: string; fields: Record<string, unknown> }> = [];
-  let offset: string | undefined;
-
-  do {
-    const url = new URL(`https://api.airtable.com/v0/${baseId}/${tableId}`);
-    url.searchParams.set("pageSize", "100");
-    if (offset) url.searchParams.set("offset", offset);
-
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-
-    if (!response.ok) return [];
-
-    const json = await response.json() as {
-      records: Array<{ id: string; fields: Record<string, unknown> }>;
-      offset?: string;
-    };
-
-    records.push(...json.records);
-    offset = json.offset;
-  } while (offset);
-
-  const target = email.trim().toLowerCase();
-  const match = records.find(record => {
-    const candidates = [
-      textValue(record.fields["PHS Email"]),
-      textValue(record.fields["Work Email"]),
-      textValue(record.fields["Email"]),
-    ].map(v => v.toLowerCase()).filter(Boolean);
-
-    return candidates.includes(target);
-  });
-
-  const value = match?.fields["SunFire Report copy"];
-  if (!Array.isArray(value)) return [];
-
-  return value.flatMap(item => {
-    if (!item || typeof item !== "object") return [];
-    const a = item as Record<string, unknown>;
-    if (typeof a.url !== "string") return [];
-
-    return [{
-      id: typeof a.id === "string" ? a.id : undefined,
-      url: a.url,
-      filename: typeof a.filename === "string" ? a.filename : "SunFire Report",
-      size: typeof a.size === "number" ? a.size : undefined,
-      type: typeof a.type === "string" ? a.type : undefined,
-    }];
-  });
+  try {
+    const records = await getTable3Records();
+    const match = records.find(record => emailMatches(record, email));
+    return attachmentList(match?.fields["SunFire Report copy"], "SunFire Report");
+  } catch {
+    return [];
+  }
 }

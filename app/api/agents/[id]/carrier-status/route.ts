@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { getSessionEmail } from "@/lib/app-session";
 import { getDashboardData } from "@/lib/airtable";
 import {
   getCarrierStatusesForAgent,
   updateCarrierStatusesForAgent,
   type CarrierStatusUpdate,
 } from "@/lib/contracting";
-import { canEdit, isAuthConfigured } from "@/lib/access";
+import { canEdit } from "@/lib/access";
 import { getDashboardUserByEmail } from "@/lib/users";
 import { writeAuditEntry } from "@/lib/audit";
 
@@ -14,15 +14,7 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  if (!isAuthConfigured()) {
-    return NextResponse.json(
-      { error: "Authentication must be configured before editing is enabled." },
-      { status: 503 },
-    );
-  }
-
-  const session = await auth();
-  const email = session?.user?.email;
+  const email = await getSessionEmail();
 
   if (!email) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
@@ -82,7 +74,7 @@ export async function PATCH(
         if ((previous?.status || "None") !== update.status) {
           entries.push(writeAuditEntry({
             userEmail: email,
-            userName: session.user?.name || "",
+            userName: dashboardUser.name || "",
             role,
             action: "Updated carrier status",
             entityType: "Agent",

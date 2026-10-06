@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
-import { daysUntil, getLicenseRecords, residentStateFromValue, displayLicenseState } from "@/lib/licenses";
+import { daysUntil, getLicenseRecords, residentStateFromValue, displayLicenseState, isTrackedLicenseState } from "@/lib/licenses";
 import { requireUser } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +46,7 @@ export default async function LicenseDetailPage({
         (params.name && normalize(a.name) === normalize(params.name))
       );
 
-  const allAgentLicenses = records.filter(license => {
+  const allAgentLicenses = records.filter(license => isTrackedLicenseState(license.state)).filter(license => {
     if (params.npn && license.npn && license.npn === params.npn) return true;
     if (params.email && license.email && normalize(license.email) === normalize(params.email)) return true;
     if (params.name && license.agentName && normalize(license.agentName) === normalize(params.name)) return true;

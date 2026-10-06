@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import { isAuthConfigured } from "@/lib/access";
+import { getSessionEmail } from "@/lib/app-session";
 import {
   getDashboardUserByEmail,
   createDashboardUser,
@@ -9,20 +8,12 @@ import {
 } from "@/lib/users";
 
 async function requireSuperAdminJson() {
-  if (!isAuthConfigured()) {
-    return {
-      error: NextResponse.json(
-        { error: "Google authentication is not configured yet." },
-        { status: 401 },
-      ),
-    };
-  }
-
-  const session = await auth();
-  const email = session?.user?.email;
+  const email = await getSessionEmail();
 
   if (!email) {
-    return { error: NextResponse.json({ error: "Unauthorized." }, { status: 401 }) };
+    return {
+      error: NextResponse.json({ error: "Unauthorized." }, { status: 401 }),
+    };
   }
 
   const current = await getDashboardUserByEmail(email);
@@ -35,7 +26,7 @@ async function requireSuperAdminJson() {
     };
   }
 
-  return { session, current };
+  return { current };
 }
 
 export async function POST(request: Request) {
@@ -55,26 +46,20 @@ export async function POST(request: Request) {
       );
     }
 
-    // Safe one-time bootstrap before Google OAuth is configured.
-    if (!isAuthConfigured()) {
-      const existingUsers = await listDashboardUsers();
+    const existingUsers = await listDashboardUsers();
+    const sessionEmail = await getSessionEmail();
 
+    if (!sessionEmail && !existingUsers.some(user => Boolean(user.lastLoginAt))) {
       if (existingUsers.length > 0) {
         return NextResponse.json(
-          {
-            error:
-              "The first Super Admin already exists. Configure Google sign-in before managing additional users.",
-          },
+          { error: "Sign in as the existing Super Admin before adding more users." },
           { status: 403 },
         );
       }
 
       if (body.role !== "super_admin" || body.status !== "active") {
         return NextResponse.json(
-          {
-            error:
-              "The first dashboard user must be an Active Super Admin.",
-          },
+          { error: "The first dashboard user must be an Active Super Admin." },
           { status: 400 },
         );
       }
@@ -87,10 +72,7 @@ export async function POST(request: Request) {
         createdByEmail: "setup-bootstrap",
       });
 
-      return NextResponse.json({
-        user: created,
-        bootstrap: true,
-      });
+      return NextResponse.json({ user: created, bootstrap: true });
     }
 
     const access = await requireSuperAdminJson();

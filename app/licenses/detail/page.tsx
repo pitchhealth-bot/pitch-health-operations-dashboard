@@ -78,8 +78,18 @@ function LicenseSection({
             </div>
           </div>
           <div>
-            <span className={expired ? "pill critical" : "pill warning"}>
-              {expired ? "Yes" : "No"}
+            <span className={
+              expired
+                ? "pill critical"
+                : days !== null && days >= 0 && days <= 30
+                  ? "pill warning"
+                  : "pill"
+            }>
+              {expired
+                ? "Yes"
+                : days !== null && days >= 0 && days <= 30
+                  ? "Almost"
+                  : "No"}
             </span>
           </div>
         </div>

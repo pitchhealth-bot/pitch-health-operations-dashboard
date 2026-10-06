@@ -258,3 +258,8 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .audit-head{padding:11px 18px;background:#faf9fd;border-top:1px solid var(--line);border-bottom:1px solid var(--line);font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#918b9d;font-weight:850}
 .audit-row{padding:12px 18px;border-bottom:1px solid var(--line);font-size:10px}.audit-row:last-child{border-bottom:0}.audit-row:hover{background:#fbfaff}.audit-row strong{display:block;font-size:10px}.audit-row small{display:block;color:var(--muted);font-size:9px;margin-top:2px}.audit-change{display:grid;gap:3px}
 @media(max-width:950px){.sidebar-user{display:none}}
+
+.license-table-head,.license-table-row{display:grid;grid-template-columns:1.35fr .75fr 1fr .65fr 1fr 1fr .65fr;gap:12px;align-items:center;min-width:1050px}
+.license-table-head{padding:13px 18px;color:#8d8798;font-size:9px;text-transform:uppercase;letter-spacing:.08em;background:#faf9fd;border-bottom:1px solid var(--line);font-weight:850}
+.license-table-row{padding:13px 18px;border-bottom:1px solid var(--line);font-size:11px;transition:.15s ease}
+.license-table-row:last-child{border-bottom:0}.license-table-row:hover{background:#fbfaff}.license-table-row strong{font-size:12px}

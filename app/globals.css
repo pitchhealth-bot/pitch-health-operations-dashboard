@@ -299,3 +299,18 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .license-detail-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .record-link-button{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:var(--purple);color:#fff;padding:9px 13px;border-radius:10px;font-size:11px;font-weight:850;box-shadow:0 8px 18px rgba(79,43,200,.16)}
 .record-link-button:hover{background:var(--purple-dark)}
+
+.carrier-edit-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.carrier-edit-button,.carrier-save-button,.carrier-cancel-button{border:0;border-radius:10px;padding:9px 12px;font-size:10px;font-weight:850;cursor:pointer}
+.carrier-edit-button,.carrier-save-button{background:var(--purple);color:#fff;box-shadow:0 7px 16px rgba(79,43,200,.14)}
+.carrier-edit-button:hover,.carrier-save-button:hover{background:var(--purple-dark)}
+.carrier-cancel-button{background:#f1eff5;color:#625e6b}
+.carrier-cancel-button:hover{background:#e9e6ef}
+.carrier-save-button:disabled,.carrier-cancel-button:disabled{opacity:.5;cursor:not-allowed}
+.carrier-status-select,.carrier-writing-input{width:100%;max-width:230px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 10px;font-size:10px;outline:none}
+.carrier-status-select:focus,.carrier-writing-input:focus{border-color:#bbaaf8;box-shadow:0 0 0 3px var(--purple-soft)}
+.carrier-writing-input:disabled{background:#f4f3f6;color:#9a96a3}
+.carrier-save-message{margin-bottom:12px;padding:10px 12px;border-radius:10px;font-size:10px;font-weight:750}
+.carrier-save-message.success{background:var(--okbg);color:var(--ok)}
+.carrier-save-message.error{background:var(--critbg);color:var(--crit)}
+.carrier-readonly-note{margin-top:10px;color:var(--muted);font-size:9px}

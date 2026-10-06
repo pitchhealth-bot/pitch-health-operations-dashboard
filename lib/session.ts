@@ -1,12 +1,14 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { getRoleForEmail, isAuthConfigured, type AppRole } from "./access";
+import { isAuthConfigured, type AppRole } from "./access";
+import { getDashboardUserByEmail } from "./users";
 
 export async function requireUser() {
   if (!isAuthConfigured()) {
     return {
       user: { name: "Authentication not configured", email: null },
-      role: "viewer" as AppRole,
+      role: "agent" as AppRole,
+      dashboardUser: null,
       authConfigured: false,
     };
   }
@@ -17,9 +19,16 @@ export async function requireUser() {
     redirect("/login");
   }
 
+  const dashboardUser = await getDashboardUserByEmail(session.user.email);
+
+  if (!dashboardUser || dashboardUser.status !== "active") {
+    redirect("/login");
+  }
+
   return {
     user: session.user,
-    role: getRoleForEmail(session.user.email),
+    role: dashboardUser.role,
+    dashboardUser,
     authConfigured: true,
   };
 }
@@ -32,6 +41,9 @@ export async function requireRole(roles: AppRole[]) {
   const current = await requireUser();
 
   if (!roles.includes(current.role)) {
+    if (current.role === "agent" && current.dashboardUser?.airtableAgentRecordId) {
+      redirect(`/agents/${current.dashboardUser.airtableAgentRecordId}`);
+    }
     redirect("/");
   }
 

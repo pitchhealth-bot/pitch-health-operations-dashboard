@@ -123,14 +123,16 @@ export default function CarrierStatusEditor({
             {!editing ? (
               <button
                 type="button"
-                className="carrier-edit-button"
+                className="carrier-pencil-button"
                 onClick={() => {
                   setDraft(rows);
                   setEditing(true);
                   setMessage("");
                 }}
+                aria-label="Edit carrier status"
+                title="Edit Carrier Status"
               >
-                Edit Carrier Status
+                ✎
               </button>
             ) : (
               <>

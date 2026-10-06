@@ -1,10 +1,36 @@
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import { isAuthConfigured, type AppRole } from "./access";
-import { getDashboardUserByEmail } from "./users";
+import type { AppRole } from "./access";
+import { getSessionEmail } from "./app-session";
+import {
+  getDashboardUserByEmail,
+  listDashboardUsers,
+} from "./users";
 
 export async function requireUser() {
-  if (!isAuthConfigured()) {
+  const email = await getSessionEmail();
+
+  if (email) {
+    const dashboardUser = await getDashboardUserByEmail(email);
+
+    if (!dashboardUser || dashboardUser.status !== "active") {
+      redirect("/login");
+    }
+
+    return {
+      user: {
+        name: dashboardUser.name || dashboardUser.email,
+        email: dashboardUser.email,
+      },
+      role: dashboardUser.role,
+      dashboardUser,
+      authConfigured: true,
+    };
+  }
+
+  const users = await listDashboardUsers().catch(() => []);
+  const hasCompletedLogin = users.some(user => Boolean(user.lastLoginAt));
+
+  if (!hasCompletedLogin) {
     return {
       user: { name: "Setup Admin", email: null },
       role: "super_admin" as AppRole,
@@ -13,24 +39,7 @@ export async function requireUser() {
     };
   }
 
-  const session = await auth();
-
-  if (!session?.user?.email) {
-    redirect("/login");
-  }
-
-  const dashboardUser = await getDashboardUserByEmail(session.user.email);
-
-  if (!dashboardUser || dashboardUser.status !== "active") {
-    redirect("/login");
-  }
-
-  return {
-    user: session.user,
-    role: dashboardUser.role,
-    dashboardUser,
-    authConfigured: true,
-  };
+  redirect("/login");
 }
 
 export async function requireRole(roles: AppRole[]) {

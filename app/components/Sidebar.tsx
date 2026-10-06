@@ -8,18 +8,36 @@ import type { AppRole } from "@/lib/access";
 export default function Sidebar({
   user,
 }: {
-  user?: { name?: string | null; email?: string | null; role: AppRole } | null;
+  user?: {
+    name?: string | null;
+    email?: string | null;
+    role: AppRole;
+    airtableAgentRecordId?: string;
+  } | null;
 }) {
   const pathname = usePathname();
 
-  const items = [
+  const adminItems = [
     { href: "/", label: "Dashboard", icon: "⌂" },
     { href: "/agents", label: "Active Agents", icon: "◎" },
     { href: "/licenses", label: "License Expirations", icon: "◷" },
-    ...(user?.role === "superadmin"
-      ? [{ href: "/audit", label: "Audit Log", icon: "≡" }]
-      : []),
   ];
+
+  const agentItems = user?.airtableAgentRecordId
+    ? [{ href: `/agents/${user.airtableAgentRecordId}`, label: "My Record", icon: "◎" }]
+    : [];
+
+  const items = user?.role === "agent"
+    ? agentItems
+    : [
+        ...adminItems,
+        ...(user?.role === "super_admin"
+          ? [
+              { href: "/users", label: "Users", icon: "♙" },
+              { href: "/audit", label: "Audit Log", icon: "≡" },
+            ]
+          : []),
+      ];
 
   return (
     <aside className="app-sidebar">
@@ -65,7 +83,7 @@ export default function Sidebar({
           </div>
           <div className="sidebar-user-copy">
             <strong>{user.name || user.email}</strong>
-            <span>{user.role}</span>
+            <span>{user.role.replace("_", " ")}</span>
           </div>
           <button
             className="sidebar-signout"

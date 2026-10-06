@@ -15,6 +15,7 @@ export default function Sidebar({
   const items = [
     { href: "/", label: "Dashboard", icon: "⌂" },
     { href: "/agents", label: "Active Agents", icon: "◎" },
+    { href: "/licenses", label: "License Expirations", icon: "◷" },
     ...(user?.role === "superadmin"
       ? [{ href: "/audit", label: "Audit Log", icon: "≡" }]
       : []),

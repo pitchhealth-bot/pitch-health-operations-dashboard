@@ -4,7 +4,7 @@ import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
 import { getContractingSources } from "@/lib/contracting";
 import type { Agent, PipelineStage } from "@/lib/types";
-import { requireUser } from "@/lib/session";
+import { requireRole } from "@/lib/session";
 
 const stages: PipelineStage[] = ["Pre-Licensing","Exam","Pre-Contracting","Contracting","RTS"];
 
@@ -33,7 +33,7 @@ function AgentRow({ agent }: { agent: Agent }) {
 }
 
 export default async function Home() {
-  await requireUser();
+  await requireRole(["admin", "super_admin"]);
 
   const [{ agents, source, error }, contractingSources] = await Promise.all([getDashboardData(), getContractingSources()]);
   const licensed = agents.filter(a => a.licensingStatus === "Licensed");

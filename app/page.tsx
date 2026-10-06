@@ -61,12 +61,12 @@ export default async function Home() {
 
       <section className="metric-grid">
         <Link href="/agents" className="metric metric-link"><div className="metric-top"><span>Active agents</span><i>↗</i></div><strong>{agents.length}</strong><small>View all agents →</small></Link>
-        <div className="metric"><div className="metric-top"><span>Licensed</span><i>✓</i></div><strong>{licensed.length}</strong><small>Ready for contracting</small></div>
-        <div className="metric"><div className="metric-top"><span>Non-licensed</span><i>◷</i></div><strong>{nonLicensed.length}</strong><small>Licensing in progress</small></div>
-        <div className="metric"><div className="metric-top"><span>Stuck 7+ days</span><i>!</i></div><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical</small></div>
-        <div className="metric"><div className="metric-top"><span>Active blockers</span><i>⚑</i></div><strong>{blocked.length}</strong><small>Needs attention</small></div>
-        <div className="metric"><div className="metric-top"><span>Missing info</span><i>?</i></div><strong>{missing.length}</strong><small>Incomplete profiles</small></div>
-        <div className="metric"><div className="metric-top"><span>Licenses ≤30d</span><i>⌁</i></div><strong>{expiring.length}</strong><small>Upcoming expirations</small></div>
+        <Link href="/agents?licensing=Licensed" className="metric metric-link"><div className="metric-top"><span>Licensed</span><i>✓</i></div><strong>{licensed.length}</strong><small>Ready for contracting →</small></Link>
+        <Link href="/agents?licensing=Non-licensed" className="metric metric-link"><div className="metric-top"><span>Non-licensed</span><i>◷</i></div><strong>{nonLicensed.length}</strong><small>Licensing in progress →</small></Link>
+        <Link href="/agents?filter=stuck" className="metric metric-link"><div className="metric-top"><span>Stuck 7+ days</span><i>!</i></div><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical →</small></Link>
+        <Link href="/agents?filter=blocked" className="metric metric-link"><div className="metric-top"><span>Active blockers</span><i>⚑</i></div><strong>{blocked.length}</strong><small>Needs attention →</small></Link>
+        <Link href="/agents?filter=missing" className="metric metric-link"><div className="metric-top"><span>Missing info</span><i>?</i></div><strong>{missing.length}</strong><small>Incomplete profiles →</small></Link>
+        <Link href="/agents?filter=expiring" className="metric metric-link"><div className="metric-top"><span>Licenses ≤30d</span><i>⌁</i></div><strong>{expiring.length}</strong><small>Upcoming expirations →</small></Link>
       </section>
 
       <section className="panel">

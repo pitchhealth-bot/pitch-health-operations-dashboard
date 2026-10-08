@@ -34,6 +34,7 @@ export default function UsersManager({
   const [adding, setAdding] = useState(false);
   const [invitingEmail, setInvitingEmail] = useState("");
   const [accessActionId, setAccessActionId] = useState("");
+  const [openMenuId, setOpenMenuId] = useState("");
 
   async function saveUser(user: DashboardUser) {
     setSavingId(user.id);
@@ -262,14 +263,6 @@ export default function UsersManager({
             </span>
             <div className="user-row-actions">
               <button
-                className="user-invite-button"
-                type="button"
-                disabled={invitingEmail === user.email}
-                onClick={() => sendInvite(user.email)}
-              >
-                {invitingEmail === user.email ? "Sending..." : "Send Invite"}
-              </button>
-              <button
                 className="user-save-button"
                 type="button"
                 disabled={savingId === user.id}
@@ -277,22 +270,56 @@ export default function UsersManager({
               >
                 {savingId === user.id ? "Saving..." : "Save"}
               </button>
-              <button
-                className="user-revoke-button"
-                type="button"
-                disabled={accessActionId === user.id || user.status === "inactive"}
-                onClick={() => changeAccess(user, "revoke")}
-              >
-                {user.status === "inactive" ? "Revoked" : "Revoke"}
-              </button>
-              <button
-                className="user-delete-button"
-                type="button"
-                disabled={accessActionId === user.id}
-                onClick={() => changeAccess(user, "delete")}
-              >
-                Delete
-              </button>
+
+              <div className="user-more-wrap">
+                <button
+                  className="user-more-button"
+                  type="button"
+                  aria-label="More user actions"
+                  aria-expanded={openMenuId === user.id}
+                  onClick={() => setOpenMenuId(current => current === user.id ? "" : user.id)}
+                >
+                  ⋯
+                </button>
+
+                {openMenuId === user.id && (
+                  <div className="user-more-menu">
+                    <button
+                      type="button"
+                      disabled={invitingEmail === user.email}
+                      onClick={async () => {
+                        setOpenMenuId("");
+                        await sendInvite(user.email);
+                      }}
+                    >
+                      {invitingEmail === user.email ? "Sending..." : "Send Invite"}
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={accessActionId === user.id || user.status === "inactive"}
+                      onClick={async () => {
+                        setOpenMenuId("");
+                        await changeAccess(user, "revoke");
+                      }}
+                    >
+                      {user.status === "inactive" ? "Access Revoked" : "Revoke Access"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="danger"
+                      disabled={accessActionId === user.id}
+                      onClick={async () => {
+                        setOpenMenuId("");
+                        await changeAccess(user, "delete");
+                      }}
+                    >
+                      Delete User
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}

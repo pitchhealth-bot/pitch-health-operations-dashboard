@@ -33,6 +33,7 @@ export default function UsersManager({
   const [savingId, setSavingId] = useState("");
   const [adding, setAdding] = useState(false);
   const [invitingEmail, setInvitingEmail] = useState("");
+  const [accessActionId, setAccessActionId] = useState("");
 
   async function saveUser(user: DashboardUser) {
     setSavingId(user.id);
@@ -83,6 +84,41 @@ export default function UsersManager({
       setMessage(error instanceof Error ? error.message : "Could not send invite.");
     } finally {
       setInvitingEmail("");
+    }
+  }
+
+  async function changeAccess(user: DashboardUser, mode: "revoke" | "delete") {
+    const actionLabel = mode === "revoke" ? "revoke access for" : "delete";
+    const confirmed = window.confirm(
+      `Are you sure you want to ${actionLabel} ${user.name || user.email}?`,
+    );
+
+    if (!confirmed) return;
+
+    setAccessActionId(user.id);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/users", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: user.id, mode }),
+      });
+
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error || "Could not update access.");
+
+      if (mode === "delete") {
+        setUsers(current => current.filter(item => item.id !== user.id));
+        setMessage("User deleted.");
+      } else {
+        setUsers(current => current.map(item => item.id === user.id ? json.user : item));
+        setMessage("Access revoked.");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Could not update access.");
+    } finally {
+      setAccessActionId("");
     }
   }
 
@@ -240,6 +276,22 @@ export default function UsersManager({
                 onClick={() => saveUser(user)}
               >
                 {savingId === user.id ? "Saving..." : "Save"}
+              </button>
+              <button
+                className="user-revoke-button"
+                type="button"
+                disabled={accessActionId === user.id || user.status === "inactive"}
+                onClick={() => changeAccess(user, "revoke")}
+              >
+                {user.status === "inactive" ? "Revoked" : "Revoke"}
+              </button>
+              <button
+                className="user-delete-button"
+                type="button"
+                disabled={accessActionId === user.id}
+                onClick={() => changeAccess(user, "delete")}
+              >
+                Delete
               </button>
             </div>
           </div>

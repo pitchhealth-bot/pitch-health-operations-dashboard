@@ -1,3 +1,11 @@
+type Role = "super_admin" | "admin" | "agent";
+
+const ROLE_LABELS: Record<Role, string> = {
+  super_admin: "Super Admin",
+  admin: "Admin",
+  agent: "Agent",
+};
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionEmail } from "@/lib/app-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { sendPitchHealthEmail } from "@/lib/pitch-health-email";
 import {
   getDashboardUserByEmail,
   listDashboardUsers,
@@ -38,50 +37,27 @@ export async function POST(request: Request) {
     }
 
     const origin = new URL(request.url).origin;
-    const redirectTo = `${origin}/auth/accept`;
     const supabase = getSupabaseAdmin();
 
-    let actionLink = "";
-
-    const inviteLink = await supabase.auth.admin.generateLink({
-      type: "invite",
-      email: target.email,
-      options: {
-        redirectTo,
-        data: {
-          name: target.name || "",
-          dashboard_role: target.role,
-        },
+    const { error } = await supabase.auth.admin.inviteUserByEmail(target.email, {
+      redirectTo: `${origin}/auth/accept`,
+      data: {
+        name: target.name || "",
+        dashboard_role: target.role,
       },
     });
 
-    if (!inviteLink.error) {
-      actionLink = inviteLink.data.properties?.action_link || "";
-    } else {
-      const magicLink = await supabase.auth.admin.generateLink({
-        type: "magiclink",
+    if (error) {
+      const fallback = await supabase.auth.signInWithOtp({
         email: target.email,
-        options: { redirectTo },
+        options: {
+          emailRedirectTo: `${origin}/auth/accept`,
+          shouldCreateUser: false,
+        },
       });
 
-      if (magicLink.error) {
-        throw new Error(magicLink.error.message);
-      }
-
-      actionLink = magicLink.data.properties?.action_link || "";
+      if (fallback.error) throw new Error(fallback.error.message);
     }
-
-    if (!actionLink) {
-      throw new Error("Supabase did not return a secure sign-in link.");
-    }
-
-    await sendPitchHealthEmail({
-      to: target.email,
-      name: target.name,
-      role: target.role,
-      actionUrl: actionLink,
-      type: "invite",
-    });
 
     return NextResponse.json({ ok: true, branded: true });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { sendPitchHealthEmail } from "@/lib/pitch-health-email";
 import { getDashboardUserByEmail } from "@/lib/users";
 
 export async function POST(request: Request) {
@@ -19,19 +20,50 @@ export async function POST(request: Request) {
     }
 
     const origin = new URL(request.url).origin;
+    const redirectTo = `${origin}/auth/accept`;
     const supabase = getSupabaseAdmin();
 
-    const { error } = await supabase.auth.signInWithOtp({
+    let actionLink = "";
+
+    const magicLink = await supabase.auth.admin.generateLink({
+      type: "magiclink",
       email,
-      options: {
-        emailRedirectTo: `${origin}/auth/accept`,
-        shouldCreateUser: false,
-      },
+      options: { redirectTo },
     });
 
-    if (error) throw new Error(error.message);
+    if (!magicLink.error) {
+      actionLink = magicLink.data.properties?.action_link || "";
+    } else {
+      const inviteLink = await supabase.auth.admin.generateLink({
+        type: "invite",
+        email,
+        options: {
+          redirectTo,
+          data: {
+            name: dashboardUser.name || "",
+            dashboard_role: dashboardUser.role,
+          },
+        },
+      });
 
-    return NextResponse.json({ ok: true });
+      if (inviteLink.error) throw new Error(inviteLink.error.message);
+
+      actionLink = inviteLink.data.properties?.action_link || "";
+    }
+
+    if (!actionLink) {
+      throw new Error("Supabase did not return a secure sign-in link.");
+    }
+
+    await sendPitchHealthEmail({
+      to: email,
+      name: dashboardUser.name,
+      role: dashboardUser.role,
+      actionUrl: actionLink,
+      type: "signin",
+    });
+
+    return NextResponse.json({ ok: true, branded: true });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Could not send sign-in link." },

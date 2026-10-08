@@ -605,3 +605,14 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .user-delete-button{border:1px solid #f2b8b5;background:#fff0ef;color:#b42318}
 .user-delete-button:hover:not(:disabled){background:#ffe2df}
 .user-revoke-button:disabled,.user-delete-button:disabled{opacity:.5;cursor:not-allowed}
+
+.user-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.user-more-wrap{position:relative}
+.user-more-button{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#4f2bd0;font-size:18px;font-weight:800;line-height:1;cursor:pointer;display:grid;place-items:center}
+.user-more-button:hover{background:#f8f5ff;border-color:#d9cff7}
+.user-more-menu{position:absolute;right:0;top:40px;z-index:30;min-width:170px;padding:6px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 16px 35px rgba(40,28,82,.14)}
+.user-more-menu button{width:100%;border:0;background:transparent;text-align:left;padding:10px 11px;border-radius:8px;font-size:10px;font-weight:750;color:var(--ink);cursor:pointer}
+.user-more-menu button:hover:not(:disabled){background:#f7f4ff}
+.user-more-menu button.danger{color:#b42318}
+.user-more-menu button.danger:hover:not(:disabled){background:#fff0ef}
+.user-more-menu button:disabled{opacity:.45;cursor:not-allowed}

@@ -6,6 +6,9 @@ const ROLE_LABELS: Record<Role, string> = {
   agent: "Agent",
 };
 
+const LOGO_URL =
+  "https://images.squarespace-cdn.com/content/v1/68e2e3dcf5bd6f280a59912d/c02852b6-e33d-4c4e-9a43-508854bdaf99/Pitch%2BHealth%2BOnboarding%2BPacket.png";
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -13,21 +16,6 @@ function escapeHtml(value: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-}
-
-function brandHeader() {
-  return `
-    <div style="padding:30px 34px 24px;background:linear-gradient(135deg,#4f2bd0,#7353e8);text-align:left;">
-      <div style="font-family:Arial,Helvetica,sans-serif;color:#ffffff;">
-        <div style="font-size:30px;font-weight:900;letter-spacing:-1px;line-height:1;">
-          PITCH HEALTH
-        </div>
-        <div style="font-size:14px;font-weight:700;letter-spacing:5px;margin-top:6px;color:#ded6ff;">
-          SOLUTIONS
-        </div>
-      </div>
-    </div>
-  `;
 }
 
 export function pitchHealthEmailHtml(input: {
@@ -44,70 +32,88 @@ export function pitchHealthEmailHtml(input: {
   return `
 <!doctype html>
 <html>
-  <body style="margin:0;padding:0;background:#f4f3f8;font-family:Arial,Helvetica,sans-serif;color:#17141f;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f3f8;padding:36px 16px;">
+  <body style="margin:0;padding:0;background:#f5f5f8;font-family:Arial,Helvetica,sans-serif;color:#18161f;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f8;padding:40px 16px;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 12px 34px rgba(39,29,76,.08);">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #eceaf2;border-radius:18px;overflow:hidden;box-shadow:0 12px 30px rgba(44,32,84,.06);">
             <tr>
-              <td>
-                ${brandHeader()}
+              <td style="height:6px;background:#5634d6;font-size:0;line-height:0;">&nbsp;</td>
+            </tr>
+
+            <tr>
+              <td style="padding:30px 34px 10px;text-align:center;">
+                <img
+                  src="${LOGO_URL}"
+                  alt="Pitch Health Solutions"
+                  width="240"
+                  style="display:block;margin:0 auto;max-width:240px;width:100%;height:auto;border:0;"
+                />
               </td>
             </tr>
+
             <tr>
-              <td style="padding:38px 38px 32px;">
-                <div style="font-size:11px;letter-spacing:2.5px;font-weight:800;color:#5634d6;margin-bottom:12px;">
-                  PITCH HEALTH OPERATIONS
+              <td style="padding:18px 38px 36px;">
+                <div style="font-size:10px;letter-spacing:2.2px;font-weight:800;color:#5634d6;text-transform:uppercase;margin-bottom:12px;">
+                  Pitch Health Operations
                 </div>
 
-                <h1 style="margin:0 0 18px;font-size:28px;line-height:1.2;color:#17141f;">
-                  ${isInvite ? "You’ve been invited" : "Your secure sign-in link"}
+                <h1 style="margin:0 0 16px;font-size:28px;line-height:1.18;letter-spacing:-.4px;color:#18161f;">
+                  ${isInvite ? "You’re invited" : "Your sign-in link"}
                 </h1>
 
-                <p style="font-size:15px;line-height:1.7;color:#676270;margin:0 0 14px;">
+                <p style="font-size:15px;line-height:1.65;color:#686472;margin:0 0 12px;">
                   Hi ${name},
                 </p>
 
-                <p style="font-size:15px;line-height:1.7;color:#676270;margin:0 0 18px;">
+                <p style="font-size:15px;line-height:1.65;color:#686472;margin:0 0 20px;">
                   ${
                     isInvite
-                      ? `You now have access to the Pitch Health Operations dashboard as <strong style="color:#17141f;">${role}</strong>.`
+                      ? "You’ve been granted access to the Pitch Health Operations dashboard."
                       : "Use the secure button below to sign in to Pitch Health Operations."
                   }
                 </p>
 
                 ${
                   isInvite
-                    ? `<div style="background:#f6f3ff;border:1px solid #e5defd;border-radius:12px;padding:15px 17px;margin:22px 0;">
-                        <div style="font-size:11px;color:#8a8297;text-transform:uppercase;letter-spacing:1.5px;font-weight:800;">Access Level</div>
-                        <div style="font-size:16px;color:#4f2bd0;font-weight:800;margin-top:5px;">${role}</div>
-                      </div>`
+                    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                        <tr>
+                          <td style="background:#f3efff;border:1px solid #e2dafd;border-radius:999px;padding:8px 13px;">
+                            <span style="font-size:12px;font-weight:800;color:#5634d6;">${role}</span>
+                          </td>
+                        </tr>
+                      </table>`
                     : ""
                 }
 
-                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
                   <tr>
-                    <td style="background:#5634d6;border-radius:10px;">
-                      <a href="${actionUrl}" style="display:inline-block;padding:15px 26px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;">
-                        ${isInvite ? "Access Pitch Health Operations" : "Sign In to Pitch Health Operations"}
+                    <td align="center" style="background:#5634d6;border-radius:11px;">
+                      <a
+                        href="${actionUrl}"
+                        style="display:block;padding:15px 20px;color:#ffffff;text-decoration:none;font-size:15px;font-weight:800;text-align:center;"
+                      >
+                        ${isInvite ? "Open Pitch Health Operations" : "Sign In to Pitch Health Operations"}
                       </a>
                     </td>
                   </tr>
                 </table>
 
-                <p style="font-size:12px;line-height:1.6;color:#96909e;margin:0 0 8px;">
-                  This is a secure, one-time sign-in link. If you weren’t expecting this email, you can safely ignore it.
-                </p>
-
-                <p style="font-size:12px;line-height:1.6;color:#96909e;margin:0;">
-                  For security, do not forward this email or share the access link.
-                </p>
+                <div style="border-top:1px solid #efedf3;padding-top:20px;">
+                  <p style="font-size:12px;line-height:1.6;color:#9893a2;margin:0 0 6px;">
+                    This is a secure, one-time link intended only for you.
+                  </p>
+                  <p style="font-size:12px;line-height:1.6;color:#9893a2;margin:0;">
+                    If you weren’t expecting this email, you can safely ignore it.
+                  </p>
+                </div>
               </td>
             </tr>
+
             <tr>
-              <td style="border-top:1px solid #eeeaf4;padding:22px 38px 26px;background:#fcfbfe;">
-                <div style="font-size:12px;font-weight:800;color:#322d39;">Pitch Health Solutions</div>
-                <div style="font-size:11px;color:#9992a2;margin-top:5px;">Operations Dashboard</div>
+              <td style="padding:18px 38px 22px;background:#faf9fc;border-top:1px solid #efedf3;">
+                <div style="font-size:11px;font-weight:800;color:#3a3640;">Pitch Health Solutions</div>
+                <div style="font-size:10px;color:#9b96a4;margin-top:4px;">Operations Dashboard</div>
               </td>
             </tr>
           </table>
@@ -125,9 +131,10 @@ export function pitchHealthEmailText(input: {
   type: "invite" | "signin";
 }) {
   const role = ROLE_LABELS[input.role];
+
   return input.type === "invite"
-    ? `Hi ${input.name || "there"},\n\nYou’ve been invited to Pitch Health Operations as ${role}.\n\nAccess Pitch Health Operations:\n${input.actionUrl}\n\nThis is a secure one-time link. Do not forward it.\n\nPitch Health Solutions`
-    : `Hi ${input.name || "there"},\n\nUse this secure link to sign in to Pitch Health Operations:\n${input.actionUrl}\n\nThis is a secure one-time link. Do not forward it.\n\nPitch Health Solutions`;
+    ? `Hi ${input.name || "there"},\n\nYou’ve been invited to Pitch Health Operations as ${role}.\n\nOpen Pitch Health Operations:\n${input.actionUrl}\n\nThis is a secure one-time link.\n\nPitch Health Solutions`
+    : `Hi ${input.name || "there"},\n\nUse this secure link to sign in to Pitch Health Operations:\n${input.actionUrl}\n\nThis is a secure one-time link.\n\nPitch Health Solutions`;
 }
 
 export async function sendPitchHealthEmail(input: {

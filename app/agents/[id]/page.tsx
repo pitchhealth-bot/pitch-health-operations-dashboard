@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/session";
 import { canEdit } from "@/lib/access";
 import CarrierStatusEditor from "./CarrierStatusEditor";
 import CarrierCertificateUpload from "./CarrierCertificateUpload";
+import { getCarrierCertificatesForAgent } from "@/lib/carrier-certificates";
 
 export const dynamic = "force-dynamic";
 
@@ -86,7 +87,7 @@ export default async function AgentProfilePage({
 
   if (!agent) notFound();
 
-  const [ahip, carrierStatuses, sunFireReports] = await Promise.all([getAhip2027ForAgent(agent.email), getCarrierStatusesForAgent(agent.email), getSunFireReportForAgent(agent.email)]);
+  const [ahip, carrierStatuses, sunFireReports, carrierCertificates] = await Promise.all([getAhip2027ForAgent(agent.email), getCarrierStatusesForAgent(agent.email), getSunFireReportForAgent(agent.email), getCarrierCertificatesForAgent(agent.id)]);
 
   return (
     <main>
@@ -227,7 +228,7 @@ export default async function AgentProfilePage({
       </div>
 
       {canEdit(current.role) ? (
-        <CarrierCertificateUpload agentId={agent.id} />
+        <CarrierCertificateUpload agentId={agent.id} initialCertificates={carrierCertificates} />
       ) : null}
 
       <CarrierStatusEditor

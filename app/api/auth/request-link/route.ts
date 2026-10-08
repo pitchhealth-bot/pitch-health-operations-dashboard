@@ -30,10 +30,13 @@ export async function POST(request: Request) {
 
     if (error) throw new Error(error.message);
 
-    const actionLink = data.properties?.action_link || "";
-    if (!actionLink) {
-      throw new Error("Supabase did not return a secure sign-in link.");
+    const tokenHash = data.properties?.hashed_token || "";
+    if (!tokenHash) {
+      throw new Error("Supabase did not return a secure sign-in token.");
     }
+
+    const actionLink =
+      `${appUrl}/auth/accept?token_hash=${encodeURIComponent(tokenHash)}&type=magiclink`;
 
     await sendPitchHealthEmail({
       to: email,

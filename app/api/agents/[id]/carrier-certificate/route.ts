@@ -4,7 +4,7 @@ import { getSessionEmail } from "@/lib/app-session";
 import { getDashboardData } from "@/lib/airtable";
 import { uploadCarrierCertificate } from "@/lib/carrier-certificates";
 import { writeAuditEntry } from "@/lib/audit";
-import { getDashboardUserByEmail } from "@/lib/users";
+import { getDashboardUserByEmail, listDashboardUsers } from "@/lib/users";
 
 export async function POST(
   request: Request,
@@ -12,11 +12,33 @@ export async function POST(
 ) {
   const sessionEmail = await getSessionEmail();
 
-  if (!sessionEmail) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+  let effectiveEmail = sessionEmail;
+  let dashboardUser = sessionEmail
+    ? await getDashboardUserByEmail(sessionEmail)
+    : null;
 
-  const dashboardUser = await getDashboardUserByEmail(sessionEmail);
+  if (!sessionEmail) {
+    const users = await listDashboardUsers();
+    const hasCompletedLogin = users.some(user => Boolean(user.lastLoginAt));
+
+    if (hasCompletedLogin) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
+
+    const setupAdmin =
+      users.find(user => user.role === "super_admin" && user.status === "active") ||
+      null;
+
+    if (!setupAdmin) {
+      return NextResponse.json(
+        { error: "No active Super Admin account is available for setup mode." },
+        { status: 403 },
+      );
+    }
+
+    effectiveEmail = setupAdmin.email;
+    dashboardUser = setupAdmin;
+  }
 
   if (!dashboardUser || dashboardUser.status !== "active") {
     return NextResponse.json({ error: "Your account is not active." }, { status: 403 });
@@ -52,12 +74,12 @@ export async function POST(
       name: agent.name,
       carrier,
       file,
-      uploadedByEmail: sessionEmail,
+      uploadedByEmail: effectiveEmail || dashboardUser.email,
     });
 
     try {
       await writeAuditEntry({
-        userEmail: sessionEmail,
+        userEmail: effectiveEmail || dashboardUser.email,
         userName: dashboardUser.name || "",
         role: dashboardUser.role,
         action: "Uploaded carrier certificate",

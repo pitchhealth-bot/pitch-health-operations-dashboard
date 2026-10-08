@@ -5,6 +5,7 @@ import {
   createDashboardUser,
   updateDashboardUser,
   listDashboardUsers,
+  deleteDashboardUser,
 } from "@/lib/users";
 
 async function requireSuperAdminJson() {
@@ -152,6 +153,72 @@ export async function PATCH(request: Request) {
       {
         error:
           error instanceof Error ? error.message : "Could not update user.",
+      },
+      { status: 400 },
+    );
+  }
+}
+
+
+export async function DELETE(request: Request) {
+  const access = await requireSuperAdminJson();
+  if ("error" in access) return access.error;
+
+  try {
+    const body = await request.json() as {
+      id?: string;
+      mode?: "revoke" | "delete";
+    };
+
+    if (!body.id || !body.mode) {
+      return NextResponse.json(
+        { error: "User ID and action are required." },
+        { status: 400 },
+      );
+    }
+
+    const users = await listDashboardUsers();
+    const target = users.find(user => user.id === body.id);
+
+    if (!target) {
+      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    }
+
+    if (target.email.toLowerCase() === access.current.email.toLowerCase()) {
+      return NextResponse.json(
+        { error: "You cannot revoke or delete your own access." },
+        { status: 400 },
+      );
+    }
+
+    const activeSuperAdmins = users.filter(
+      user => user.role === "super_admin" && user.status === "active",
+    );
+
+    if (
+      target.role === "super_admin" &&
+      target.status === "active" &&
+      activeSuperAdmins.length <= 1
+    ) {
+      return NextResponse.json(
+        { error: "You cannot remove the last active Super Admin." },
+        { status: 400 },
+      );
+    }
+
+    if (body.mode === "revoke") {
+      const updated = await updateDashboardUser(target.id, {
+        status: "inactive",
+      });
+      return NextResponse.json({ ok: true, user: updated, mode: "revoke" });
+    }
+
+    await deleteDashboardUser(target.id);
+    return NextResponse.json({ ok: true, id: target.id, mode: "delete" });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Could not update access.",
       },
       { status: 400 },
     );

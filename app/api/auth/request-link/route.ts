@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { sendPitchHealthEmail } from "@/lib/pitch-health-email";
 import { getDashboardUserByEmail } from "@/lib/users";
 
 export async function POST(request: Request) {
@@ -18,19 +19,31 @@ export async function POST(request: Request) {
     }
 
     const origin = new URL(request.url).origin;
+    const redirectTo = `${origin}/auth/accept`;
     const supabase = getSupabaseAdmin();
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { data, error } = await supabase.auth.admin.generateLink({
+      type: "magiclink",
       email,
-      options: {
-        emailRedirectTo: `${origin}/auth/accept`,
-        shouldCreateUser: false,
-      },
+      options: { redirectTo },
     });
 
     if (error) throw new Error(error.message);
 
-    return NextResponse.json({ ok: true, branded: true });
+    const actionLink = data.properties?.action_link || "";
+    if (!actionLink) {
+      throw new Error("Supabase did not return a secure sign-in link.");
+    }
+
+    await sendPitchHealthEmail({
+      to: email,
+      name: dashboardUser.name,
+      role: dashboardUser.role,
+      actionUrl: actionLink,
+      type: "signin",
+    });
+
+    return NextResponse.json({ ok: true, branded: true, provider: "resend" });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Could not send sign-in link." },

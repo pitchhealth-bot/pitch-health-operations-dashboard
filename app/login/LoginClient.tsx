@@ -4,28 +4,36 @@ import { useState } from "react";
 
 export default function LoginClient() {
   const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
+  const [password, setPassword] = useState("");
+  const [signingIn, setSigningIn] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function sendLink() {
-    setSending(true);
+  async function signIn() {
+    setSigningIn(true);
     setMessage("");
 
     try {
-      const response = await fetch("/api/auth/request-link", {
+      const response = await fetch("/api/auth/password-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, password }),
       });
 
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Could not send sign-in link.");
 
-      setMessage("Check your email for your secure sign-in link.");
+      if (!response.ok) {
+        throw new Error(json.error || "Could not sign in.");
+      }
+
+      window.location.replace(
+        json.role === "agent" && json.airtableAgentRecordId
+          ? `/agents/${json.airtableAgentRecordId}`
+          : "/",
+      );
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Could not send sign-in link.");
+      setMessage(error instanceof Error ? error.message : "Could not sign in.");
     } finally {
-      setSending(false);
+      setSigningIn(false);
     }
   }
 
@@ -35,7 +43,7 @@ export default function LoginClient() {
         <div className="login-mark">P</div>
         <div className="eyebrow">PITCH HEALTH SOLUTIONS</div>
         <h1>Operations Dashboard</h1>
-        <p>Enter the email address attached to your dashboard account. We’ll send you a secure sign-in link.</p>
+        <p>Sign in with the email and password attached to your dashboard account.</p>
 
         <input
           className="login-email-input"
@@ -43,21 +51,31 @@ export default function LoginClient() {
           placeholder="you@pitchhealthsolutions.com"
           value={email}
           onChange={event => setEmail(event.target.value)}
+          autoComplete="email"
+        />
+
+        <input
+          className="login-email-input"
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={event => setPassword(event.target.value)}
+          autoComplete="current-password"
           onKeyDown={event => {
-            if (event.key === "Enter" && email && !sending) sendLink();
+            if (event.key === "Enter" && email && password && !signingIn) signIn();
           }}
         />
 
         <button
           className="google-login"
-          onClick={sendLink}
-          disabled={!email || sending}
+          onClick={signIn}
+          disabled={!email || !password || signingIn}
         >
-          {sending ? "Sending..." : "Email Me a Sign-In Link"}
+          {signingIn ? "Signing In..." : "Sign In"}
         </button>
 
         {message && <div className="login-message">{message}</div>}
-        <small>Only users added by a Super Admin can access the dashboard.</small>
+        <small>First time here? Use the invite email from your Super Admin to create your password.</small>
       </section>
     </main>
   );

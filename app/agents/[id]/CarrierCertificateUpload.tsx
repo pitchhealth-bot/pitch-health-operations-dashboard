@@ -2,6 +2,17 @@
 
 import { useState } from "react";
 
+type Certificate = {
+  id: string;
+  carrier: string;
+  fileName: string;
+  contentType?: string;
+  sizeBytes?: number;
+  createdAt: string;
+  uploadedByEmail: string;
+  url: string;
+};
+
 const carriers = [
   "Aetna",
   "Humana",
@@ -14,9 +25,23 @@ const carriers = [
   "Heartland",
 ];
 
-export default function CarrierCertificateUpload({ agentId }: { agentId: string }) {
+function fileSize(bytes?: number) {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export default function CarrierCertificateUpload({
+  agentId,
+  initialCertificates,
+}: {
+  agentId: string;
+  initialCertificates: Certificate[];
+}) {
   const [carrier, setCarrier] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [certificates, setCertificates] = useState(initialCertificates);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -53,7 +78,11 @@ export default function CarrierCertificateUpload({ agentId }: { agentId: string 
         throw new Error(data.error || "Upload failed.");
       }
 
-      setMessage(`${carrier} certificate uploaded. Status changed to Contract Submitted.`);
+      if (data.certificate) {
+        setCertificates(current => [data.certificate, ...current]);
+      }
+
+      setMessage(`${carrier} certificate saved. Airtable status changed to Contract Submitted.`);
       setFile(null);
 
       const input = document.getElementById(
@@ -72,13 +101,13 @@ export default function CarrierCertificateUpload({ agentId }: { agentId: string 
       <div className="section-heading">
         <div>
           <div className="eyebrow">CARRIER DOCUMENTS</div>
-          <h2>Upload Carrier Certificate</h2>
+          <h2>Carrier Certificates</h2>
         </div>
       </div>
 
       <p className="carrier-cert-help">
-        Choose the carrier and upload the certificate. Saving will attach the file
-        in Airtable and mark that carrier as <strong>Contract Submitted</strong>.
+        Certificates are stored securely in the dashboard. Airtable only receives
+        the carrier status update to <strong>Contract Submitted</strong>.
       </p>
 
       <div className="carrier-cert-fields">
@@ -115,6 +144,39 @@ export default function CarrierCertificateUpload({ agentId }: { agentId: string 
       >
         {busy ? "Saving..." : "Save Certificate"}
       </button>
+
+      <div className="carrier-cert-list">
+        <div className="attachment-label" style={{ marginTop: 20 }}>
+          <div>
+            <strong>Stored Certificates</strong>
+            <span>{certificates.length ? `${certificates.length} certificate${certificates.length > 1 ? "s" : ""}` : "No certificates yet"}</span>
+          </div>
+        </div>
+
+        {certificates.length ? certificates.map(cert => (
+          <a
+            className="attachment-card"
+            href={cert.url}
+            target="_blank"
+            rel="noreferrer"
+            key={cert.id}
+          >
+            <div className="attachment-icon">PDF</div>
+            <div className="attachment-copy">
+              <strong>{cert.carrier} · {cert.fileName}</strong>
+              <span>
+                {cert.contentType || "Attachment"}
+                {cert.sizeBytes ? ` · ${fileSize(cert.sizeBytes)}` : ""}
+              </span>
+            </div>
+            <div className="attachment-open">↗</div>
+          </a>
+        )) : (
+          <div className="attachment-empty">
+            <span>No carrier certificates stored in the dashboard yet.</span>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

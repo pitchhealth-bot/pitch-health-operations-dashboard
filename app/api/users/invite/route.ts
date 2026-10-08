@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const supabase = getSupabaseAdmin();
 
     let tokenHash = "";
-    let verificationType: "invite" | "magiclink" = "invite";
+    let verificationType: "invite" | "recovery" = "invite";
 
     const inviteLink = await supabase.auth.admin.generateLink({
       type: "invite",
@@ -59,15 +59,15 @@ export async function POST(request: Request) {
     if (!inviteLink.error) {
       tokenHash = inviteLink.data.properties?.hashed_token || "";
     } else {
-      const magicLink = await supabase.auth.admin.generateLink({
-        type: "magiclink",
+      const recoveryLink = await supabase.auth.admin.generateLink({
+        type: "recovery",
         email: target.email,
         options: { redirectTo },
       });
 
-      if (magicLink.error) throw new Error(magicLink.error.message);
-      tokenHash = magicLink.data.properties?.hashed_token || "";
-      verificationType = "magiclink";
+      if (recoveryLink.error) throw new Error(recoveryLink.error.message);
+      tokenHash = recoveryLink.data.properties?.hashed_token || "";
+      verificationType = "recovery";
     }
 
     if (!tokenHash) {

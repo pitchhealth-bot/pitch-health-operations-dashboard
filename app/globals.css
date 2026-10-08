@@ -357,3 +357,16 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .login-email-input:focus{border-color:#bbaaf8;box-shadow:0 0 0 3px var(--purple-soft);background:#fff}
 .google-login:disabled{opacity:.55;cursor:not-allowed}
 .login-message{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--purple-softer);color:var(--purple);font-size:10px;font-weight:750}
+
+
+.carrier-cert-upload{margin-top:18px}
+.carrier-cert-help{margin:-4px 0 16px;color:var(--muted);font-size:12px;line-height:1.6}
+.carrier-cert-fields{display:grid;grid-template-columns:minmax(180px,.7fr) minmax(260px,1.3fr);gap:12px}
+.carrier-cert-fields label{display:grid;gap:7px}
+.carrier-cert-fields label>span{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.carrier-cert-fields select,.carrier-cert-fields input[type="file"]{width:100%;min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fbfaff;padding:10px 12px;font:inherit;color:inherit}
+.carrier-cert-file{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f6f3ff;color:#4f2bd0;font-size:11px;font-weight:700}
+.carrier-cert-save{margin-top:14px}
+.form-error{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff1f1;color:#b42318;font-size:11px;font-weight:700}
+.form-success{margin-top:10px;padding:10px 12px;border-radius:10px;background:#ecfdf3;color:#087a47;font-size:11px;font-weight:700}
+@media (max-width:760px){.carrier-cert-fields{grid-template-columns:1fr}}

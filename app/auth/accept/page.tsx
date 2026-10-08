@@ -7,16 +7,23 @@ export default function AcceptInvitePage() {
 
   useEffect(() => {
     async function finish() {
+      const url = new URL(window.location.href);
+      const tokenHash = url.searchParams.get("token_hash");
+      const typeParam = url.searchParams.get("type");
+      const type = typeParam === "magiclink" ? "magiclink" : "invite";
+
       const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
       const accessToken = hash.get("access_token");
-      const errorDescription = hash.get("error_description");
+      const errorDescription =
+        url.searchParams.get("error_description") ||
+        hash.get("error_description");
 
       if (errorDescription) {
         setMessage(errorDescription);
         return;
       }
 
-      if (!accessToken) {
+      if (!tokenHash && !accessToken) {
         setMessage("This sign-in link is missing a valid token.");
         return;
       }
@@ -24,7 +31,11 @@ export default function AcceptInvitePage() {
       const response = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessToken }),
+        body: JSON.stringify(
+          tokenHash
+            ? { tokenHash, type }
+            : { accessToken },
+        ),
       });
 
       const json = await response.json();
@@ -33,6 +44,8 @@ export default function AcceptInvitePage() {
         setMessage(json.error || "Could not sign you in.");
         return;
       }
+
+      window.history.replaceState({}, "", "/auth/accept");
 
       window.location.replace(
         json.role === "agent" && json.airtableAgentRecordId

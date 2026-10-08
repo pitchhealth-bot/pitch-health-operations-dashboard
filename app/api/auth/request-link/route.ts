@@ -18,8 +18,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const origin = new URL(request.url).origin;
-    const redirectTo = `${origin}/auth/accept`;
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://pitch-health-operations-dashboard.vercel.app").replace(/\/$/, "");
+    const redirectTo = `${appUrl}/auth/accept`;
     const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase.auth.admin.generateLink({

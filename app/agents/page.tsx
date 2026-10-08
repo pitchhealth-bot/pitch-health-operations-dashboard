@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
 import type { Agent } from "@/lib/types";
 import { requireRole } from "@/lib/session";
+import AgentsFilters from "./AgentsFilters";
 
 export const dynamic = "force-dynamic";
 
@@ -97,6 +98,8 @@ export default async function AgentsPage({
         agent.currentStage,
         agent.contractingDesignation,
         agent.startDate,
+        agent.email,
+        agent.personalEmail,
       ]
         .filter(Boolean)
         .some(value => String(value).toLowerCase().includes(query));
@@ -143,24 +146,13 @@ export default async function AgentsPage({
       )}
 
       <section className="panel">
-        <form className="agents-filters">
-          <input
-            name="q"
-            defaultValue={q}
-            placeholder="Search active agents..."
-            className="search-input"
-          />
-          <select name="licensing" defaultValue={licensing} className="filter-select">
-            <option value="">All licensing statuses</option>
-            <option value="Licensed">Licensed</option>
-            <option value="Non-licensed">Non-licensed</option>
-          </select>
-          <input type="hidden" name="sort" value={sort} />
-          {specialFilter && <input type="hidden" name="filter" value={specialFilter} />}
-          <input type="hidden" name="dir" value={dir} />
-          <button type="submit" className="filter-button">Filter</button>
-          {(q || licensing || specialFilter) && <Link href="/agents" className="clear-link">Clear</Link>}
-        </form>
+        <AgentsFilters
+          initialQuery={q}
+          initialLicensing={licensing}
+          sort={sort}
+          dir={dir}
+          specialFilter={specialFilter}
+        />
       </section>
 
       <section className="panel agents-list-panel">

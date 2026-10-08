@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { DragEvent, useRef, useState } from "react";
 
 type Certificate = {
   id: string;
@@ -43,6 +43,8 @@ export default function CarrierCertificateUpload({
   const [file, setFile] = useState<File | null>(null);
   const [certificates, setCertificates] = useState(initialCertificates);
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -85,10 +87,7 @@ export default function CarrierCertificateUpload({
       setMessage(`${carrier} certificate saved. Airtable status changed to Contract Submitted.`);
       setFile(null);
 
-      const input = document.getElementById(
-        `carrier-certificate-file-${agentId}`,
-      ) as HTMLInputElement | null;
-      if (input) input.value = "";
+      if (inputRef.current) inputRef.current.value = "";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
     } finally {
@@ -123,12 +122,55 @@ export default function CarrierCertificateUpload({
 
         <label>
           <span>Certificate</span>
-          <input
-            id={`carrier-certificate-file-${agentId}`}
-            type="file"
-            accept=".pdf,.png,.jpg,.jpeg"
-            onChange={event => setFile(event.target.files?.[0] || null)}
-          />
+
+          <div
+            className={`carrier-dropzone${dragging ? " is-dragging" : ""}`}
+            role="button"
+            tabIndex={0}
+            onClick={() => inputRef.current?.click()}
+            onKeyDown={event => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                inputRef.current?.click();
+              }
+            }}
+            onDragEnter={(event: DragEvent<HTMLDivElement>) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragOver={(event: DragEvent<HTMLDivElement>) => {
+              event.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={(event: DragEvent<HTMLDivElement>) => {
+              event.preventDefault();
+              if (event.currentTarget === event.target) {
+                setDragging(false);
+              }
+            }}
+            onDrop={(event: DragEvent<HTMLDivElement>) => {
+              event.preventDefault();
+              setDragging(false);
+
+              const dropped = event.dataTransfer.files?.[0] || null;
+              if (dropped) setFile(dropped);
+            }}
+          >
+            <div className="carrier-drop-icon">⇧</div>
+            <div className="carrier-drop-copy">
+              <strong>{file ? file.name : "Drop certificate here"}</strong>
+              <span>{file ? "Click or drop another file to replace it" : "or click to browse · PDF, PNG, JPG, JPEG"}</span>
+            </div>
+
+            <input
+              ref={inputRef}
+              id={`carrier-certificate-file-${agentId}`}
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg"
+              onChange={event => setFile(event.target.files?.[0] || null)}
+              className="carrier-drop-input"
+            />
+          </div>
         </label>
       </div>
 

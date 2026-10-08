@@ -47,10 +47,12 @@ export async function POST(
 
   try {
     const result = await uploadCarrierCertificate({
+      agentRecordId: agent.id,
       email: agent.email,
       name: agent.name,
       carrier,
       file,
+      uploadedByEmail: sessionEmail,
     });
 
     try {

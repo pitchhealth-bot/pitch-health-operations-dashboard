@@ -1,22 +1,3 @@
-import banner1 from "./email-assets/banner-1";
-import banner2 from "./email-assets/banner-2";
-import banner3 from "./email-assets/banner-3";
-import banner4 from "./email-assets/banner-4";
-import banner5 from "./email-assets/banner-5";
-import banner6 from "./email-assets/banner-6";
-import banner7 from "./email-assets/banner-7";
-import banner8 from "./email-assets/banner-8";
-
-type Role = "super_admin" | "admin" | "agent";
-
-const ROLE_LABELS: Record<Role, string> = {
-  super_admin: "Super Admin",
-  admin: "Admin",
-  agent: "Agent",
-};
-
-const BANNER_BASE64 = [banner1,banner2,banner3,banner4,banner5,banner6,banner7,banner8].join("");
-
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -52,7 +33,7 @@ export function pitchHealthEmailHtml(input: {
             <tr>
               <td style="padding:30px 34px 10px;text-align:center;">
                 <img
-                  src="cid:pitch-health-banner"
+                  src="https://pitch-health-operations-dashboard.vercel.app/api/email-assets/pitch-health-banner"
                   alt="Pitch Health Solutions"
                   width="420"
                   style="display:block;margin:0 auto;max-width:420px;width:100%;height:auto;border:0;"

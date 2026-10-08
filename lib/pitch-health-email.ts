@@ -169,14 +169,7 @@ export async function sendPitchHealthEmail(input: {
       subject,
       html: pitchHealthEmailHtml(input),
       text: pitchHealthEmailText(input),
-      attachments: [
-        {
-          filename: "pitch-health-banner.png",
-          content: BANNER_BASE64,
-          content_type: "image/png",
-          content_id: "pitch-health-banner",
-        },
-      ],
+
     }),
     cache: "no-store",
   });

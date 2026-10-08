@@ -155,7 +155,19 @@ export default async function LicenseDetailPage({
   const priority = expiring.filter(row => isTrackedLicenseState(row.license.state));
   const nonPriority = expiring.filter(row => !isTrackedLicenseState(row.license.state));
 
-  const displayName = agent?.name || params.name || expiring[0]?.license.agentName || "Agent";
+  const activeLicenses = allAgentLicenses
+    .map(license => {
+      const days = daysUntil(license.expirationDate);
+      return {
+        license,
+        days,
+        expired: false,
+      };
+    })
+    .filter(row => row.days !== null && row.days > 30)
+    .sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
+
+  const displayName = agent?.name || params.name || allAgentLicenses[0]?.agentName || "Agent";
 
   return (
     <main>
@@ -164,7 +176,7 @@ export default async function LicenseDetailPage({
           <div className="eyebrow">LICENSE EXPIRATIONS</div>
           <h1>{displayName}</h1>
           <p className="page-subtitle">
-            Expired and expiring licenses are separated into priority and non-priority states.
+            Review expired, expiring, and active state licenses in one place.
           </p>
         </div>
         <div className="license-detail-actions">
@@ -205,6 +217,10 @@ export default async function LicenseDetailPage({
           <span>Expiring licenses</span>
           <strong>{expiring.length}</strong>
         </div>
+        <div>
+          <span>Active states</span>
+          <strong>{activeLicenses.length}</strong>
+        </div>
       </section>
 
       <div className="license-priority-grid">
@@ -220,6 +236,13 @@ export default async function LicenseDetailPage({
           title="Non-Priority Licenses"
           rows={nonPriority}
           emptyMessage="No non-priority-state licenses are expired or expiring within 30 days."
+        />
+
+        <LicenseSection
+          eyebrow="ACTIVE STATES"
+          title="Active State Licenses"
+          rows={activeLicenses}
+          emptyMessage="No active state licenses were found."
         />
       </div>
     </main>

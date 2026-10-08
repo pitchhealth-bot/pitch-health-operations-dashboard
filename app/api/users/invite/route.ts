@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSessionEmail } from "@/lib/app-session";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
+import { sendPitchHealthEmail } from "@/lib/pitch-health-email";
 import {
   getDashboardUserByEmail,
   listDashboardUsers,
@@ -37,29 +38,49 @@ export async function POST(request: Request) {
     }
 
     const origin = new URL(request.url).origin;
+    const redirectTo = `${origin}/auth/accept`;
     const supabase = getSupabaseAdmin();
 
-    const { error } = await supabase.auth.admin.inviteUserByEmail(target.email, {
-      redirectTo: `${origin}/auth/accept`,
-      data: {
-        name: target.name || "",
-        dashboard_role: target.role,
+    let actionLink = "";
+
+    const inviteLink = await supabase.auth.admin.generateLink({
+      type: "invite",
+      email: target.email,
+      options: {
+        redirectTo,
+        data: {
+          name: target.name || "",
+          dashboard_role: target.role,
+        },
       },
     });
 
-    if (error) {
-      const fallback = await supabase.auth.signInWithOtp({
+    if (!inviteLink.error) {
+      actionLink = inviteLink.data.properties?.action_link || "";
+    } else {
+      const magicLink = await supabase.auth.admin.generateLink({
+        type: "magiclink",
         email: target.email,
-        options: {
-          emailRedirectTo: `${origin}/auth/accept`,
-          shouldCreateUser: false,
-        },
+        options: { redirectTo },
       });
 
-      if (fallback.error) throw new Error(fallback.error.message);
+      if (magicLink.error) throw new Error(magicLink.error.message);
+      actionLink = magicLink.data.properties?.action_link || "";
     }
 
-    return NextResponse.json({ ok: true, branded: true });
+    if (!actionLink) {
+      throw new Error("Supabase did not return a secure invite link.");
+    }
+
+    await sendPitchHealthEmail({
+      to: target.email,
+      name: target.name,
+      role: target.role,
+      actionUrl: actionLink,
+      type: "invite",
+    });
+
+    return NextResponse.json({ ok: true, branded: true, provider: "resend" });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Could not send invite." },

@@ -616,3 +616,11 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .user-more-menu button.danger{color:#b42318}
 .user-more-menu button.danger:hover:not(:disabled){background:#fff0ef}
 .user-more-menu button:disabled{opacity:.45;cursor:not-allowed}
+
+
+.login-card .login-email-input + .login-email-input{margin-top:10px}
+.account-panel{max-width:900px}
+.account-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.account-actions{display:flex;justify-content:flex-end;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
+.sidebar-user{text-decoration:none;color:inherit}
+@media(max-width:800px){.account-grid{grid-template-columns:1fr}}

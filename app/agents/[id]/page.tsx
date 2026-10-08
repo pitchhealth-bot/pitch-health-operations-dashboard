@@ -5,6 +5,7 @@ import { getAhip2027ForAgent, getCarrierStatusesForAgent, getSunFireReportForAge
 import { requireUser } from "@/lib/session";
 import { canEdit } from "@/lib/access";
 import CarrierStatusEditor from "./CarrierStatusEditor";
+import CarrierCertificateUpload from "./CarrierCertificateUpload";
 
 export const dynamic = "force-dynamic";
 
@@ -224,6 +225,10 @@ export default async function AgentProfilePage({
           </section>
         </aside>
       </div>
+
+      {canEdit(current.role) ? (
+        <CarrierCertificateUpload agentId={agent.id} />
+      ) : null}
 
       <CarrierStatusEditor
         agentId={agent.id}

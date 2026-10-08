@@ -110,18 +110,20 @@ export default function CarrierCertificateUpload({
       </p>
 
       <div className="carrier-cert-fields">
-        <label>
-          <span>Carrier</span>
-          <select value={carrier} onChange={event => setCarrier(event.target.value)}>
-            <option value="">Select carrier</option>
-            {carriers.map(item => (
-              <option value={item} key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
+        <div className="carrier-cert-field">
+          <span className="carrier-cert-label">Carrier</span>
+          <div className="carrier-select-shell">
+            <select value={carrier} onChange={event => setCarrier(event.target.value)}>
+              <option value="">Select carrier</option>
+              {carriers.map(item => (
+                <option value={item} key={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-        <label>
-          <span>Certificate</span>
+        <div className="carrier-cert-field">
+          <span className="carrier-cert-label">Certificate</span>
 
           <div
             className={`carrier-dropzone${dragging ? " is-dragging" : ""}`}
@@ -171,28 +173,32 @@ export default function CarrierCertificateUpload({
               className="carrier-drop-input"
             />
           </div>
-        </label>
+        </div>
       </div>
 
-      {file ? <div className="carrier-cert-file">{file.name}</div> : null}
-      {error ? <div className="form-error">{error}</div> : null}
-      {message ? <div className="form-success">{message}</div> : null}
+      <div className="carrier-cert-actions">
+        <div className="carrier-cert-feedback">
+          {error ? <div className="form-error">{error}</div> : null}
+          {message ? <div className="form-success">{message}</div> : null}
+        </div>
 
-      <button
-        className="primary-button carrier-cert-save"
-        type="button"
-        onClick={save}
-        disabled={busy}
-      >
-        {busy ? "Saving..." : "Save Certificate"}
-      </button>
+        <button
+          className="carrier-cert-save"
+          type="button"
+          onClick={save}
+          disabled={busy || !carrier || !file}
+        >
+          {busy ? "Saving..." : "Save Certificate"}
+        </button>
+      </div>
 
       <div className="carrier-cert-list">
-        <div className="attachment-label" style={{ marginTop: 20 }}>
+        <div className="carrier-cert-list-head">
           <div>
             <strong>Stored Certificates</strong>
             <span>{certificates.length ? `${certificates.length} certificate${certificates.length > 1 ? "s" : ""}` : "No certificates yet"}</span>
           </div>
+          <span className="carrier-cert-count">{certificates.length}</span>
         </div>
 
         {certificates.length ? certificates.map(cert => (

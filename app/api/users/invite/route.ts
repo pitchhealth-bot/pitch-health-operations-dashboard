@@ -37,8 +37,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const origin = new URL(request.url).origin;
-    const redirectTo = `${origin}/auth/accept`;
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://pitch-health-operations-dashboard.vercel.app").replace(/\/$/, "");
+    const redirectTo = `${appUrl}/auth/accept`;
     const supabase = getSupabaseAdmin();
 
     let actionLink = "";

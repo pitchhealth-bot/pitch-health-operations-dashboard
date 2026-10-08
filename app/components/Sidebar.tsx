@@ -16,11 +16,6 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
 
-  async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/login";
-  }
-
   const adminItems = [
     { href: "/", label: "Dashboard", icon: "⌂" },
     { href: "/agents", label: "Active Agents", icon: "◎" },
@@ -81,7 +76,7 @@ export default function Sidebar({
       </div>
 
       {user && (
-        <div className="sidebar-user">
+        <Link href="/account" className="sidebar-user" title="My Account">
           <div className="sidebar-user-avatar">
             {(user.name || user.email || "U").slice(0, 1).toUpperCase()}
           </div>
@@ -89,14 +84,8 @@ export default function Sidebar({
             <strong>{user.name || user.email}</strong>
             <span>{user.role.replace("_", " ")}</span>
           </div>
-          <button
-            className="sidebar-signout"
-            onClick={logout}
-            title="Sign out"
-          >
-            ↗
-          </button>
-        </div>
+          <span className="sidebar-signout" aria-hidden="true">↗</span>
+        </Link>
       )}
     </aside>
   );

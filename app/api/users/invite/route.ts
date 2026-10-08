@@ -41,7 +41,8 @@ export async function POST(request: Request) {
     const redirectTo = `${appUrl}/auth/accept`;
     const supabase = getSupabaseAdmin();
 
-    let actionLink = "";
+    let tokenHash = "";
+    let verificationType: "invite" | "magiclink" = "invite";
 
     const inviteLink = await supabase.auth.admin.generateLink({
       type: "invite",
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     });
 
     if (!inviteLink.error) {
-      actionLink = inviteLink.data.properties?.action_link || "";
+      tokenHash = inviteLink.data.properties?.hashed_token || "";
     } else {
       const magicLink = await supabase.auth.admin.generateLink({
         type: "magiclink",
@@ -65,12 +66,16 @@ export async function POST(request: Request) {
       });
 
       if (magicLink.error) throw new Error(magicLink.error.message);
-      actionLink = magicLink.data.properties?.action_link || "";
+      tokenHash = magicLink.data.properties?.hashed_token || "";
+      verificationType = "magiclink";
     }
 
-    if (!actionLink) {
-      throw new Error("Supabase did not return a secure invite link.");
+    if (!tokenHash) {
+      throw new Error("Supabase did not return a secure invite token.");
     }
+
+    const actionLink =
+      `${appUrl}/auth/accept?token_hash=${encodeURIComponent(tokenHash)}&type=${verificationType}`;
 
     await sendPitchHealthEmail({
       to: target.email,

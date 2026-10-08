@@ -140,7 +140,7 @@ export async function sendPitchHealthEmail(input: {
   const apiKey = process.env.RESEND_API_KEY;
   const from =
     process.env.PITCH_HEALTH_FROM_EMAIL ||
-    "Pitch Health Support <support@pitchhealthsolutions.com>";
+    "Pitch Health Operations <automations@pitchhealthsolutions.com>";
 
   if (!apiKey) {
     throw new Error(

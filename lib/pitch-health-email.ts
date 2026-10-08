@@ -1,3 +1,12 @@
+import banner1 from "./email-assets/banner-1";
+import banner2 from "./email-assets/banner-2";
+import banner3 from "./email-assets/banner-3";
+import banner4 from "./email-assets/banner-4";
+import banner5 from "./email-assets/banner-5";
+import banner6 from "./email-assets/banner-6";
+import banner7 from "./email-assets/banner-7";
+import banner8 from "./email-assets/banner-8";
+
 type Role = "super_admin" | "admin" | "agent";
 
 const ROLE_LABELS: Record<Role, string> = {
@@ -6,8 +15,7 @@ const ROLE_LABELS: Record<Role, string> = {
   agent: "Agent",
 };
 
-const LOGO_URL =
-  "https://images.squarespace-cdn.com/content/v1/68e2e3dcf5bd6f280a59912d/c02852b6-e33d-4c4e-9a43-508854bdaf99/Pitch%2BHealth%2BOnboarding%2BPacket.png";
+const BANNER_BASE64 = [banner1,banner2,banner3,banner4,banner5,banner6,banner7,banner8].join("");
 
 function escapeHtml(value: string) {
   return value
@@ -44,10 +52,10 @@ export function pitchHealthEmailHtml(input: {
             <tr>
               <td style="padding:30px 34px 10px;text-align:center;">
                 <img
-                  src="${LOGO_URL}"
+                  src="cid:pitch-health-banner"
                   alt="Pitch Health Solutions"
-                  width="240"
-                  style="display:block;margin:0 auto;max-width:240px;width:100%;height:auto;border:0;"
+                  width="420"
+                  style="display:block;margin:0 auto;max-width:420px;width:100%;height:auto;border:0;"
                 />
               </td>
             </tr>
@@ -172,6 +180,14 @@ export async function sendPitchHealthEmail(input: {
       subject,
       html: pitchHealthEmailHtml(input),
       text: pitchHealthEmailText(input),
+      attachments: [
+        {
+          filename: "pitch-health-banner.png",
+          content: BANNER_BASE64,
+          content_type: "image/png",
+          content_id: "pitch-health-banner",
+        },
+      ],
     }),
     cache: "no-store",
   });

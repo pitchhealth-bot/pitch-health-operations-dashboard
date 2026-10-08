@@ -130,3 +130,15 @@ export async function touchLastLogin(email: string) {
     })
     .eq("email", email.trim().toLowerCase());
 }
+
+
+export async function deleteDashboardUser(id: string) {
+  const supabase = getSupabaseAdmin();
+
+  const { error } = await supabase
+    .from("dashboard_users")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
+}

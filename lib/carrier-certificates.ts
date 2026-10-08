@@ -5,8 +5,8 @@ type AirtableRecord = {
   fields: Record<string, unknown>;
 };
 
-const CARRIER_CERT_BASE_ID = "app7KT6sXkBqdwoO9";
-const CARRIER_CERT_TABLE_ID = "tbloBQNL30Y9SPYaV";
+const CARRIER_CERT_BASE_ID = "app5eoO1QYp4UAoaU";
+const CARRIER_CERT_TABLE_ID = "tblx66f77FNlyJ3m4";
 const STORAGE_BUCKET = "carrier-certificates";
 
 export const CARRIER_CERTIFICATE_CARRIERS = [
@@ -42,74 +42,6 @@ function textValue(value: unknown) {
 
 function normalize(value: string) {
   return value.trim().toLowerCase();
-}
-
-async function fetchAllRecords(token: string): Promise<AirtableRecord[]> {
-  const records: AirtableRecord[] = [];
-  let offset: string | undefined;
-
-  do {
-    const url = new URL(
-      `https://api.airtable.com/v0/${CARRIER_CERT_BASE_ID}/${CARRIER_CERT_TABLE_ID}`,
-    );
-    url.searchParams.set("pageSize", "100");
-    if (offset) url.searchParams.set("offset", offset);
-
-    const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      const detail = await response.text();
-      throw new Error(`Could not read carrier tracker (${response.status}): ${detail}`);
-    }
-
-    const json = await response.json() as {
-      records: AirtableRecord[];
-      offset?: string;
-    };
-
-    records.push(...json.records);
-    offset = json.offset;
-  } while (offset);
-
-  return records;
-}
-
-function findMatchingRecord(
-  records: AirtableRecord[],
-  email: string,
-  name: string,
-) {
-  const emailTarget = normalize(email);
-  const nameTarget = normalize(name);
-
-  const byEmail = records.find(record => {
-    const candidates = [
-      textValue(record.fields["PHS Email"]),
-      textValue(record.fields["Work Email"]),
-      textValue(record.fields["Email"]),
-      textValue(record.fields["Personal Email"]),
-      textValue(record.fields["Personal email"]),
-    ].map(normalize).filter(Boolean);
-
-    return candidates.includes(emailTarget);
-  });
-
-  if (byEmail) return byEmail;
-
-  return records.find(record => {
-    const candidates = [
-      textValue(record.fields["Name"]),
-      textValue(record.fields["Agent Name"]),
-      textValue(record.fields["Agent"]),
-      textValue(record.fields["Candidate"]),
-      textValue(record.fields["Candidate Name"]),
-    ].map(normalize).filter(Boolean);
-
-    return candidates.includes(nameTarget);
-  });
 }
 
 function safeFileName(value: string) {
@@ -189,15 +121,6 @@ export async function uploadCarrierCertificate(input: {
     throw new Error("Only PDF, PNG, JPG, and JPEG files are supported.");
   }
 
-  const records = await fetchAllRecords(token);
-  const record = findMatchingRecord(records, input.email, input.name);
-
-  if (!record) {
-    throw new Error(
-      `No Airtable carrier-tracker record matched ${input.name}. Checked email first, then name.`,
-    );
-  }
-
   const supabase = getSupabaseAdmin();
   const storagePath = [
     input.agentRecordId,
@@ -240,7 +163,7 @@ export async function uploadCarrierCertificate(input: {
   }
 
   const statusResponse = await fetch(
-    `https://api.airtable.com/v0/${CARRIER_CERT_BASE_ID}/${CARRIER_CERT_TABLE_ID}/${record.id}`,
+    `https://api.airtable.com/v0/${CARRIER_CERT_BASE_ID}/${CARRIER_CERT_TABLE_ID}/${input.agentRecordId}`,
     {
       method: "PATCH",
       headers: {
@@ -273,7 +196,7 @@ export async function uploadCarrierCertificate(input: {
   if (signedError) throw new Error(signedError.message);
 
   return {
-    recordId: record.id,
+    recordId: input.agentRecordId,
     carrier: input.carrier,
     status: "Contract Submitted",
     certificate: {

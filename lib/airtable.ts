@@ -1,7 +1,6 @@
 import { unstable_cache } from "next/cache";
 import type { Agent, DashboardData, PipelineStage } from "./types";
 import { sampleAgents } from "./mock-data";
-import { getLicenseRecords, daysUntil } from "./licenses";
 
 const allowedStages: PipelineStage[] = ["Pre-Licensing","Exam","Pre-Contracting","Contracting","RTS"];
 
@@ -197,34 +196,6 @@ async function loadDashboardData(): Promise<DashboardData> {
       };
     });
 
-    const licenseData = await getLicenseRecords();
-
-    if (licenseData.records.length) {
-      for (const agent of agents) {
-        const agentEmail = (agent.email || "").trim().toLowerCase();
-        const agentNpn = (agent.npn || "").trim();
-        const agentName = agent.name.trim().toLowerCase();
-
-        const matches = licenseData.records
-          .filter(license => {
-          if (agentNpn && license.npn && license.npn.trim() === agentNpn) return true;
-          if (agentEmail && license.email && license.email.trim().toLowerCase() === agentEmail) return true;
-          return Boolean(agentName && license.agentName && license.agentName.trim().toLowerCase() === agentName);
-        });
-
-        const upcoming = matches
-          .map(license => license.expirationDate)
-          .filter((value): value is string => Boolean(value))
-          .map(value => ({ value, days: daysUntil(value) }))
-          .filter(item => item.days !== null && item.days >= 0)
-          .sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
-
-        if (upcoming.length) {
-          agent.licenseExpiry = upcoming[0].value;
-        }
-      }
-    }
-
     return { agents, source: "airtable" };
   } catch (error) {
     console.error("Airtable load failed", error);
@@ -236,6 +207,6 @@ async function loadDashboardData(): Promise<DashboardData> {
 
 export const getDashboardData = unstable_cache(
   loadDashboardData,
-  ["pitch-dashboard-data-v3"],
-  { revalidate: 30, tags: ["dashboard-data"] },
+  ["pitch-dashboard-data-v4"],
+  { revalidate: 60, tags: ["dashboard-data"] },
 );

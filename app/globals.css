@@ -624,3 +624,23 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .account-actions{display:flex;justify-content:flex-end;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
 .sidebar-user{text-decoration:none;color:inherit}
 @media(max-width:800px){.account-grid{grid-template-columns:1fr}}
+
+.carrier-contract-submitted{background:#fff0bd!important;color:#8c6500!important}
+.carrier-certifications-complete{background:#ffd6bf!important;color:#9b4d1b!important}
+.carrier-na{background:#eef0f4!important;color:#5d6470!important}
+.carrier-rejected{background:#e5e7eb!important;color:#4b5563!important}
+.carrier-release-needed{background:#dbeafe!important;color:#245aa8!important}
+.carrier-requested-release{background:#ccfbf1!important;color:#0f766e!important}
+.carrier-released{background:#dbeafe!important;color:#0f56b3!important}
+
+.carrier-status-select.carrier-rts{background:#efe9ff!important;color:#5b3fd0!important}
+.carrier-status-select.carrier-requested{background:#fff3d6!important;color:#9b6500!important}
+.carrier-status-select.carrier-contract-submitted{background:#fff0bd!important;color:#8c6500!important}
+.carrier-status-select.carrier-certifications-complete{background:#ffd6bf!important;color:#9b4d1b!important}
+.carrier-status-select.carrier-completed{background:#e8f8ef!important;color:#087443!important}
+.carrier-status-select.carrier-na{background:#eef0f4!important;color:#5d6470!important}
+.carrier-status-select.carrier-rejected{background:#e5e7eb!important;color:#4b5563!important}
+.carrier-status-select.carrier-release-needed{background:#dbeafe!important;color:#245aa8!important}
+.carrier-status-select.carrier-requested-release{background:#ccfbf1!important;color:#0f766e!important}
+.carrier-status-select.carrier-released{background:#dbeafe!important;color:#0f56b3!important}
+.carrier-status-select.carrier-none{background:#f3f2f6!important;color:#7a7684!important}

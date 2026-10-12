@@ -41,7 +41,7 @@ export function pitchHealthEmailHtml(input: {
             <tr>
               <td style="padding:30px 34px 10px;text-align:center;">
                 <img
-                  src="https://pitch-health-operations-dashboard.vercel.app/api/email-assets/pitch-health-banner"
+                  src="https://pitch-health-operations-dashboard.vercel.app/pitch-health-email-banner.png"
                   alt="Pitch Health Solutions"
                   width="420"
                   style="display:block;margin:0 auto;max-width:420px;width:100%;height:auto;border:0;"

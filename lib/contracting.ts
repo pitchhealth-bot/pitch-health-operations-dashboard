@@ -71,19 +71,19 @@ async function fetchAllRecords(tableId?: string): Promise<AirtableRecord[]> {
 const getTable1Records = unstable_cache(
   async () => fetchAllRecords(process.env.AIRTABLE_TABLE_ID_CONTRACTING_1),
   ["pitch-contracting-table-1-v2"],
-  { revalidate: 30, tags: ["contracting-data", "contracting-table-1"] },
+  { revalidate: 300, tags: ["contracting-data", "contracting-table-1"] },
 );
 
 const getTable2Records = unstable_cache(
   async () => fetchAllRecords(process.env.AIRTABLE_TABLE_ID_CONTRACTING_2),
   ["pitch-contracting-table-2-v2"],
-  { revalidate: 30, tags: ["contracting-data", "contracting-table-2"] },
+  { revalidate: 300, tags: ["contracting-data", "contracting-table-2"] },
 );
 
 const getTable3Records = unstable_cache(
   async () => fetchAllRecords(process.env.AIRTABLE_TABLE_ID_CONTRACTING_3),
   ["pitch-contracting-table-3-v2"],
-  { revalidate: 30, tags: ["contracting-data", "contracting-table-3"] },
+  { revalidate: 300, tags: ["contracting-data", "contracting-table-3"] },
 );
 
 export async function getContractingSources(): Promise<ContractingSource[]> {

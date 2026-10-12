@@ -3,14 +3,32 @@
 import { useMemo, useState } from "react";
 import type { CarrierStatus } from "@/lib/contracting";
 
-const STATUS_OPTIONS = ["None","Requested","Completed","Ineligible","RTS"];
+const STATUS_OPTIONS = [
+  "None",
+  "RTS",
+  "Requested",
+  "Contract Submitted",
+  "Certifications complete",
+  "Completed",
+  "N/A",
+  "Rejected",
+  "Release Needed",
+  "Requested Release from PHS",
+  "Released from PHS",
+];
 
 function pillClass(status: string) {
   const value = status.toLowerCase();
   if (value === "rts") return "pill carrier-rts";
   if (value === "completed") return "pill carrier-completed";
   if (value === "requested") return "pill carrier-requested";
-  if (value === "ineligible") return "pill carrier-ineligible";
+  if (value === "contract submitted") return "pill carrier-contract-submitted";
+  if (value === "certifications complete") return "pill carrier-certifications-complete";
+  if (value === "n/a") return "pill carrier-na";
+  if (value === "rejected") return "pill carrier-rejected";
+  if (value === "release needed") return "pill carrier-release-needed";
+  if (value === "requested release from phs") return "pill carrier-requested-release";
+  if (value === "released from phs") return "pill carrier-released";
   return "pill carrier-none";
 }
 
@@ -178,7 +196,7 @@ export default function CarrierStatusEditor({
             <div>
               {editing ? (
                 <select
-                  className="carrier-status-select"
+                  className={`carrier-status-select ${pillClass(item.status).replace("pill ", "")}`}
                   value={item.status}
                   onChange={event => {
                     const status = event.target.value;

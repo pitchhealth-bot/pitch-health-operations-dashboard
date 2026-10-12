@@ -333,7 +333,19 @@ export async function updateCarrierStatusesForAgent(
   const allowedCarriers = new Set([
     "Aetna","Humana","Cigna","UHC","Zing","Devoted","UNL","Wellcare","Heartland",
   ]);
-  const allowedStatuses = new Set(["None","Requested","Completed","Ineligible","RTS"]);
+  const allowedStatuses = new Set([
+    "None",
+    "RTS",
+    "Requested",
+    "Contract Submitted",
+    "Certifications complete",
+    "Completed",
+    "N/A",
+    "Rejected",
+    "Release Needed",
+    "Requested Release from PHS",
+    "Released from PHS",
+  ]);
 
   const records = await getTable3Records();
   const match = records.find(record => emailMatches(record, email));

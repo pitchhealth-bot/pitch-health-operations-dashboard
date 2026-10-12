@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
 import { getContractingSources } from "@/lib/contracting";
+import { getLicenseRecords, daysUntil } from "@/lib/licenses";
 import type { Agent, PipelineStage } from "@/lib/types";
 import { requireRole } from "@/lib/session";
 
@@ -35,7 +36,48 @@ function AgentRow({ agent }: { agent: Agent }) {
 export default async function Home() {
   await requireRole(["admin", "super_admin"]);
 
-  const [{ agents, source, error }, contractingSources] = await Promise.all([getDashboardData(), getContractingSources()]);
+  const [{ agents, source, error }, contractingSources, licenseData] = await Promise.all([
+    getDashboardData(),
+    getContractingSources(),
+    getLicenseRecords(),
+  ]);
+
+  if (licenseData.records.length) {
+    const byNpn = new Map<string, string[]>();
+    const byEmail = new Map<string, string[]>();
+    const byName = new Map<string, string[]>();
+
+    for (const license of licenseData.records) {
+      if (!license.expirationDate) continue;
+      if (license.npn) {
+        const key = license.npn.trim();
+        byNpn.set(key, [...(byNpn.get(key) || []), license.expirationDate]);
+      }
+      if (license.email) {
+        const key = license.email.trim().toLowerCase();
+        byEmail.set(key, [...(byEmail.get(key) || []), license.expirationDate]);
+      }
+      if (license.agentName) {
+        const key = license.agentName.trim().toLowerCase();
+        byName.set(key, [...(byName.get(key) || []), license.expirationDate]);
+      }
+    }
+
+    for (const agent of agents) {
+      const expirations =
+        (agent.npn && byNpn.get(agent.npn.trim())) ||
+        (agent.email && byEmail.get(agent.email.trim().toLowerCase())) ||
+        byName.get(agent.name.trim().toLowerCase()) ||
+        [];
+
+      const upcoming = expirations
+        .map(value => ({ value, days: daysUntil(value) }))
+        .filter(item => item.days !== null && item.days >= 0)
+        .sort((a, b) => (a.days ?? 99999) - (b.days ?? 99999));
+
+      if (upcoming.length) agent.licenseExpiry = upcoming[0].value;
+    }
+  }
   const licensed = agents.filter(a => a.licensingStatus === "Licensed");
   const nonLicensed = agents.filter(a => a.licensingStatus === "Non-licensed");
   const stagnant = agents.filter(a => a.daysInStage >= 7);

@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import Link from "next/link";
+import { Suspense } from "react";
 import { getDashboardData } from "@/lib/airtable";
 import { getContractingSources } from "@/lib/contracting";
 import { getLicenseRecords, daysUntil } from "@/lib/licenses";
@@ -33,12 +34,40 @@ function AgentRow({ agent }: { agent: Agent }) {
   );
 }
 
+async function ContractingSourcesPanel() {
+  const contractingSources = await getContractingSources();
+
+  return (
+    <section className="panel">
+      <div className="panel-title">
+        <div>
+          <span className="eyebrow">CONTRACTING DATA</span>
+          <h2>Connected Airtable tables</h2>
+        </div>
+      </div>
+      <div className="contracting-grid">
+        {contractingSources.map(source => (
+          <div className="contracting-source" key={source.key}>
+            <div>
+              <strong>{source.key}</strong>
+              <div className="muted">{source.ok ? "Connected" : source.error}</div>
+            </div>
+            <div className={source.ok ? "pill success" : "pill critical"}>
+              {source.ok ? `${source.count} records` : "Error"}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+
 export default async function Home() {
   await requireRole(["admin", "super_admin"]);
 
-  const [{ agents, source, error }, contractingSources, licenseData] = await Promise.all([
+  const [{ agents, source, error }, licenseData] = await Promise.all([
     getDashboardData(),
-    getContractingSources(),
     getLicenseRecords(),
   ]);
 
@@ -111,22 +140,21 @@ export default async function Home() {
         <Link href="/licenses" className="metric metric-link"><div className="metric-top"><span>Licenses ≤30d</span><i>⌁</i></div><strong>{expiring.length}</strong><small>Upcoming expirations →</small></Link>
       </section>
 
-      <section className="panel">
-        <div className="panel-title"><div><span className="eyebrow">CONTRACTING DATA</span><h2>Connected Airtable tables</h2></div></div>
-        <div className="contracting-grid">
-          {contractingSources.map(source => (
-            <div className="contracting-source" key={source.key}>
+      <Suspense
+        fallback={
+          <section className="panel">
+            <div className="panel-title">
               <div>
-                <strong>{source.key}</strong>
-                <div className="muted">{source.ok ? "Connected" : source.error}</div>
-              </div>
-              <div className={source.ok ? "pill success" : "pill critical"}>
-                {source.ok ? `${source.count} records` : "Error"}
+                <span className="eyebrow">CONTRACTING DATA</span>
+                <h2>Connected Airtable tables</h2>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="muted">Loading contracting connections...</div>
+          </section>
+        }
+      >
+        <ContractingSourcesPanel />
+      </Suspense>
 
       <section className="panel">
         <div className="panel-title"><div><span className="eyebrow">PIPELINE</span><h2>Agent journey</h2></div><span className="muted">Bottlenecks at a glance</span></div>

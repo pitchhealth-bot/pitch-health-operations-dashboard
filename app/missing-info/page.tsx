@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
 import { requireRole } from "@/lib/session";
+import MissingInfoEditor from "./MissingInfoEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -74,43 +75,24 @@ export default async function MissingInfoPage() {
       </section>
 
       <section className="panel agents-list-panel">
-        <div className="missing-info-table-head">
-          <span>Agent</span>
-          <span>Status</span>
-          <span>Role</span>
-          {REQUIRED_FIELDS.map(field => <span key={field}>{field}</span>)}
-          <span>Missing</span>
-        </div>
-
-        {incomplete.length ? incomplete.map(agent => (
-          <div className="missing-info-table-row" key={agent.id}>
-            <div>
-              <Link href={"/agents/" + agent.id} className="agent-name-link">
-                <strong>{agent.name}</strong>
-              </Link>
-              <div className="muted">{agent.email || "No work email"}</div>
-            </div>
-            <div>
-              <span className="pill success">{agent.status || "Active"}</span>
-            </div>
-            <div>{agent.role || "No Role"}</div>
-
-            {REQUIRED_FIELDS.map(field => {
-              const missing = agent.missingFields.includes(field);
-              return (
-                <div key={field}>
-                  <span className={missing ? "pill critical" : "pill success"}>
-                    {missing ? "Missing" : "Complete"}
-                  </span>
-                </div>
-              );
-            })}
-
-            <div>
-              <span className="pill warning">{agent.missingFields.length}</span>
-            </div>
-          </div>
-        )) : (
+        {incomplete.length ? (
+          <MissingInfoEditor
+            rows={incomplete.map(agent => ({
+              id: agent.id,
+              name: agent.name,
+              email: agent.email,
+              status: agent.status,
+              role: agent.role,
+              licensingStatus: agent.licensingStatus,
+              ssn: agent.ssn,
+              dateOfBirth: agent.dateOfBirth,
+              npn: agent.npn,
+              discordUserId: agent.discordUserId,
+              residentState: agent.residentState,
+              missingFields: agent.missingFields,
+            }))}
+          />
+        ) : (
           <div className="empty" style={{ minHeight: 160 }}>
             All active agents have the five required profile items.
           </div>

@@ -106,11 +106,22 @@ export default function AgentProfileEditor({
     }
 
     if (options?.select) {
+      const designationClass =
+        key === "contractingDesignation"
+          ? value === "Pitch Health"
+            ? " designation-pitch-health"
+            : value === "IFG"
+              ? " designation-ifg"
+              : value === "TrueCare"
+                ? " designation-truecare"
+                : ""
+          : "";
+
       return (
-        <label className="record-field record-field-editable">
+        <label className="record-field record-field-editable record-field-select">
           <span>{label}</span>
           <select
-            className="profile-edit-input"
+            className={`profile-edit-input profile-edit-select${designationClass}`}
             value={value}
             onChange={event => update(key, event.target.value)}
           >
@@ -209,7 +220,9 @@ export default function AgentProfileEditor({
             select: ["Licensed", "Non-licensed"],
           })}
           {field("Current Stage", "currentStage")}
-          {field("Contracting Designation", "contractingDesignation")}
+          {field("Contracting Designation", "contractingDesignation", {
+            select: ["Pitch Health", "IFG", "TrueCare"],
+          })}
           {field("NPN", "npn")}
         </div>
 

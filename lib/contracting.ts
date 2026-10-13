@@ -565,8 +565,81 @@ export async function updateCertificationDocumentForAgent(input: {
   email?: string;
   name?: string;
   kind: CertificationDocumentKind;
-  fileUrl: string;
-  fileName: string;
+  fileUrl?: string;
+  fileName?: string;
+  removeAttachmentIds?: string[];
+}) {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING || "app7KT6sXkBqdwoO9";
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_1 || "tblJPbR1iOlU9kFE7";
+
+  if (!token) throw new Error("AIRTABLE_PAT is not configured.");
+
+  const [records, schema] = await Promise.all([
+    getTable1Records(),
+    getContractingDocumentsSchema(),
+  ]);
+
+  const match = findAgentRecord(records, input.email, input.name);
+  if (!match) {
+    throw new Error("No Contracting Documents & Information record matched this agent.");
+  }
+
+  const fieldName = certificationFieldName(input.kind, schema, match.fields);
+  if (!fieldName) {
+    throw new Error(
+      input.kind === "sunfire"
+        ? "Could not find the SunFire Reports attachment field in Contracting Documents & Information."
+        : "Could not find the 2027 AHIP Document field in Contracting Documents & Information.",
+    );
+  }
+
+  const removeIds = new Set(input.removeAttachmentIds || []);
+  const currentAttachments = attachmentList(match.fields[fieldName], fieldName);
+
+  const nextAttachments: Array<{ id?: string; url?: string; filename?: string }> =
+    currentAttachments
+      .filter(file => !file.id || !removeIds.has(file.id))
+      .map(file => file.id ? { id: file.id } : { url: file.url, filename: file.filename });
+
+  if (input.fileUrl && input.fileName) {
+    nextAttachments.push({
+      url: input.fileUrl,
+      filename: input.fileName,
+    });
+  }
+
+  const response = await fetch(
+    `https://api.airtable.com/v0/${baseId}/${tableId}/${match.id}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fields: {
+          [fieldName]: nextAttachments,
+          ...(input.kind === "sunfire"
+            ? { "SunFire Report Last Update": new Date().toISOString().slice(0, 10) }
+            : {}),
+        },
+      }),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Airtable certification update failed (${response.status}): ${detail}`);
+  }
+
+  const updated = await response.json() as AirtableRecord;
+  return {
+    recordId: match.id,
+    fieldName,
+    attachments: attachmentList(updated.fields[fieldName], fieldName),
+  };
 }) {
   const token = process.env.AIRTABLE_PAT;
   const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING || "app7KT6sXkBqdwoO9";

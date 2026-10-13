@@ -620,9 +620,6 @@ export async function updateCertificationDocumentForAgent(input: {
       body: JSON.stringify({
         fields: {
           [fieldName]: nextAttachments,
-          ...(input.kind === "sunfire"
-            ? { "SunFire Report Last Update": new Date().toISOString().slice(0, 10) }
-            : {}),
         },
       }),
       cache: "no-store",

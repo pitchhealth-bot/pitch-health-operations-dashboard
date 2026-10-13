@@ -478,3 +478,149 @@ export async function updateCarrierStatusesForAgent(
     })),
   };
 }
+
+
+export type CertificationDocumentKind = "ahip2027" | "sunfire";
+
+type TableSchema = {
+  id: string;
+  name: string;
+  fields?: AirtableFieldSchema[];
+};
+
+async function getContractingDocumentsSchema(): Promise<AirtableFieldSchema[]> {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING || "app7KT6sXkBqdwoO9";
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_1 || "tblJPbR1iOlU9kFE7";
+
+  if (!token || !baseId || !tableId) return [];
+
+  const response = await fetch(`https://api.airtable.com/v0/meta/bases/${baseId}/tables`, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) return [];
+
+  const json = await response.json() as { tables?: TableSchema[] };
+  return json.tables?.find(table => table.id === tableId)?.fields || [];
+}
+
+function certificationFieldName(
+  kind: CertificationDocumentKind,
+  schema: AirtableFieldSchema[],
+  recordFields?: Record<string, unknown>,
+) {
+  const names = schema.map(field => field.name);
+
+  if (kind === "ahip2027") {
+    return (
+      names.find(name => name === "2027 AHIP Document") ||
+      names.find(name => normalizeFieldName(name).includes("2027ahip")) ||
+      Object.keys(recordFields || {}).find(name => normalizeFieldName(name).includes("2027ahip")) ||
+      "2027 AHIP Document"
+    );
+  }
+
+  return (
+    names.find(name => normalizeFieldName(name) === "sunfirereportcopy") ||
+    names.find(name => normalizeFieldName(name).includes("sunfirereport")) ||
+    Object.keys(recordFields || {}).find(name => normalizeFieldName(name).includes("sunfirereport")) ||
+    ""
+  );
+}
+
+function findAgentRecord(
+  records: AirtableRecord[],
+  email?: string,
+  name?: string,
+) {
+  return (
+    (email ? records.find(record => emailMatches(record, email)) : undefined) ||
+    (name ? records.find(record => nameMatches(record, name)) : undefined)
+  );
+}
+
+export async function getCertificationDocumentsForAgent(
+  email?: string,
+  name?: string,
+) {
+  try {
+    const [records, schema] = await Promise.all([
+      getTable1Records(),
+      getContractingDocumentsSchema(),
+    ]);
+
+    const match = findAgentRecord(records, email, name);
+    if (!match) return { ahip: [], sunfire: [] };
+
+    const ahipField = certificationFieldName("ahip2027", schema, match.fields);
+    const sunfireField = certificationFieldName("sunfire", schema, match.fields);
+
+    return {
+      ahip: attachmentList(match.fields[ahipField], "AHIP 2027"),
+      sunfire: sunfireField
+        ? attachmentList(match.fields[sunfireField], "SunFire Report")
+        : [],
+    };
+  } catch {
+    return { ahip: [], sunfire: [] };
+  }
+}
+
+export async function updateCertificationDocumentForAgent(input: {
+  email?: string;
+  name?: string;
+  kind: CertificationDocumentKind;
+  fileUrl: string;
+  fileName: string;
+}) {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING || "app7KT6sXkBqdwoO9";
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_1 || "tblJPbR1iOlU9kFE7";
+
+  if (!token) throw new Error("AIRTABLE_PAT is not configured.");
+
+  const [records, schema] = await Promise.all([
+    getTable1Records(),
+    getContractingDocumentsSchema(),
+  ]);
+
+  const match = findAgentRecord(records, input.email, input.name);
+  if (!match) {
+    throw new Error("No Contracting Documents & Information record matched this agent.");
+  }
+
+  const fieldName = certificationFieldName(input.kind, schema, match.fields);
+  if (!fieldName) {
+    throw new Error(
+      input.kind === "sunfire"
+        ? "Could not find a SunFire attachment field in Contracting Documents & Information."
+        : "Could not find the 2027 AHIP Document field in Contracting Documents & Information.",
+    );
+  }
+
+  const response = await fetch(
+    `https://api.airtable.com/v0/${baseId}/${tableId}/${match.id}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fields: {
+          [fieldName]: [{ url: input.fileUrl, filename: input.fileName }],
+        },
+      }),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Airtable certification update failed (${response.status}): ${detail}`);
+  }
+
+  return { recordId: match.id, fieldName };
+}

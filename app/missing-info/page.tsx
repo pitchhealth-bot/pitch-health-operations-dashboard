@@ -21,6 +21,14 @@ export default async function MissingInfoPage() {
     agent => (agent.status || "").trim().toLowerCase() === "active",
   );
 
+  const roleOptions = Array.from(
+    new Set(
+      activeAgents
+        .map(agent => (agent.role || "").trim())
+        .filter(Boolean),
+    ),
+  ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
   const incomplete = activeAgents
     .filter(agent => agent.missingFields.length > 0)
     .sort((a, b) => {
@@ -78,6 +86,7 @@ export default async function MissingInfoPage() {
         <div className="missing-info-scroll">
         {incomplete.length ? (
           <MissingInfoEditor
+            roleOptions={roleOptions}
             rows={incomplete.map(agent => ({
               id: agent.id,
               name: agent.name,

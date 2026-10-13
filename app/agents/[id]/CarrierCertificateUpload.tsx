@@ -105,8 +105,8 @@ export default function CarrierCertificateUpload({
       </div>
 
       <p className="carrier-cert-help">
-        Certificates are stored securely in the dashboard. Airtable only receives
-        the carrier status update to <strong>Contract Submitted</strong>.
+        Certificates are stored securely in Supabase and synced with Airtable.
+        New uploads also update the carrier status to <strong>Contract Submitted</strong>.
       </p>
 
       <div className="carrier-cert-fields">

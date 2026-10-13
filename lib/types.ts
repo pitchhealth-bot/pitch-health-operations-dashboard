@@ -26,6 +26,9 @@ export type Agent = {
   phoneNumber?: string;
   dateOfBirth?: string;
   npn?: string;
+  ssn?: string;
+  discordUserId?: string;
+  residentState?: string;
   ahip2027?: AirtableAttachment[];
   stage: PipelineStage;
   subStage?: string;

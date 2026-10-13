@@ -77,13 +77,31 @@ function UploadBox({
   inputRef: RefObject<HTMLInputElement | null>;
   onChange: (file: File | null) => void;
 }) {
+  const [dragActive, setDragActive] = useState(false);
+
   return (
     <div
-      className={`certification-upload-box${file ? " has-file" : ""}`}
+      className={`certification-upload-box${file ? " has-file" : ""}${dragActive ? " drag-active" : ""}`}
       onClick={() => inputRef.current?.click()}
-      onDragOver={event => event.preventDefault()}
+      onDragEnter={event => {
+        event.preventDefault();
+        setDragActive(true);
+      }}
+      onDragOver={event => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        setDragActive(true);
+      }}
+      onDragLeave={event => {
+        event.preventDefault();
+        const nextTarget = event.relatedTarget as Node | null;
+        if (!nextTarget || !event.currentTarget.contains(nextTarget)) {
+          setDragActive(false);
+        }
+      }}
       onDrop={event => {
         event.preventDefault();
+        setDragActive(false);
         onChange(event.dataTransfer.files?.[0] || null);
       }}
     >
@@ -96,8 +114,20 @@ function UploadBox({
       />
       <div className="certification-upload-icon">↑</div>
       <div>
-        <strong>{file ? file.name : `Upload ${label}`}</strong>
-        <span>{file ? "Ready to save" : "Drop file here or click to browse"}</span>
+        <strong>
+          {dragActive
+            ? "Release to upload"
+            : file
+              ? file.name
+              : `Upload ${label}`}
+        </strong>
+        <span>
+          {dragActive
+            ? "Drop the file here"
+            : file
+              ? "Ready to save"
+              : "Drop file here or click to browse"}
+        </span>
       </div>
     </div>
   );

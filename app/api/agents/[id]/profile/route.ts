@@ -21,6 +21,9 @@ const FIELD_MAP = {
   currentStage: "Current Stage",
   contractingDesignation: "Contracting Designation",
   npn: "NPN",
+  ssn: "SSN",
+  discordUserId: "Discord User ID",
+  residentState: "Resident State",
 } as const;
 
 type EditableKey = keyof typeof FIELD_MAP;

@@ -209,7 +209,7 @@ export default function UsersManager({
           <span></span>
         </div>
 
-        {users.map(user => (
+        {users.map((user, index) => (
           <div className="users-row" key={user.id}>
             <input
               className="user-cell-input"
@@ -271,7 +271,7 @@ export default function UsersManager({
                 {savingId === user.id ? "Saving..." : "Save"}
               </button>
 
-              <div className="user-more-wrap">
+              <div className={`user-more-wrap${index >= users.length - 2 ? " menu-up" : ""}`}>
                 <button
                   className="user-more-button"
                   type="button"

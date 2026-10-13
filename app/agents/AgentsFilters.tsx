@@ -10,12 +10,14 @@ export default function AgentsFilters({
   sort,
   dir,
   specialFilter,
+  roleView,
 }: {
   initialQuery: string;
   initialLicensing: string;
   sort: string;
   dir: string;
   specialFilter: string;
+  roleView: string;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
@@ -30,6 +32,7 @@ export default function AgentsFilters({
     if (sort) params.set("sort", sort);
     if (dir) params.set("dir", dir);
     if (specialFilter) params.set("filter", specialFilter);
+    if (roleView) params.set("roleView", roleView);
 
     const qs = params.toString();
     router.replace(qs ? `/agents?${qs}` : "/agents", { scroll: false });
@@ -80,7 +83,7 @@ export default function AgentsFilters({
         Filter
       </button>
 
-      {(query || licensing || specialFilter) && (
+      {(query || licensing || specialFilter || roleView) && (
         <Link href="/agents" className="clear-link">
           Clear
         </Link>

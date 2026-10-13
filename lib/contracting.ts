@@ -511,21 +511,26 @@ function certificationFieldName(
   schema: AirtableFieldSchema[],
   recordFields?: Record<string, unknown>,
 ) {
-  const names = schema.map(field => field.name);
+  const attachmentFields = schema.filter(field => field.type === "multipleAttachments");
 
   if (kind === "ahip2027") {
     return (
-      names.find(name => name === "2027 AHIP Document") ||
-      names.find(name => normalizeFieldName(name).includes("2027ahip")) ||
-      Object.keys(recordFields || {}).find(name => normalizeFieldName(name).includes("2027ahip")) ||
-      "2027 AHIP Document"
+      attachmentFields.find(field => field.name === "2027 AHIP Document")?.name ||
+      attachmentFields.find(field =>
+        normalizeFieldName(field.name).includes("2027ahip"),
+      )?.name ||
+      ""
     );
   }
 
   return (
-    names.find(name => normalizeFieldName(name) === "sunfirereportcopy") ||
-    names.find(name => normalizeFieldName(name).includes("sunfirereport")) ||
-    Object.keys(recordFields || {}).find(name => normalizeFieldName(name).includes("sunfirereport")) ||
+    attachmentFields.find(field =>
+      normalizeFieldName(field.name) === "sunfirereportcopy",
+    )?.name ||
+    attachmentFields.find(field => {
+      const normalized = normalizeFieldName(field.name);
+      return normalized.includes("sunfire") && normalized.includes("report");
+    })?.name ||
     ""
   );
 }

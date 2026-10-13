@@ -682,3 +682,33 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   color:#fff;
   box-shadow:0 8px 18px rgba(79,43,208,.16);
 }
+
+.profile-edit-actions{display:flex;align-items:center;gap:8px}
+.profile-pencil-button{
+  width:34px;height:34px;border-radius:10px;
+  border:1px solid var(--line);background:#fff;color:var(--purple);
+  font-size:18px;font-weight:800;cursor:pointer;
+  display:grid;place-items:center;
+}
+.profile-pencil-button:hover{background:#f8f5ff;border-color:#cfc4f7}
+.profile-cancel-button,.profile-save-button{
+  border-radius:9px;padding:8px 12px;font-size:9px;font-weight:850;cursor:pointer;
+}
+.profile-cancel-button{border:1px solid var(--line);background:#f7f6fa;color:#686472}
+.profile-save-button{border:0;background:var(--purple);color:#fff}
+.profile-save-button:hover{background:var(--purple-dark)}
+.profile-cancel-button:disabled,.profile-save-button:disabled{opacity:.5;cursor:not-allowed}
+.record-field-editable{display:block}
+.profile-edit-input{
+  width:100%;margin-top:6px;border:1px solid var(--line);
+  background:#fff;border-radius:9px;padding:9px 10px;
+  font-size:10px;font-weight:700;color:var(--ink);outline:none;
+}
+.profile-edit-input:focus{
+  border-color:#bbaaf8;box-shadow:0 0 0 3px var(--purple-soft)
+}
+.profile-edit-message{
+  margin-top:12px;padding:9px 11px;border-radius:9px;
+  background:var(--purple-softer);color:var(--purple);
+  font-size:10px;font-weight:750
+}

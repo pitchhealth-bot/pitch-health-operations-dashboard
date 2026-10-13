@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/session";
 import { canEdit } from "@/lib/access";
 import CarrierStatusEditor from "./CarrierStatusEditor";
 import CarrierCertificateUpload from "./CarrierCertificateUpload";
+import AgentProfileEditor from "./AgentProfileEditor";
 import { getCarrierCertificatesForAgent } from "@/lib/carrier-certificates";
 
 export const dynamic = "force-dynamic";
@@ -120,43 +121,63 @@ export default async function AgentProfilePage({
       </section>
       <div className="employee-layout">
         <div>
-          <section className="panel employee-section">
-            <div className="section-heading">
-              <div>
-                <div className="eyebrow">CONTACT & IDENTITY</div>
-                <h2>Personal Information</h2>
-              </div>
-            </div>
+          {canEdit(current.role) ? (
+            <AgentProfileEditor
+              agentId={agent.id}
+              initialValues={{
+                name: agent.name || "",
+                email: agent.email || "",
+                personalEmail: agent.personalEmail || "",
+                phoneNumber: agent.phoneNumber || "",
+                dateOfBirth: agent.dateOfBirth || "",
+                startDate: agent.startDate || "",
+                status: agent.status || "",
+                role: agent.role || "",
+                licensingStatus: agent.licensingStatus || "",
+                currentStage: agent.currentStage || "",
+                contractingDesignation: agent.contractingDesignation || "",
+                npn: agent.npn || "",
+              }}
+            />
+          ) : (
+            <>
+              <section className="panel employee-section">
+                <div className="section-heading">
+                  <div>
+                    <div className="eyebrow">CONTACT & IDENTITY</div>
+                    <h2>Personal Information</h2>
+                  </div>
+                </div>
 
-            <div className="record-grid">
-              <Field label="Name" value={agent.name} />
-              <Field label="Work Email" value={agent.email} />
-              <Field label="Personal Email" value={agent.personalEmail} />
-              <Field label="Phone Number" value={formatPhone(agent.phoneNumber)} />
-              <Field label="Date of Birth" value={formatDate(agent.dateOfBirth)} />
-              <Field label="Start Date" value={formatDate(agent.startDate)} />
-            </div>
-          </section>
+                <div className="record-grid">
+                  <Field label="Name" value={agent.name} />
+                  <Field label="Work Email" value={agent.email} />
+                  <Field label="Personal Email" value={agent.personalEmail} />
+                  <Field label="Phone Number" value={formatPhone(agent.phoneNumber)} />
+                  <Field label="Date of Birth" value={formatDate(agent.dateOfBirth)} />
+                  <Field label="Start Date" value={formatDate(agent.startDate)} />
+                </div>
+              </section>
 
-          <section className="panel employee-section">
-            <div className="section-heading">
-              <div>
-                <div className="eyebrow">EMPLOYMENT</div>
-                <h2>Role & Contracting</h2>
-              </div>
-            </div>
+              <section className="panel employee-section">
+                <div className="section-heading">
+                  <div>
+                    <div className="eyebrow">EMPLOYMENT</div>
+                    <h2>Role & Contracting</h2>
+                  </div>
+                </div>
 
-            <div className="record-grid">
-              <Field label="Status" value={agent.status} />
-              <Field label="Role" value={agent.role} />
-              <Field label="Licensing Status" value={agent.licensingStatus} />
-              <Field label="Current Stage" value={agent.currentStage} />
-              <Field label="Contracting Designation" value={agent.contractingDesignation} />
-              <Field label="NPN" value={agent.npn} />
-            </div>
-          </section>
-        </div>
-
+                <div className="record-grid">
+                  <Field label="Status" value={agent.status} />
+                  <Field label="Role" value={agent.role} />
+                  <Field label="Licensing Status" value={agent.licensingStatus} />
+                  <Field label="Current Stage" value={agent.currentStage} />
+                  <Field label="Contracting Designation" value={agent.contractingDesignation} />
+                  <Field label="NPN" value={agent.npn} />
+                </div>
+              </section>
+            </>
+          ))}
         <aside>
           <section className="panel employee-section">
             <div className="section-heading">

@@ -20,6 +20,7 @@ export default function Sidebar({
     { href: "/", label: "Dashboard", icon: "⌂" },
     { href: "/agents", label: "Active Agents", icon: "◎" },
     { href: "/licenses", label: "License Expirations", icon: "◷" },
+    { href: "/missing-info", label: "Missing Info", icon: "?" },
   ];
 
   const agentItems = user?.airtableAgentRecordId

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDashboardData } from "@/lib/airtable";
-import { getAhip2027ForAgent, getCarrierStatusesForAgent, getSunFireReportForAgent } from "@/lib/contracting";
+import { getAhip2027ForAgent, getCarrierStatusesForAgent, getSunFireReportForAgent, getCarrierCertificateAttachmentsForAgent } from "@/lib/contracting";
 import { requireUser } from "@/lib/session";
 import { canEdit } from "@/lib/access";
 import CarrierStatusEditor from "./CarrierStatusEditor";
@@ -88,7 +88,38 @@ export default async function AgentProfilePage({
 
   if (!agent) notFound();
 
-  const [ahip, carrierStatuses, sunFireReports, carrierCertificates] = await Promise.all([getAhip2027ForAgent(agent.email), getCarrierStatusesForAgent(agent.email), getSunFireReportForAgent(agent.email), getCarrierCertificatesForAgent(agent.id, agent.email, agent.name)]);
+  const [
+    ahip,
+    carrierStatuses,
+    sunFireReports,
+    carrierCertificates,
+    airtableCarrierCertificates,
+  ] = await Promise.all([
+    getAhip2027ForAgent(agent.email),
+    getCarrierStatusesForAgent(agent.email),
+    getSunFireReportForAgent(agent.email),
+    getCarrierCertificatesForAgent(agent.id, agent.email, agent.name),
+    getCarrierCertificateAttachmentsForAgent(agent.email, agent.name),
+  ]);
+
+  const mergedCarrierCertificates = [
+    ...carrierCertificates,
+    ...airtableCarrierCertificates
+      .filter(file => !carrierCertificates.some(existing =>
+        existing.carrier === file.carrier &&
+        existing.fileName === file.filename
+      ))
+      .map(file => ({
+        id: `airtable-${file.attachmentId || file.airtableRecordId + "-" + file.carrier + "-" + file.filename}`,
+        carrier: file.carrier,
+        fileName: file.filename,
+        contentType: file.type,
+        sizeBytes: file.size,
+        createdAt: "",
+        uploadedByEmail: "Airtable",
+        url: file.url,
+      })),
+  ];
 
   return (
     <main>
@@ -251,7 +282,7 @@ export default async function AgentProfilePage({
       </div>
 
       {canEdit(current.role) ? (
-        <CarrierCertificateUpload agentId={agent.id} initialCertificates={carrierCertificates} />
+        <CarrierCertificateUpload agentId={agent.id} initialCertificates={mergedCarrierCertificates} />
       ) : null}
 
       <CarrierStatusEditor

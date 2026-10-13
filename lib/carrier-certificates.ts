@@ -65,10 +65,173 @@ function safeFileName(value: string) {
   return value.replace(/[^a-zA-Z0-9._-]+/g, "-");
 }
 
+type AirtableAttachment = {
+  id?: string;
+  url: string;
+  filename: string;
+  size?: number;
+  type?: string;
+};
+
+function airtableAttachments(value: unknown): AirtableAttachment[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap(item => {
+    if (!item || typeof item !== "object") return [];
+    const attachment = item as Record<string, unknown>;
+    if (typeof attachment.url !== "string") return [];
+
+    return [{
+      id: typeof attachment.id === "string" ? attachment.id : undefined,
+      url: attachment.url,
+      filename:
+        typeof attachment.filename === "string"
+          ? attachment.filename
+          : "Carrier Certificate",
+      size: typeof attachment.size === "number" ? attachment.size : undefined,
+      type: typeof attachment.type === "string" ? attachment.type : undefined,
+    }];
+  });
+}
+
+async function syncAirtableCertificatesForAgent(input: {
+  agentRecordId: string;
+  email?: string;
+  name?: string;
+}) {
+  const token = process.env.AIRTABLE_PAT;
+  if (!token) return;
+
+  const email = input.email?.trim() || "";
+  const name = input.name?.trim() || "";
+  if (!email && !name) return;
+
+  let record: AirtableRecord | null = null;
+
+  if (email) {
+    record = await findContractingRecordByEmail(token, email);
+  }
+
+  if (!record && name) {
+    const url = new URL(
+      `https://api.airtable.com/v0/${CONTRACTING_CERT_BASE_ID}/${CONTRACTING_CERT_TABLE_ID}`,
+    );
+    url.searchParams.set("pageSize", "100");
+    url.searchParams.set(
+      "filterByFormula",
+      `LOWER({Name})='${name.toLowerCase().replace(/'/g, "\\'")}'`,
+    );
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const json = await response.json() as { records?: AirtableRecord[] };
+      record = json.records?.[0] || null;
+    }
+  }
+
+  if (!record) return;
+
+  const supabase = getSupabaseAdmin();
+
+  const { data: existingRows, error: existingError } = await supabase
+    .from("carrier_certificates")
+    .select("source_airtable_attachment_id")
+    .eq("agent_record_id", input.agentRecordId)
+    .not("source_airtable_attachment_id", "is", null);
+
+  if (existingError) throw new Error(existingError.message);
+
+  const existingIds = new Set(
+    (existingRows || [])
+      .map(row => row.source_airtable_attachment_id)
+      .filter(Boolean),
+  );
+
+  for (const carrier of CARRIER_CERTIFICATE_CARRIERS) {
+    const fieldName = AIRTABLE_CERTIFICATE_FIELDS[carrier];
+    const attachments = airtableAttachments(record.fields[fieldName]);
+
+    for (const attachment of attachments) {
+      const sourceId =
+        attachment.id ||
+        [record.id, carrier, attachment.filename, attachment.size || ""].join(":");
+
+      if (existingIds.has(sourceId)) continue;
+
+      const response = await fetch(attachment.url, { cache: "no-store" });
+      if (!response.ok) continue;
+
+      const buffer = Buffer.from(await response.arrayBuffer());
+      if (!buffer.length) continue;
+
+      const contentType =
+        attachment.type ||
+        response.headers.get("content-type") ||
+        "application/octet-stream";
+
+      const storagePath = [
+        input.agentRecordId,
+        carrier.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        `airtable-${safeFileName(sourceId)}-${safeFileName(attachment.filename)}`,
+      ].join("/");
+
+      const { error: uploadError } = await supabase.storage
+        .from(STORAGE_BUCKET)
+        .upload(storagePath, buffer, {
+          contentType,
+          upsert: false,
+        });
+
+      if (uploadError && !/already exists/i.test(uploadError.message)) {
+        continue;
+      }
+
+      const { error: insertError } = await supabase
+        .from("carrier_certificates")
+        .insert({
+          agent_record_id: input.agentRecordId,
+          agent_name: name,
+          agent_email: email,
+          carrier,
+          storage_path: storagePath,
+          file_name: attachment.filename,
+          content_type: contentType,
+          size_bytes: attachment.size || buffer.length,
+          uploaded_by_email: "Imported from Airtable",
+          source: "airtable",
+          source_airtable_attachment_id: sourceId,
+          source_airtable_record_id: record.id,
+        });
+
+      if (!insertError) {
+        existingIds.add(sourceId);
+      } else if (!/duplicate/i.test(insertError.message)) {
+        await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
+      }
+    }
+  }
+}
+
 export async function getCarrierCertificatesForAgent(
   agentRecordId: string,
+  email?: string,
+  name?: string,
 ): Promise<CarrierCertificate[]> {
   const supabase = getSupabaseAdmin();
+
+  try {
+    await syncAirtableCertificatesForAgent({
+      agentRecordId,
+      email,
+      name,
+    });
+  } catch (error) {
+    console.error("Carrier certificate Airtable sync failed", error);
+  }
 
   const { data, error } = await supabase
     .from("carrier_certificates")

@@ -88,7 +88,7 @@ export default async function AgentProfilePage({
 
   if (!agent) notFound();
 
-  const [ahip, carrierStatuses, sunFireReports, carrierCertificates] = await Promise.all([getAhip2027ForAgent(agent.email), getCarrierStatusesForAgent(agent.email), getSunFireReportForAgent(agent.email), getCarrierCertificatesForAgent(agent.id)]);
+  const [ahip, carrierStatuses, sunFireReports, carrierCertificates] = await Promise.all([getAhip2027ForAgent(agent.email), getCarrierStatusesForAgent(agent.email), getSunFireReportForAgent(agent.email), getCarrierCertificatesForAgent(agent.id, agent.email, agent.name)]);
 
   return (
     <main>

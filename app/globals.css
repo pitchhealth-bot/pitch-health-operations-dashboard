@@ -889,3 +889,41 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   font-size:9px;
   font-weight:750;
 }
+
+.missing-info-panel{
+  padding:0;
+  overflow:hidden;
+}
+.missing-info-scroll{
+  width:100%;
+  max-height:calc(100vh - 190px);
+  overflow:auto;
+  overscroll-behavior:contain;
+  scrollbar-gutter:stable both-edges;
+}
+.missing-info-table-head{
+  position:sticky;
+  top:0;
+  z-index:15;
+  background:#f8f7fb;
+  box-shadow:0 1px 0 var(--line);
+}
+.missing-info-table-row{
+  background:#fff;
+}
+.missing-info-scroll::-webkit-scrollbar{
+  width:12px;
+  height:12px;
+}
+.missing-info-scroll::-webkit-scrollbar-track{
+  background:#f3f1f8;
+  border-radius:999px;
+}
+.missing-info-scroll::-webkit-scrollbar-thumb{
+  background:#c8c0df;
+  border:3px solid #f3f1f8;
+  border-radius:999px;
+}
+.missing-info-scroll::-webkit-scrollbar-thumb:hover{
+  background:#a99bd0;
+}

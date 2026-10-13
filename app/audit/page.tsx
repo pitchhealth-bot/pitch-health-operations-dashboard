@@ -33,26 +33,11 @@ export default async function AuditPage() {
 
       {error && (
         <section className="panel audit-setup">
-          <div className="eyebrow">SETUP REQUIRED</div>
-          <h2>Dashboard Audit Log table</h2>
+          <div className="eyebrow">AUDIT LOG ERROR</div>
+          <h2>Could not load audit history</h2>
           <p className="muted">
-            Create an Airtable table named <strong>Dashboard Audit Log</strong> in the configured audit base.
+            The dashboard audit log is stored in Supabase. Please try again in a moment.
           </p>
-          <div className="audit-field-list">
-            {[
-              "Timestamp",
-              "User Email",
-              "User Name",
-              "Role",
-              "Action",
-              "Entity Type",
-              "Entity ID",
-              "Entity Name",
-              "Field",
-              "Old Value",
-              "New Value",
-            ].map(field => <span key={field}>{field}</span>)}
-          </div>
           <p className="audit-error">{error}</p>
         </section>
       )}

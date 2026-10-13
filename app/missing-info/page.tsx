@@ -74,7 +74,8 @@ export default async function MissingInfoPage() {
         </div>
       </section>
 
-      <section className="panel agents-list-panel">
+      <section className="panel agents-list-panel missing-info-panel">
+        <div className="missing-info-scroll">
         {incomplete.length ? (
           <MissingInfoEditor
             rows={incomplete.map(agent => ({
@@ -97,6 +98,7 @@ export default async function MissingInfoPage() {
             All active agents have the five required profile items.
           </div>
         )}
+        </div>
       </section>
     </main>
   );

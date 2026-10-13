@@ -25,7 +25,7 @@ function normalizeDateInput(value?: string) {
   return date.toISOString().slice(0, 10);
 }
 
-export default function MissingInfoEditor({ rows }: { rows: Row[] }) {
+export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; roleOptions: string[] }) {
   const router = useRouter();
   const [editingId, setEditingId] = useState("");
   const [savingId, setSavingId] = useState("");
@@ -40,6 +40,7 @@ export default function MissingInfoEditor({ rows }: { rows: Row[] }) {
       discordUserId: row.discordUserId || "",
       residentState: row.residentState || "",
       licensingStatus: row.licensingStatus || "",
+      role: row.role || "",
       ...(drafts[row.id] || {}),
     };
   }
@@ -79,6 +80,7 @@ export default function MissingInfoEditor({ rows }: { rows: Row[] }) {
           discordUserId: draft.discordUserId || "",
           residentState: draft.residentState || "",
           licensingStatus: draft.licensingStatus || "",
+          role: draft.role || "",
         }),
       });
 
@@ -121,7 +123,7 @@ export default function MissingInfoEditor({ rows }: { rows: Row[] }) {
         const draft = draftFor(row);
 
         return (
-          <div className="missing-info-table-row" key={row.id}>
+          <div className={`missing-info-table-row${editing ? " editing" : ""}`} key={row.id}>
             <div>
               <a href={"/agents/" + row.id} className="agent-name-link">
                 <strong>{row.name}</strong>
@@ -133,7 +135,24 @@ export default function MissingInfoEditor({ rows }: { rows: Row[] }) {
               <span className="pill success">{row.status || "Active"}</span>
             </div>
 
-            <div>{row.role || "No Role"}</div>
+            <div>
+              {editing ? (
+                <select
+                  className="missing-inline-input"
+                  value={String(draft.role || "")}
+                  onChange={event => update(row.id, "role", event.target.value)}
+                >
+                  <option value="">No Role</option>
+                  {roleOptions.map(role => (
+                    <option key={role} value={role}>{role}</option>
+                  ))}
+                </select>
+              ) : (
+                <span className={row.role ? "role-chip" : "role-chip role-chip-empty"}>
+                  {row.role || "No Role"}
+                </span>
+              )}
+            </div>
 
             <div>
               {editing ? (

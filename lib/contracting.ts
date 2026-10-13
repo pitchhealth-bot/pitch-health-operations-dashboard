@@ -248,6 +248,72 @@ export async function getSunFireReportForAgent(email?: string) {
   }
 }
 
+export type CarrierCertificateAttachment = {
+  carrier: string;
+  airtableRecordId: string;
+  attachmentId?: string;
+  url: string;
+  filename: string;
+  size?: number;
+  type?: string;
+};
+
+function nameMatches(record: AirtableRecord, name: string) {
+  const target = name.trim().toLowerCase();
+  if (!target) return false;
+
+  const candidates = [
+    textValue(record.fields["Name"]),
+    textValue(record.fields["Agent Name"]),
+    textValue(record.fields["Full Name"]),
+  ]
+    .map(value => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  return candidates.includes(target);
+}
+
+export async function getCarrierCertificateAttachmentsForAgent(
+  email?: string,
+  name?: string,
+): Promise<CarrierCertificateAttachment[]> {
+  const certificateFields: Record<string, string> = {
+    Aetna: "Aetna Certificate",
+    Humana: "Humana Certificate",
+    Cigna: "Cigna Certificate",
+    UHC: "UHC Certificate",
+    Zing: "Zing Certificate",
+    Devoted: "Devoted Certificate",
+    UNL: "UNL Certificate",
+    Wellcare: "Wellcare Certificate",
+    Heartland: "Heartland Certificate",
+  };
+
+  try {
+    const records = await getTable3Records();
+
+    const match =
+      (email ? records.find(record => emailMatches(record, email)) : undefined) ||
+      (name ? records.find(record => nameMatches(record, name)) : undefined);
+
+    if (!match) return [];
+
+    return Object.entries(certificateFields).flatMap(([carrier, fieldName]) =>
+      attachmentList(match.fields[fieldName], `${carrier} Certificate`).map(file => ({
+        carrier,
+        airtableRecordId: match.id,
+        attachmentId: file.id,
+        url: file.url,
+        filename: file.filename,
+        size: file.size,
+        type: file.type,
+      })),
+    );
+  } catch {
+    return [];
+  }
+}
+
 
 export type CarrierStatusUpdate = {
   carrier: string;

@@ -16,7 +16,11 @@ export default async function MissingInfoPage() {
   await requireRole(["admin", "super_admin"]);
 
   const { agents, source, error } = await getDashboardData();
-  const incomplete = agents
+  const activeAgents = agents.filter(
+    agent => (agent.status || "").trim().toLowerCase() === "active",
+  );
+
+  const incomplete = activeAgents
     .filter(agent => agent.missingFields.length > 0)
     .sort((a, b) => {
       const countDiff = b.missingFields.length - a.missingFields.length;
@@ -34,7 +38,7 @@ export default async function MissingInfoPage() {
             Track the five required profile items for active agents.
           </p>
           <div className="muted">
-            {incomplete.length} of {agents.length} active agents have missing information
+            {incomplete.length} of {activeAgents.length} active agents have missing information
           </div>
         </div>
         <Link className="back-link" href="/">← Dashboard</Link>
@@ -72,6 +76,7 @@ export default async function MissingInfoPage() {
       <section className="panel agents-list-panel">
         <div className="missing-info-table-head">
           <span>Agent</span>
+          <span>Status</span>
           <span>Role</span>
           {REQUIRED_FIELDS.map(field => <span key={field}>{field}</span>)}
           <span>Missing</span>
@@ -84,6 +89,9 @@ export default async function MissingInfoPage() {
                 <strong>{agent.name}</strong>
               </Link>
               <div className="muted">{agent.email || "No work email"}</div>
+            </div>
+            <div>
+              <span className="pill success">{agent.status || "Active"}</span>
             </div>
             <div>{agent.role || "No Role"}</div>
 

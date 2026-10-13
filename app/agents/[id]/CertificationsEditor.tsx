@@ -81,10 +81,12 @@ export default function CertificationsEditor({
   agentId,
   initialAhip,
   initialSunfire,
+  editable,
 }: {
   agentId: string;
   initialAhip: CertificationFile[];
   initialSunfire: CertificationFile[];
+  editable: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -168,7 +170,7 @@ export default function CertificationsEditor({
         </div>
 
         <div className="profile-edit-actions">
-          {!editing ? (
+          {!editing && editable ? (
             <button
               type="button"
               className="profile-pencil-button"
@@ -178,7 +180,7 @@ export default function CertificationsEditor({
             >
               ✎
             </button>
-          ) : (
+          ) : editing ? (
             <>
               <button
                 type="button"
@@ -197,7 +199,7 @@ export default function CertificationsEditor({
                 {saving ? "Saving..." : "Save"}
               </button>
             </>
-          )}
+          ) : null}
         </div>
       </div>
 

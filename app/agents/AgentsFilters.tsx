@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 
 export default function AgentsFilters({
   initialQuery,
@@ -22,6 +22,7 @@ export default function AgentsFilters({
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [licensing, setLicensing] = useState(initialLicensing);
+  const [isPending, startTransition] = useTransition();
   const firstRun = useRef(true);
 
   function navigate(nextQuery: string, nextLicensing: string) {
@@ -35,7 +36,9 @@ export default function AgentsFilters({
     if (roleView) params.set("roleView", roleView);
 
     const qs = params.toString();
-    router.replace(qs ? `/agents?${qs}` : "/agents", { scroll: false });
+    startTransition(() => {
+      router.replace(qs ? `/agents?${qs}` : "/agents", { scroll: false });
+    });
   }
 
   useEffect(() => {
@@ -52,7 +55,8 @@ export default function AgentsFilters({
   }, [query]);
 
   return (
-    <div className="agents-filters">
+    <div className="agents-filters-wrap">
+      <div className="agents-filters">
       <input
         value={query}
         onChange={event => setQuery(event.target.value)}
@@ -88,6 +92,12 @@ export default function AgentsFilters({
           Clear
         </Link>
       )}
+      </div>
+
+      <div className={`agents-filter-loading${isPending ? " visible" : ""}`} aria-live="polite">
+        <span className="agents-loading-spinner" aria-hidden="true" />
+        <span>Updating agents...</span>
+      </div>
     </div>
   );
 }

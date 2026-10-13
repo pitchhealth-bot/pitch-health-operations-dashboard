@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 type Row = {
   id: string;
@@ -26,7 +25,7 @@ function normalizeDateInput(value?: string) {
 }
 
 export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; roleOptions: string[] }) {
-  const router = useRouter();
+  const [localRows, setLocalRows] = useState(rows);
   const [editingId, setEditingId] = useState("");
   const [savingId, setSavingId] = useState("");
   const [message, setMessage] = useState("");
@@ -90,9 +89,33 @@ export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; 
         throw new Error(json.error || "Could not update this agent.");
       }
 
+      const updatedMissingFields: string[] = [];
+      if (!String(draft.ssn || "").trim()) updatedMissingFields.push("SSN");
+      if (!String(draft.dateOfBirth || "").trim()) updatedMissingFields.push("Date of Birth");
+      if (!String(draft.npn || "").trim()) updatedMissingFields.push("NPN");
+      if (!String(draft.discordUserId || "").trim()) updatedMissingFields.push("Discord User ID");
+      if (!String(draft.residentState || "").trim()) updatedMissingFields.push("Resident State");
+
+      setLocalRows(current =>
+        current.map(item =>
+          item.id === row.id
+            ? {
+                ...item,
+                role: String(draft.role || ""),
+                licensingStatus: String(draft.licensingStatus || ""),
+                ssn: String(draft.ssn || ""),
+                dateOfBirth: String(draft.dateOfBirth || ""),
+                npn: String(draft.npn || ""),
+                discordUserId: String(draft.discordUserId || ""),
+                residentState: String(draft.residentState || ""),
+                missingFields: updatedMissingFields,
+              }
+            : item,
+        ),
+      );
+
       setEditingId("");
       setMessage(`${row.name} updated in Airtable.`);
-      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not update this agent.");
     } finally {
@@ -118,7 +141,7 @@ export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; 
         <span></span>
       </div>
 
-      {rows.map(row => {
+      {localRows.map(row => {
         const editing = editingId === row.id;
         const draft = draftFor(row);
 

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDashboardData } from "@/lib/airtable";
-import { getAhip2027ForAgent, getCarrierStatusesForAgent, getSunFireReportForAgent, getCarrierCertificateAttachmentsForAgent } from "@/lib/contracting";
+import { getCarrierStatusesForAgent, getSunFireReportForAgent, getCarrierCertificateAttachmentsForAgent, getCertificationDocumentsForAgent } from "@/lib/contracting";
 import { requireUser } from "@/lib/session";
 import { canEdit } from "@/lib/access";
 import CarrierStatusEditor from "./CarrierStatusEditor";
 import CarrierCertificateUpload from "./CarrierCertificateUpload";
 import AgentProfileEditor from "./AgentProfileEditor";
+import CertificationsEditor from "./CertificationsEditor";
 import { getCarrierCertificatesForAgent } from "@/lib/carrier-certificates";
 
 export const dynamic = "force-dynamic";
@@ -89,18 +90,23 @@ export default async function AgentProfilePage({
   if (!agent) notFound();
 
   const [
-    ahip,
+    certificationDocuments,
     carrierStatuses,
-    sunFireReports,
+    legacySunFireReports,
     carrierCertificates,
     airtableCarrierCertificates,
   ] = await Promise.all([
-    getAhip2027ForAgent(agent.email),
+    getCertificationDocumentsForAgent(agent.email, agent.name),
     getCarrierStatusesForAgent(agent.email),
     getSunFireReportForAgent(agent.email),
     getCarrierCertificatesForAgent(agent.id, agent.email, agent.name),
     getCarrierCertificateAttachmentsForAgent(agent.email, agent.name),
   ]);
+
+  const ahip = certificationDocuments.ahip;
+  const sunFireReports = certificationDocuments.sunfire.length
+    ? certificationDocuments.sunfire
+    : legacySunFireReports;
 
   const mergedCarrierCertificates = [
     ...carrierCertificates,
@@ -212,72 +218,12 @@ export default async function AgentProfilePage({
         </div>
 
         <aside>
-          <section className="panel employee-section">
-            <div className="section-heading">
-              <div>
-                <div className="eyebrow">DOCUMENTS</div>
-                <h2>Certifications</h2>
-              </div>
-            </div>
-
-            <div className="attachment-group">
-              <div className="attachment-label">
-                <div>
-                  <strong>AHIP 2027</strong>
-                  <span>{ahip.length ? `${ahip.length} attachment${ahip.length > 1 ? "s" : ""}` : "No attachment"}</span>
-                </div>
-              </div>
-
-              {ahip.length ? ahip.map((file, index) => (
-                <a
-                  className="attachment-card"
-                  href={file.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  key={file.id || `${file.filename}-${index}`}
-                >
-                  <div className="attachment-icon">PDF</div>
-                  <div className="attachment-copy">
-                    <strong>{file.filename}</strong>
-                    <span>{file.type || "Attachment"}{file.size ? ` · ${fileSize(file.size)}` : ""}</span>
-                  </div>
-                  <div className="attachment-open">↗</div>
-                </a>
-              )) : (
-                <div className="attachment-empty">
-                  <span>No AHIP 2027 attachment found in Airtable.</span>
-                </div>
-              )}
-
-              <div className="attachment-label" style={{ marginTop: 12 }}>
-                <div>
-                  <strong>SunFire Report</strong>
-                  <span>{sunFireReports.length ? `${sunFireReports.length} attachment${sunFireReports.length > 1 ? "s" : ""}` : "No attachment"}</span>
-                </div>
-              </div>
-
-              {sunFireReports.length ? sunFireReports.map((file, index) => (
-                <a
-                  className="attachment-card"
-                  href={file.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  key={file.id || `sunfire-${file.filename}-${index}`}
-                >
-                  <div className="attachment-icon">PDF</div>
-                  <div className="attachment-copy">
-                    <strong>{file.filename}</strong>
-                    <span>{file.type || "Attachment"}{file.size ? ` · ${fileSize(file.size)}` : ""}</span>
-                  </div>
-                  <div className="attachment-open">↗</div>
-                </a>
-              )) : (
-                <div className="attachment-empty">
-                  <span>No SunFire Report attachment found in Airtable.</span>
-                </div>
-              )}
-            </div>
-          </section>
+          <CertificationsEditor
+            agentId={agent.id}
+            initialAhip={ahip}
+            initialSunfire={sunFireReports}
+            editable={canEdit(current.role)}
+          />
         </aside>
       </div>
 

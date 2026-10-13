@@ -772,3 +772,51 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 @media(max-width:640px){
   .missing-required-grid{grid-template-columns:1fr}
 }
+
+.record-field-editable{
+  padding:12px 14px;
+}
+.record-field-editable > span{
+  margin-bottom:8px;
+}
+.record-field-select{
+  min-height:86px;
+}
+.profile-edit-input{
+  width:100%;
+  margin-top:0;
+  border:1px solid #e4e0ed;
+  background:#fff;
+  border-radius:10px;
+  padding:9px 11px;
+  min-height:38px;
+  font-size:10px;
+  font-weight:700;
+  color:var(--ink);
+  outline:none;
+  box-shadow:none;
+}
+.profile-edit-select{
+  appearance:auto;
+  -webkit-appearance:menulist;
+  padding-right:10px;
+}
+.profile-edit-input:focus{
+  border-color:#a58af4;
+  box-shadow:0 0 0 3px rgba(86,52,214,.10);
+}
+.profile-edit-select.designation-pitch-health{
+  background:#efe8ff;
+  border-color:#d8c7ff;
+  color:#5f32dc;
+}
+.profile-edit-select.designation-ifg{
+  background:#d8fbf7;
+  border-color:#a9efe7;
+  color:#087f78;
+}
+.profile-edit-select.designation-truecare{
+  background:#e2efff;
+  border-color:#b9d8ff;
+  color:#1767c6;
+}

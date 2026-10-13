@@ -54,10 +54,12 @@ function sortHref(
   currentDir: "asc" | "desc",
   q: string,
   licensing: string,
+  roleView: string,
 ) {
   const params = new URLSearchParams();
   if (q) params.set("q", q);
   if (licensing) params.set("licensing", licensing);
+  if (roleView) params.set("roleView", roleView);
   params.set("sort", key);
   params.set("dir", currentSort === key && currentDir === "asc" ? "desc" : "asc");
   return `/agents?${params.toString()}`;
@@ -72,6 +74,7 @@ export default async function AgentsPage({
     sort?: string;
     dir?: string;
     filter?: string;
+    roleView?: string;
   }>;
 }) {
   await requireRole(["admin", "super_admin"]);
@@ -79,6 +82,7 @@ export default async function AgentsPage({
   const q = params.q || "";
   const licensing = params.licensing || "";
   const specialFilter = params.filter || "";
+  const roleView = params.roleView || "";
   const sort = columns.some(c => c.key === params.sort)
     ? (params.sort as SortKey)
     : "name";
@@ -108,6 +112,14 @@ export default async function AgentsPage({
       !licensing ||
       (agent.licensingStatus || "").toLowerCase() === licensing.toLowerCase();
 
+    const normalizedRole = (agent.role || "").trim().toLowerCase();
+    const matchesRole =
+      !roleView ||
+      (roleView === "admin" && normalizedRole === "admin") ||
+      (roleView === "bootcamp-direct" && normalizedRole === "bootcamp direct") ||
+      (roleView === "medicare-agent" && normalizedRole === "medicare agent") ||
+      (roleView === "no-role" && !normalizedRole);
+
     const licenseDays = (() => {
       if (!agent.licenseExpiry) return null;
       const date = new Date(agent.licenseExpiry);
@@ -122,7 +134,7 @@ export default async function AgentsPage({
       (specialFilter === "missing" && agent.missingFields.length > 0) ||
       (specialFilter === "expiring" && licenseDays !== null && licenseDays <= 30);
 
-    return matchesQuery && matchesLicensing && matchesSpecial;
+    return matchesQuery && matchesLicensing && matchesRole && matchesSpecial;
   });
 
   const sorted = sortAgents(filtered, sort, dir);
@@ -146,12 +158,41 @@ export default async function AgentsPage({
       )}
 
       <section className="panel">
+        <div className="agent-role-tabs">
+          {[
+            ["", "All"],
+            ["admin", "ADMIN"],
+            ["bootcamp-direct", "Bootcamp Direct"],
+            ["medicare-agent", "Medicare Agent"],
+            ["no-role", "No Role"],
+          ].map(([value, label]) => {
+            const tabParams = new URLSearchParams();
+            if (q) tabParams.set("q", q);
+            if (licensing) tabParams.set("licensing", licensing);
+            if (sort) tabParams.set("sort", sort);
+            if (dir) tabParams.set("dir", dir);
+            if (specialFilter) tabParams.set("filter", specialFilter);
+            if (value) tabParams.set("roleView", value);
+
+            return (
+              <Link
+                key={label}
+                href={tabParams.toString() ? `/agents?${tabParams.toString()}` : "/agents"}
+                className={`agent-role-tab${roleView === value ? " active" : ""}`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+
         <AgentsFilters
           initialQuery={q}
           initialLicensing={licensing}
           sort={sort}
           dir={dir}
           specialFilter={specialFilter}
+          roleView={roleView}
         />
       </section>
 
@@ -160,7 +201,7 @@ export default async function AgentsPage({
           {columns.map(column => (
             <Link
               key={column.key}
-              href={sortHref(column.key, sort, dir, q, licensing)}
+              href={sortHref(column.key, sort, dir, q, licensing, roleView)}
               className="sort-header"
             >
               <span>{column.label}</span>

@@ -509,30 +509,18 @@ async function getContractingDocumentsSchema(): Promise<AirtableFieldSchema[]> {
 function certificationFieldName(
   kind: CertificationDocumentKind,
   schema: AirtableFieldSchema[],
-  recordFields?: Record<string, unknown>,
+  _recordFields?: Record<string, unknown>,
 ) {
-  const attachmentFields = schema.filter(field => field.type === "multipleAttachments");
+  const expectedName =
+    kind === "ahip2027"
+      ? "2027 AHIP Document"
+      : "SunFire Reports";
 
-  if (kind === "ahip2027") {
-    return (
-      attachmentFields.find(field => field.name === "2027 AHIP Document")?.name ||
-      attachmentFields.find(field =>
-        normalizeFieldName(field.name).includes("2027ahip"),
-      )?.name ||
-      ""
-    );
-  }
-
-  return (
-    attachmentFields.find(field =>
-      normalizeFieldName(field.name) === "sunfirereportcopy",
-    )?.name ||
-    attachmentFields.find(field => {
-      const normalized = normalizeFieldName(field.name);
-      return normalized.includes("sunfire") && normalized.includes("report");
-    })?.name ||
-    ""
+  const field = schema.find(
+    item => item.name === expectedName && item.type === "multipleAttachments",
   );
+
+  return field?.name || "";
 }
 
 function findAgentRecord(

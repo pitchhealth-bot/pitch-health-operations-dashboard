@@ -5,8 +5,13 @@ type AirtableRecord = {
   fields: Record<string, unknown>;
 };
 
-const CARRIER_CERT_BASE_ID = "app5eoO1QYp4UAoaU";
-const CARRIER_CERT_TABLE_ID = "tblx66f77FNlyJ3m4";
+const CARRIER_STATUS_BASE_ID = "app5eoO1QYp4UAoaU";
+const CARRIER_STATUS_TABLE_ID = "tblx66f77FNlyJ3m4";
+
+const CONTRACTING_CERT_BASE_ID =
+  process.env.AIRTABLE_BASE_ID_CONTRACTING || "app7KT6sXkBqdwoO9";
+const CONTRACTING_CERT_TABLE_ID =
+  process.env.AIRTABLE_TABLE_ID_CONTRACTING_3 || "tbloBQNL30Y9SPYaV";
 const STORAGE_BUCKET = "carrier-certificates";
 
 export const CARRIER_CERTIFICATE_CARRIERS = [
@@ -20,6 +25,18 @@ export const CARRIER_CERTIFICATE_CARRIERS = [
   "Wellcare",
   "Heartland",
 ] as const;
+
+const AIRTABLE_CERTIFICATE_FIELDS: Record<string, string> = {
+  Aetna: "Aetna Certificate",
+  Humana: "Humana Certificate",
+  Cigna: "Cigna Certificate",
+  UHC: "UHC Certificate",
+  Zing: "Zing Certificate",
+  Devoted: "Devoted Certificate",
+  UNL: "UNL Certificate",
+  Wellcare: "Wellcare Certificate",
+  Heartland: "Heartland Certificate",
+};
 
 export type CarrierCertificate = {
   id: string;
@@ -81,6 +98,96 @@ export async function getCarrierCertificatesForAgent(
       url: signed.signedUrl,
     };
   }));
+}
+
+async function findContractingRecordByEmail(token: string, email: string) {
+  const url = new URL(
+    `https://api.airtable.com/v0/${CONTRACTING_CERT_BASE_ID}/${CONTRACTING_CERT_TABLE_ID}`,
+  );
+  url.searchParams.set("pageSize", "100");
+  url.searchParams.set(
+    "filterByFormula",
+    `LOWER({PHS Email})='${email.trim().toLowerCase().replace(/'/g, "\\'")}'`,
+  );
+
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Could not find the Contracting and RTS Tracker record (${response.status}): ${detail}`,
+    );
+  }
+
+  const json = await response.json() as { records?: AirtableRecord[] };
+  return json.records?.[0] || null;
+}
+
+async function attachCertificateToContractingTracker(input: {
+  token: string;
+  email: string;
+  carrier: string;
+  fileName: string;
+  fileUrl: string;
+}) {
+  const fieldName = AIRTABLE_CERTIFICATE_FIELDS[input.carrier];
+
+  if (!fieldName) {
+    throw new Error(`No Airtable certificate field is configured for ${input.carrier}.`);
+  }
+
+  const record = await findContractingRecordByEmail(input.token, input.email);
+
+  if (!record) {
+    throw new Error("No Contracting and RTS Tracker record matched this agent.");
+  }
+
+  const existing = Array.isArray(record.fields[fieldName])
+    ? record.fields[fieldName] as Array<Record<string, unknown>>
+    : [];
+
+  const attachments = [
+    ...existing.flatMap(item => {
+      if (!item || typeof item !== "object" || typeof item.url !== "string") return [];
+      return [{
+        url: item.url,
+        ...(typeof item.filename === "string" ? { filename: item.filename } : {}),
+      }];
+    }),
+    {
+      url: input.fileUrl,
+      filename: input.fileName,
+    },
+  ];
+
+  const response = await fetch(
+    `https://api.airtable.com/v0/${CONTRACTING_CERT_BASE_ID}/${CONTRACTING_CERT_TABLE_ID}/${record.id}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${input.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fields: {
+          [fieldName]: attachments,
+        },
+      }),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Airtable certificate attachment failed (${response.status}): ${detail}`,
+    );
+  }
+
+  return { recordId: record.id, fieldName };
 }
 
 export async function uploadCarrierCertificate(input: {
@@ -162,8 +269,32 @@ export async function uploadCarrierCertificate(input: {
     throw new Error(`Dashboard certificate record failed: ${metadataError.message}`);
   }
 
+  const { data: airtableSigned, error: airtableSignedError } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrl(storagePath, 60 * 60);
+
+  if (airtableSignedError) {
+    await supabase.from("carrier_certificates").delete().eq("id", metadata.id);
+    await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
+    throw new Error(`Could not create certificate URL: ${airtableSignedError.message}`);
+  }
+
+  try {
+    await attachCertificateToContractingTracker({
+      token,
+      email: input.email,
+      carrier: input.carrier,
+      fileName: input.file.name,
+      fileUrl: airtableSigned.signedUrl,
+    });
+  } catch (error) {
+    await supabase.from("carrier_certificates").delete().eq("id", metadata.id);
+    await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
+    throw error;
+  }
+
   const statusResponse = await fetch(
-    `https://api.airtable.com/v0/${CARRIER_CERT_BASE_ID}/${CARRIER_CERT_TABLE_ID}/${input.agentRecordId}`,
+    `https://api.airtable.com/v0/${CARRIER_STATUS_BASE_ID}/${CARRIER_STATUS_TABLE_ID}/${input.agentRecordId}`,
     {
       method: "PATCH",
       headers: {
@@ -181,11 +312,8 @@ export async function uploadCarrierCertificate(input: {
 
   if (!statusResponse.ok) {
     const detail = await statusResponse.text();
-    await supabase.from("carrier_certificates").delete().eq("id", metadata.id);
-    await supabase.storage.from(STORAGE_BUCKET).remove([storagePath]);
-
     throw new Error(
-      `Certificate was not saved because Airtable status update failed (${statusResponse.status}): ${detail}`,
+      `Certificate was attached in Airtable, but the carrier status update failed (${statusResponse.status}): ${detail}`,
     );
   }
 

@@ -177,7 +177,7 @@ export default async function AgentProfilePage({
                 </div>
               </section>
             </>
-          ))}
+          )}
         <aside>
           <section className="panel employee-section">
             <div className="section-heading">

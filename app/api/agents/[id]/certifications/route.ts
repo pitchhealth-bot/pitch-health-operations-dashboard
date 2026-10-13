@@ -44,46 +44,64 @@ export async function POST(
   const form = await request.formData();
   const file = form.get("file");
   const kind = String(form.get("kind") || "") as CertificationDocumentKind;
+  const removeAttachmentIds = form
+    .getAll("removeAttachmentId")
+    .map(value => String(value))
+    .filter(Boolean);
 
-  if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Choose a file first." }, { status: 400 });
+  const hasFile = file instanceof File && file.size > 0;
+
+  if (!hasFile && removeAttachmentIds.length === 0) {
+    return NextResponse.json(
+      { error: "Choose a file or remove an existing attachment." },
+      { status: 400 },
+    );
   }
 
   if (kind !== "ahip2027" && kind !== "sunfire") {
     return NextResponse.json({ error: "Unsupported certification type." }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.has(file.type)) {
+  if (hasFile && !ALLOWED_TYPES.has(file.type)) {
     return NextResponse.json({ error: "Only PDF, PNG, JPG, and JPEG files are supported." }, { status: 400 });
   }
 
   const supabase = getSupabaseAdmin();
-  const storagePath = [
-    id,
-    kind,
-    `${Date.now()}-${safeFileName(file.name)}`,
-  ].join("/");
+  let storagePath = "";
+  let signedUrl = "";
+  let uploadedFileName = "";
 
-  const bytes = Buffer.from(await file.arrayBuffer());
+  if (hasFile) {
+    storagePath = [
+      id,
+      kind,
+      `${Date.now()}-${safeFileName(file.name)}`,
+    ].join("/");
 
-  const { error: uploadError } = await supabase.storage
-    .from(BUCKET)
-    .upload(storagePath, bytes, {
-      contentType: file.type || "application/octet-stream",
-      upsert: false,
-    });
+    const bytes = Buffer.from(await file.arrayBuffer());
 
-  if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 });
-  }
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(storagePath, bytes, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
 
-  const { data: signed, error: signedError } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrl(storagePath, 60 * 60);
+    if (uploadError) {
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+    }
 
-  if (signedError) {
-    await supabase.storage.from(BUCKET).remove([storagePath]);
-    return NextResponse.json({ error: signedError.message }, { status: 500 });
+    const { data: signed, error: signedError } = await supabase.storage
+      .from(BUCKET)
+      .createSignedUrl(storagePath, 60 * 60);
+
+    if (signedError) {
+      await supabase.storage.from(BUCKET).remove([storagePath]);
+      return NextResponse.json({ error: signedError.message }, { status: 500 });
+    }
+
+    signedUrl = signed.signedUrl;
+    uploadedFileName = file.name;
   }
 
   try {
@@ -91,8 +109,9 @@ export async function POST(
       email: agent.email,
       name: agent.name,
       kind,
-      fileUrl: signed.signedUrl,
-      fileName: file.name,
+      fileUrl: signedUrl || undefined,
+      fileName: uploadedFileName || undefined,
+      removeAttachmentIds,
     });
 
     await writeAuditEntry({
@@ -104,8 +123,10 @@ export async function POST(
       entityId: agent.id,
       entityName: agent.name,
       field: result.fieldName,
-      oldValue: "",
-      newValue: file.name,
+      oldValue: removeAttachmentIds.length
+        ? `Removed ${removeAttachmentIds.length} attachment${removeAttachmentIds.length === 1 ? "" : "s"}`
+        : "",
+      newValue: uploadedFileName || "Attachment removed",
     }).catch(() => undefined);
 
     revalidateTag("contracting-data", "max");
@@ -114,16 +135,21 @@ export async function POST(
     return NextResponse.json({
       ok: true,
       kind,
-      file: {
-        filename: file.name,
-        url: signed.signedUrl,
-        type: file.type,
-        size: file.size,
-      },
+      file: hasFile
+        ? {
+            filename: uploadedFileName,
+            url: signedUrl,
+            type: file.type,
+            size: file.size,
+          }
+        : null,
+      attachments: result.attachments,
       fieldName: result.fieldName,
     });
   } catch (error) {
-    await supabase.storage.from(BUCKET).remove([storagePath]);
+    if (storagePath) {
+      await supabase.storage.from(BUCKET).remove([storagePath]);
+    }
 
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Could not update certification." },

@@ -1214,3 +1214,22 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   background:#ffe8e4;
   border-color:#eba59e;
 }
+
+.certification-upload-box.drag-active{
+  border-color:#7c57e8;
+  background:#f2ecff;
+  transform:translateY(-2px) scale(1.01);
+  box-shadow:0 10px 26px rgba(86,52,214,.12);
+}
+.certification-upload-box.drag-active .certification-upload-icon{
+  background:#ddd0ff;
+  transform:translateY(-2px);
+  animation:certificationUploadBounce .7s ease-in-out infinite alternate;
+}
+.certification-upload-box.drag-active strong{
+  color:var(--purple);
+}
+@keyframes certificationUploadBounce{
+  from{transform:translateY(-1px)}
+  to{transform:translateY(-5px)}
+}

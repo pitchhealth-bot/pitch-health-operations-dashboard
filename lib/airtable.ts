@@ -89,18 +89,12 @@ function daysSince(value?: string) {
 }
 
 function missingFromFields(fields: Record<string, unknown>): string[] {
-  const explicit = findFieldValue(fields, ["Missing Fields", "Missing Info", "Missing Information"]);
-  if (Array.isArray(explicit)) return explicit.map(String);
-  if (typeof explicit === "string" && explicit.trim()) {
-    return explicit.split(",").map(v => v.trim()).filter(Boolean);
-  }
-
   const required: Array<[string, string[]]> = [
     ["SSN", ["SSN", "Social Security Number", "Social Security #"]],
-    ["DOB", ["DOB", "Date of Birth", "Birth Date", "Birthday"]],
-    ["Discord", ["Discord", "Discord Username", "Discord Name"]],
-    ["PDB", ["PDB", "PDB Report", "PDB Status", "NIPR PDB"]],
+    ["Date of Birth", ["Date of Birth", "Date Of Birth", "DOB", "Birth Date", "Birthday"]],
     ["NPN", ["NPN", "National Producer Number"]],
+    ["Discord User ID", ["Discord User ID", "Discord ID", "Discord UserID", "Discord User Id"]],
+    ["Resident State", ["Resident State", "Resident state", "Resident-State"]],
   ];
 
   return required
@@ -207,6 +201,6 @@ async function loadDashboardData(): Promise<DashboardData> {
 
 export const getDashboardData = unstable_cache(
   loadDashboardData,
-  ["pitch-dashboard-data-v4"],
+  ["pitch-dashboard-data-v5"],
   { revalidate: 60, tags: ["dashboard-data"] },
 );

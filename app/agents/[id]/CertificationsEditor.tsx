@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import type { RefObject } from "react";
 
 type CertificationFile = {
   id?: string;
@@ -48,7 +49,7 @@ function UploadBox({
 }: {
   label: string;
   file: File | null;
-  inputRef: React.RefObject<HTMLInputElement | null>;
+  inputRef: RefObject<HTMLInputElement | null>;
   onChange: (file: File | null) => void;
 }) {
   return (

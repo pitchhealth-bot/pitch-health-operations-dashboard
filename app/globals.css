@@ -747,7 +747,7 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .missing-info-table-head,
 .missing-info-table-row{
   display:grid;
-  grid-template-columns:1.6fr 1fr repeat(5,1fr) .55fr;
+  grid-template-columns:1.6fr .8fr 1fr repeat(5,1fr) .55fr;
   gap:12px;
   align-items:center;
   min-width:1200px;

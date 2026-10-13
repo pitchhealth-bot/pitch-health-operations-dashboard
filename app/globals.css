@@ -644,3 +644,8 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .carrier-status-select.carrier-requested-release{background:#ccfbf1!important;color:#0f766e!important}
 .carrier-status-select.carrier-released{background:#dbeafe!important;color:#0f56b3!important}
 .carrier-status-select.carrier-none{background:#f3f2f6!important;color:#7a7684!important}
+
+.user-more-wrap.menu-up .user-more-menu{
+  top:auto;
+  bottom:40px;
+}

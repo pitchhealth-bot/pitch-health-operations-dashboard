@@ -18,14 +18,23 @@ function fileSize(bytes?: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function AttachmentCard({ file }: { file: CertificationFile }) {
+function AttachmentCard({
+  file,
+  removable = false,
+  onRemove,
+}: {
+  file: CertificationFile;
+  removable?: boolean;
+  onRemove?: () => void;
+}) {
   return (
-    <a
-      className="attachment-card"
-      href={file.url}
-      target="_blank"
-      rel="noreferrer"
-    >
+    <div className={`attachment-card-wrap${removable ? " removable" : ""}`}>
+      <a
+        className="attachment-card"
+        href={file.url}
+        target="_blank"
+        rel="noreferrer"
+      >
       <div className="attachment-icon">
         {file.type?.includes("pdf") ? "PDF" : "FILE"}
       </div>
@@ -36,8 +45,24 @@ function AttachmentCard({ file }: { file: CertificationFile }) {
           {file.size ? ` · ${fileSize(file.size)}` : ""}
         </span>
       </div>
-      <div className="attachment-open">↗</div>
-    </a>
+        <div className="attachment-open">↗</div>
+      </a>
+      {removable ? (
+        <button
+          type="button"
+          className="attachment-remove-button"
+          aria-label={`Remove ${file.filename}`}
+          title="Remove attachment"
+          onClick={event => {
+            event.preventDefault();
+            event.stopPropagation();
+            onRemove?.();
+          }}
+        >
+          ×
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -96,26 +121,40 @@ export default function CertificationsEditor({
   const [sunfireFiles, setSunfireFiles] = useState(initialSunfire);
   const [ahipUpload, setAhipUpload] = useState<File | null>(null);
   const [sunfireUpload, setSunfireUpload] = useState<File | null>(null);
+  const [removedAhipIds, setRemovedAhipIds] = useState<string[]>([]);
+  const [removedSunfireIds, setRemovedSunfireIds] = useState<string[]>([]);
 
   const ahipRef = useRef<HTMLInputElement>(null);
   const sunfireRef = useRef<HTMLInputElement>(null);
 
   const hasChanges = useMemo(
-    () => Boolean(ahipUpload || sunfireUpload),
-    [ahipUpload, sunfireUpload],
+    () => Boolean(
+      ahipUpload ||
+      sunfireUpload ||
+      removedAhipIds.length ||
+      removedSunfireIds.length
+    ),
+    [ahipUpload, sunfireUpload, removedAhipIds, removedSunfireIds],
   );
 
   function cancel() {
     setAhipUpload(null);
     setSunfireUpload(null);
+    setRemovedAhipIds([]);
+    setRemovedSunfireIds([]);
     setMessage("");
     setEditing(false);
   }
 
-  async function upload(kind: "ahip2027" | "sunfire", file: File) {
+  async function saveKind(
+    kind: "ahip2027" | "sunfire",
+    file: File | null,
+    removeIds: string[],
+  ) {
     const form = new FormData();
     form.append("kind", kind);
-    form.append("file", file);
+    if (file) form.append("file", file);
+    removeIds.forEach(id => form.append("removeAttachmentId", id));
 
     const response = await fetch(`/api/agents/${agentId}/certifications`, {
       method: "POST",
@@ -128,7 +167,7 @@ export default function CertificationsEditor({
       throw new Error(json.error || "Could not save certification.");
     }
 
-    return json.file as CertificationFile;
+    return json.attachments as CertificationFile[];
   }
 
   async function save() {
@@ -141,18 +180,20 @@ export default function CertificationsEditor({
     setMessage("");
 
     try {
-      if (ahipUpload) {
-        const saved = await upload("ahip2027", ahipUpload);
-        setAhipFiles([saved]);
+      if (ahipUpload || removedAhipIds.length) {
+        const saved = await saveKind("ahip2027", ahipUpload, removedAhipIds);
+        setAhipFiles(saved);
       }
 
-      if (sunfireUpload) {
-        const saved = await upload("sunfire", sunfireUpload);
-        setSunfireFiles([saved]);
+      if (sunfireUpload || removedSunfireIds.length) {
+        const saved = await saveKind("sunfire", sunfireUpload, removedSunfireIds);
+        setSunfireFiles(saved);
       }
 
       setAhipUpload(null);
       setSunfireUpload(null);
+      setRemovedAhipIds([]);
+      setRemovedSunfireIds([]);
       setEditing(false);
       setMessage("Certification documents updated in Airtable.");
     } catch (error) {
@@ -213,12 +254,28 @@ export default function CertificationsEditor({
         </div>
 
         {editing ? (
-          <UploadBox
-            label="AHIP 2027"
-            file={ahipUpload}
-            inputRef={ahipRef}
-            onChange={setAhipUpload}
-          />
+          <>
+            {ahipFiles
+              .filter(file => !file.id || !removedAhipIds.includes(file.id))
+              .map((file, index) => (
+                <AttachmentCard
+                  key={file.id || `${file.filename}-${index}`}
+                  file={file}
+                  removable={Boolean(file.id)}
+                  onRemove={() => {
+                    if (file.id) {
+                      setRemovedAhipIds(current => [...current, file.id!]);
+                    }
+                  }}
+                />
+              ))}
+            <UploadBox
+              label="AHIP 2027"
+              file={ahipUpload}
+              inputRef={ahipRef}
+              onChange={setAhipUpload}
+            />
+          </>
         ) : ahipFiles.length ? (
           ahipFiles.map((file, index) => (
             <AttachmentCard key={file.id || `${file.filename}-${index}`} file={file} />
@@ -237,12 +294,28 @@ export default function CertificationsEditor({
         </div>
 
         {editing ? (
-          <UploadBox
-            label="SunFire Report"
-            file={sunfireUpload}
-            inputRef={sunfireRef}
-            onChange={setSunfireUpload}
-          />
+          <>
+            {sunfireFiles
+              .filter(file => !file.id || !removedSunfireIds.includes(file.id))
+              .map((file, index) => (
+                <AttachmentCard
+                  key={file.id || `sunfire-${file.filename}-${index}`}
+                  file={file}
+                  removable={Boolean(file.id)}
+                  onRemove={() => {
+                    if (file.id) {
+                      setRemovedSunfireIds(current => [...current, file.id!]);
+                    }
+                  }}
+                />
+              ))}
+            <UploadBox
+              label="SunFire Report"
+              file={sunfireUpload}
+              inputRef={sunfireRef}
+              onChange={setSunfireUpload}
+            />
+          </>
         ) : sunfireFiles.length ? (
           sunfireFiles.map((file, index) => (
             <AttachmentCard key={file.id || `sunfire-${file.filename}-${index}`} file={file} />

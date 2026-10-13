@@ -91,7 +91,23 @@ export async function PATCH(
 
     if (oldValue === newValue) continue;
 
-    fields[field] = newValue || null;
+    if (key === "npn") {
+      if (!newValue) {
+        fields[field] = null;
+      } else {
+        const parsed = Number(newValue.replace(/,/g, ""));
+        if (!Number.isFinite(parsed)) {
+          return NextResponse.json(
+            { error: "NPN must be a valid number." },
+            { status: 400 },
+          );
+        }
+        fields[field] = parsed;
+      }
+    } else {
+      fields[field] = newValue || null;
+    }
+
     changes.push({ key, field, oldValue, newValue });
   }
 

@@ -277,7 +277,7 @@ export default function AgentProfileEditor({
 
         <div className="record-grid">
           {field("Status", "status")}
-          {field("Role", "role")}
+          {field("Role", "role", {\n            select: ["ADMIN", "Medicare Agent", "Bootcamp Direct", "Fronter", "Hospital Indemnity"],\n          })}
           {field("Licensing Status", "licensingStatus", {
             select: ["Licensed", "Non-licensed"],
           })}

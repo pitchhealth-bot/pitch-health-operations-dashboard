@@ -175,7 +175,7 @@ async function loadDashboardData(): Promise<DashboardData> {
         id: record.id,
         name: asText(f["Name"] || f["Agent Name"]) || "Unnamed agent",
         email: asText(f["PHS Email"]),
-        personalEmail: asText(findFieldValue(f, ["Personal Email", "Personal email", "Personal E-mail"])),
+        personalEmail: asText(findFieldValue(f, ["Email", "Personal Email", "Personal email", "Personal E-mail"])),
         phoneNumber: asText(findFieldValue(f, ["Phone Number", "Phone", "Mobile Number", "Mobile"])),
         dateOfBirth: asText(findFieldValue(f, ["Date of Birth", "DOB", "Birth Date", "Birthday"])),
         npn: asText(f["NPN"]),
@@ -214,6 +214,6 @@ async function loadDashboardData(): Promise<DashboardData> {
 
 export const getDashboardData = unstable_cache(
   loadDashboardData,
-  ["pitch-dashboard-data-v7"],
+  ["pitch-dashboard-data-v8"],
   { revalidate: 300, tags: ["dashboard-data"] },
 );

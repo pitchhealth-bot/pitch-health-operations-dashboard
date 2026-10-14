@@ -223,16 +223,6 @@ export async function getCarrierCertificatesForAgent(
 ): Promise<CarrierCertificate[]> {
   const supabase = getSupabaseAdmin();
 
-  try {
-    await syncAirtableCertificatesForAgent({
-      agentRecordId,
-      email,
-      name,
-    });
-  } catch (error) {
-    console.error("Carrier certificate Airtable sync failed", error);
-  }
-
   const { data, error } = await supabase
     .from("carrier_certificates")
     .select("*")

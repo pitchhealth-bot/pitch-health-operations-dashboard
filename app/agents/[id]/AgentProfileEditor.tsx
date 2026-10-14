@@ -39,7 +39,7 @@ export default function AgentProfileEditor({
   agentId: string;
   initialValues: AgentProfileValues;
 }) {
-  const [editing, setEditing] = useState(false);
+  const [editingSection, setEditingSection] = useState<"personal" | "required" | "employment" | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -47,6 +47,12 @@ export default function AgentProfileEditor({
   const [savedValues, setSavedValues] = useState(initialValues);
 
   const pristine = useMemo(() => savedValues, [savedValues]);
+
+  const sectionKeys = {
+    personal: ["name", "email", "personalEmail", "phoneNumber", "dateOfBirth", "startDate"],
+    required: ["ssn", "dateOfBirth", "npn", "discordUserId", "residentState"],
+    employment: ["status", "role", "licensingStatus", "currentStage", "contractingDesignation", "states"],
+  } as const;
 
   useEffect(() => {
     if (saveState !== "saved") return;
@@ -61,14 +67,20 @@ export default function AgentProfileEditor({
     setValues(current => ({ ...current, [key]: value }));
   }
 
-  function cancel() {
-    setValues(pristine);
+  function cancel(section: "personal" | "required" | "employment") {
+    setValues(current => {
+      const next = { ...current };
+      for (const key of sectionKeys[section]) {
+        next[key] = pristine[key];
+      }
+      return next;
+    });
     setMessage("");
     setSaveState("idle");
-    setEditing(false);
+    setEditingSection(null);
   }
 
-  async function save() {
+  async function save(section: "personal" | "required" | "employment") {
     setSaving(true);
     setSaveState("saving");
     setMessage("");
@@ -77,7 +89,9 @@ export default function AgentProfileEditor({
       const response = await fetch(`/api/agents/${agentId}/profile`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify(
+          Object.fromEntries(sectionKeys[section].map(key => [key, values[key]])),
+        ),
       });
 
       const json = await response.json();
@@ -86,14 +100,20 @@ export default function AgentProfileEditor({
         throw new Error(json.error || "Could not save employee record.");
       }
 
-      setSavedValues(values);
+      setSavedValues(current => {
+        const next = { ...current };
+        for (const key of sectionKeys[section]) {
+          next[key] = values[key];
+        }
+        return next;
+      });
       setMessage(
         json.changed
           ? `${json.changed} field${json.changed === 1 ? "" : "s"} updated in Airtable.`
           : "No changes to save.",
       );
       setSaveState("saved");
-      setEditing(false);
+      setEditingSection(null);
     } catch (error) {
       setSaveState("error");
       setMessage(error instanceof Error ? error.message : "Could not save employee record.");
@@ -110,10 +130,11 @@ export default function AgentProfileEditor({
       select?: string[];
       placeholder?: string;
     },
+    isEditing = false,
   ) => {
     const value = values[key];
 
-    if (!editing) {
+    if (!isEditing) {
       return (
         <div className="record-field">
           <span>{label}</span>
@@ -169,6 +190,68 @@ export default function AgentProfileEditor({
     );
   };
 
+  function PencilIcon() {
+    return (
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+        <path
+          d="M4 20h4.25L19.3 8.95a2.1 2.1 0 0 0 0-2.97L18.02 4.7a2.1 2.1 0 0 0-2.97 0L4 15.75V20Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="m13.8 5.95 4.25 4.25M4 20l4.8-1.15"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+
+  function SectionActions({ section }: { section: "personal" | "required" | "employment" }) {
+    const isEditing = editingSection === section;
+
+    if (!isEditing) {
+      return (
+        <button
+          type="button"
+          className="profile-pencil-button minimal-pencil-button"
+          aria-label={`Edit ${section} information`}
+          title="Edit"
+          onClick={() => setEditingSection(section)}
+          disabled={saving}
+        >
+          <PencilIcon />
+        </button>
+      );
+    }
+
+    return (
+      <div className="profile-edit-actions">
+        <button
+          type="button"
+          className="profile-cancel-button"
+          onClick={() => cancel(section)}
+          disabled={saving}
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          className="profile-save-button"
+          onClick={() => save(section)}
+          disabled={saving}
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       {saveState !== "idle" ? (
@@ -211,63 +294,16 @@ export default function AgentProfileEditor({
             <h2>Personal Information</h2>
           </div>
 
-          <div className="profile-edit-actions">
-            {saveState === "saving" ? (
-              <div className="profile-save-status saving" aria-live="polite">
-                <span className="profile-save-spinner" aria-hidden="true" />
-                Saving to Airtable...
-              </div>
-            ) : saveState === "saved" ? (
-              <div className="profile-save-status saved" aria-live="polite">
-                <span aria-hidden="true">✓</span>
-                Saved to Airtable
-              </div>
-            ) : saveState === "error" ? (
-              <div className="profile-save-status error" aria-live="assertive">
-                Save failed
-              </div>
-            ) : null}
-
-            {!editing ? (
-              <button
-                type="button"
-                className="profile-pencil-button"
-                aria-label="Edit employee record"
-                title="Edit employee record"
-                onClick={() => setEditing(true)}
-              >
-                ✎
-              </button>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  className="profile-cancel-button"
-                  onClick={cancel}
-                  disabled={saving}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="profile-save-button"
-                  onClick={save}
-                  disabled={saving}
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
-              </>
-            )}
-          </div>
+          <SectionActions section="personal" />
         </div>
 
         <div className="record-grid">
-          {field("Name", "name")}
-          {field("Work Email", "email", { type: "email" })}
-          {field("Personal Email", "personalEmail", { type: "email" })}
-          {field("Phone Number", "phoneNumber", { type: "tel" })}
-          {field("Date of Birth", "dateOfBirth", { type: "date" })}
-          {field("Start Date", "startDate", { type: "date" })}
+          {field("Name", "name", undefined, editingSection === "personal")}
+          {field("Work Email", "email", { type: "email" }, editingSection === "personal")}
+          {field("Personal Email", "personalEmail", { type: "email" }, editingSection === "personal")}
+          {field("Phone Number", "phoneNumber", { type: "tel" }, editingSection === "personal")}
+          {field("Date of Birth", "dateOfBirth", { type: "date" }, editingSection === "personal")}
+          {field("Start Date", "startDate", { type: "date" }, editingSection === "personal")}
         </div>
       </section>
 
@@ -277,14 +313,17 @@ export default function AgentProfileEditor({
             <div className="eyebrow">REQUIRED PROFILE</div>
             <h2>Profile Information</h2>
           </div>
-          <div className="required-profile-note">Tracked in Missing Info</div>
+          <div className="section-heading-actions">
+            <div className="required-profile-note">Tracked in Missing Info</div>
+            <SectionActions section="required" />
+          </div>
         </div>
 
         <div className="record-grid">
-          {field("SSN", "ssn", { type: editing ? "password" : "text", placeholder: "Enter SSN" })}
-          {field("Date of Birth", "dateOfBirth", { type: "date" })}
-          {field("NPN", "npn", { placeholder: "Enter NPN" })}
-          {field("Discord User ID", "discordUserId", { placeholder: "Enter Discord User ID" })}
+          {field("SSN", "ssn", { type: editingSection === "required" ? "password" : "text", placeholder: "Enter SSN" }, editingSection === "required")}
+          {field("Date of Birth", "dateOfBirth", { type: "date" }, editingSection === "required")}
+          {field("NPN", "npn", { placeholder: "Enter NPN" }, editingSection === "required")}
+          {field("Discord User ID", "discordUserId", { placeholder: "Enter Discord User ID" }, editingSection === "required")}
           {field("Resident State", "residentState", {
             select: [
               "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS",
@@ -292,7 +331,7 @@ export default function AgentProfileEditor({
               "NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV",
               "WI","WY","DC"
             ],
-          })}
+          }, editingSection === "required")}
         </div>
       </section>
 
@@ -302,21 +341,22 @@ export default function AgentProfileEditor({
             <div className="eyebrow">EMPLOYMENT</div>
             <h2>Role & Contracting</h2>
           </div>
+          <SectionActions section="employment" />
         </div>
 
         <div className="record-grid">
-          {field("Status", "status")}
+          {field("Status", "status", undefined, editingSection === "employment")}
           {field("Role", "role", {
             select: ["ADMIN", "Medicare Agent", "Bootcamp Direct", "Fronter", "Hospital Indemnity"],
-          })}
+          }, editingSection === "employment")}
           {field("Licensing Status", "licensingStatus", {
             select: ["Licensed", "Non-licensed"],
-          })}
-          {field("Current Stage", "currentStage")}
+          }, editingSection === "employment")}
+          {field("Current Stage", "currentStage", undefined, editingSection === "employment")}
           {field("Contracting Designation", "contractingDesignation", {
             select: ["Pitch Health", "IFG", "TrueCare"],
-          })}
-          {field("States", "states", { placeholder: "Enter number of states" })}
+          }, editingSection === "employment")}
+          {field("States", "states", { placeholder: "Enter number of states" }, editingSection === "employment")}
         </div>
 
         {message ? <div className="profile-edit-message">{message}</div> : null}

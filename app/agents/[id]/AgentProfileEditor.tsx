@@ -15,6 +15,9 @@ type AgentProfileValues = {
   currentStage: string;
   contractingDesignation: string;
   npn: string;
+  ssn: string;
+  discordUserId: string;
+  residentState: string;
 };
 
 function display(value?: string) {
@@ -102,7 +105,7 @@ export default function AgentProfileEditor({
     label: string,
     key: keyof AgentProfileValues,
     options?: {
-      type?: "text" | "email" | "tel" | "date";
+      type?: "text" | "email" | "tel" | "date" | "password";
       select?: string[];
       placeholder?: string;
     },
@@ -267,6 +270,31 @@ export default function AgentProfileEditor({
         </div>
       </section>
 
+      <section className="panel employee-section required-profile-section">
+        <div className="section-heading">
+          <div>
+            <div className="eyebrow">REQUIRED PROFILE</div>
+            <h2>Profile Information</h2>
+          </div>
+          <div className="required-profile-note">Tracked in Missing Info</div>
+        </div>
+
+        <div className="record-grid">
+          {field("SSN", "ssn", { type: editing ? "password" : "text", placeholder: "Enter SSN" })}
+          {field("Date of Birth", "dateOfBirth", { type: "date" })}
+          {field("NPN", "npn", { placeholder: "Enter NPN" })}
+          {field("Discord User ID", "discordUserId", { placeholder: "Enter Discord User ID" })}
+          {field("Resident State", "residentState", {
+            select: [
+              "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS",
+              "KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY",
+              "NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV",
+              "WI","WY","DC"
+            ],
+          })}
+        </div>
+      </section>
+
       <section className="panel employee-section">
         <div className="section-heading">
           <div>
@@ -287,7 +315,6 @@ export default function AgentProfileEditor({
           {field("Contracting Designation", "contractingDesignation", {
             select: ["Pitch Health", "IFG", "TrueCare"],
           })}
-          {field("NPN", "npn")}
         </div>
 
         {message ? <div className="profile-edit-message">{message}</div> : null}

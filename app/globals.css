@@ -1662,3 +1662,38 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   cursor:pointer;
   font:inherit;
 }
+
+.profile-save-status{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:36px;
+  padding:0 11px;
+  border-radius:10px;
+  font-size:8.5px;
+  font-weight:850;
+  white-space:nowrap;
+}
+.profile-save-status.saving{
+  background:#f3efff;
+  color:#5b34d6;
+}
+.profile-save-status.saved{
+  background:#eaf8f1;
+  color:#087443;
+}
+.profile-save-status.error{
+  background:#fff0ee;
+  color:#c33a2f;
+}
+.profile-save-spinner{
+  width:13px;
+  height:13px;
+  border:2px solid #d8cef7;
+  border-top-color:#5b34d6;
+  border-radius:50%;
+  animation:profileSaveSpin .7s linear infinite;
+}
+@keyframes profileSaveSpin{
+  to{transform:rotate(360deg)}
+}

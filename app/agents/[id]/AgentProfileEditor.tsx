@@ -46,7 +46,10 @@ export default function AgentProfileEditor({
 
   useEffect(() => {
     if (saveState !== "saved") return;
-    const timer = window.setTimeout(() => setSaveState("idle"), 2200);
+    const timer = window.setTimeout(() => {
+      setSaveState("idle");
+      setMessage("");
+    }, 3200);
     return () => window.clearTimeout(timer);
   }, [saveState]);
 
@@ -164,6 +167,39 @@ export default function AgentProfileEditor({
 
   return (
     <>
+      {saveState !== "idle" ? (
+        <div
+          className={`profile-save-toast ${saveState}`}
+          role={saveState === "error" ? "alert" : "status"}
+          aria-live={saveState === "error" ? "assertive" : "polite"}
+        >
+          {saveState === "saving" ? (
+            <>
+              <span className="profile-save-spinner" aria-hidden="true" />
+              <div>
+                <strong>Saving to Airtable...</strong>
+                <span>Main Company Directory</span>
+              </div>
+            </>
+          ) : saveState === "saved" ? (
+            <>
+              <span className="profile-save-toast-icon">✓</span>
+              <div>
+                <strong>Saved to Airtable</strong>
+                <span>Main Company Directory updated successfully.</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <span className="profile-save-toast-icon">!</span>
+              <div>
+                <strong>Save failed</strong>
+                <span>{message || "Airtable did not accept the update."}</span>
+              </div>
+            </>
+          )}
+        </div>
+      ) : null}
       <section className="panel employee-section">
         <div className="section-heading">
           <div>
@@ -180,10 +216,10 @@ export default function AgentProfileEditor({
             ) : saveState === "saved" ? (
               <div className="profile-save-status saved" aria-live="polite">
                 <span aria-hidden="true">✓</span>
-                Saved
+                Saved to Airtable
               </div>
-            ) : saveState === "error" && !editing ? (
-              <div className="profile-save-status error" aria-live="polite">
+            ) : saveState === "error" ? (
+              <div className="profile-save-status error" aria-live="assertive">
                 Save failed
               </div>
             ) : null}

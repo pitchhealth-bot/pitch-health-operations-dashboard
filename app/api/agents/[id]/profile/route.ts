@@ -11,7 +11,7 @@ const TABLE_ID = "tblx66f77FNlyJ3m4";
 const FIELD_MAP = {
   name: "Name",
   email: "PHS Email",
-  personalEmail: "Personal email",
+  personalEmail: "Email",
   phoneNumber: "Phone Number",
   dateOfBirth: "Date of Birth",
   startDate: "(EDIT) Start Date",

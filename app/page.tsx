@@ -38,7 +38,7 @@ async function ContractingSourcesPanel() {
   const contractingSources = await getContractingSources();
 
   return (
-    <section className="panel">
+    <section className="panel dashboard-panel connected-panel">
       <div className="panel-title">
         <div>
           <span className="eyebrow">CONTRACTING DATA</span>
@@ -123,21 +123,41 @@ export default async function Home() {
 
   return (
     <main>
-      <header className="topbar">
-        <div><div className="eyebrow">OPERATIONS DASHBOARD</div><h1>Licensing & Contracting</h1><p className="page-subtitle">Track agent readiness, licensing progress, blockers, and contracting health.</p></div>
-        <div className="source"><span className={source === "airtable" ? "dot live" : "dot"} />{source === "airtable" ? "Live Airtable" : source === "error" ? "Airtable error" : "Sample data"}</div>
+      <header className="dashboard-hero">
+        <div className="dashboard-hero-copy">
+          <div className="eyebrow dashboard-hero-eyebrow">OPERATIONS DASHBOARD</div>
+          <h1>Licensing & Contracting</h1>
+          <p className="page-subtitle">
+            Track agent readiness, licensing progress, blockers, and contracting health.
+          </p>
+          <div className="dashboard-hero-meta">
+            <span>{agents.length} active agents</span>
+            <span>{licensed.length} licensed</span>
+            <span>{missing.length} incomplete profiles</span>
+          </div>
+        </div>
+
+        <div className="dashboard-hero-status">
+          <div className="source source-hero">
+            <span className={source === "airtable" ? "dot live" : "dot"} />
+            {source === "airtable" ? "Live Airtable" : source === "error" ? "Airtable error" : "Sample data"}
+          </div>
+          <div className="hero-orbit hero-orbit-one" />
+          <div className="hero-orbit hero-orbit-two" />
+          <div className="hero-monogram">P</div>
+        </div>
       </header>
 
       {source === "error" && <section className="panel"><strong>Airtable connection error</strong><div className="muted" style={{marginTop:8}}>{error}</div></section>}
 
-      <section className="metric-grid">
-        <Link href="/agents" className="metric metric-link"><div className="metric-top"><span>Active agents</span><i>↗</i></div><strong>{agents.length}</strong><small>View all agents →</small></Link>
-        <Link href="/agents?licensing=Licensed" className="metric metric-link"><div className="metric-top"><span>Licensed</span><i>✓</i></div><strong>{licensed.length}</strong><small>Ready for contracting →</small></Link>
-        <Link href="/agents?licensing=Non-licensed" className="metric metric-link"><div className="metric-top"><span>Non-licensed</span><i>◷</i></div><strong>{nonLicensed.length}</strong><small>Licensing in progress →</small></Link>
-        <Link href="/agents?filter=stuck" className="metric metric-link"><div className="metric-top"><span>Stuck 7+ days</span><i>!</i></div><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical →</small></Link>
-        <Link href="/agents?filter=blocked" className="metric metric-link"><div className="metric-top"><span>Active blockers</span><i>⚑</i></div><strong>{blocked.length}</strong><small>Needs attention →</small></Link>
-        <Link href="/missing-info" className="metric metric-link"><div className="metric-top"><span>Missing info</span><i>?</i></div><strong>{missing.length}</strong><small>Incomplete profiles →</small></Link>
-        <Link href="/licenses" className="metric metric-link"><div className="metric-top"><span>Licenses ≤30d</span><i>⌁</i></div><strong>{expiring.length}</strong><small>Upcoming expirations →</small></Link>
+      <section className="metric-grid dashboard-metrics">
+        <Link href="/agents" className="metric metric-link metric-purple"><div className="metric-top"><span>Active agents</span><i>↗</i></div><strong>{agents.length}</strong><small>View all agents →</small></Link>
+        <Link href="/agents?licensing=Licensed" className="metric metric-link metric-green"><div className="metric-top"><span>Licensed</span><i>✓</i></div><strong>{licensed.length}</strong><small>Ready for contracting →</small></Link>
+        <Link href="/agents?licensing=Non-licensed" className="metric metric-link metric-amber"><div className="metric-top"><span>Non-licensed</span><i>◷</i></div><strong>{nonLicensed.length}</strong><small>Licensing in progress →</small></Link>
+        <Link href="/agents?filter=stuck" className="metric metric-link metric-red"><div className="metric-top"><span>Stuck 7+ days</span><i>!</i></div><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical →</small></Link>
+        <Link href="/agents?filter=blocked" className="metric metric-link metric-orange"><div className="metric-top"><span>Active blockers</span><i>⚑</i></div><strong>{blocked.length}</strong><small>Needs attention →</small></Link>
+        <Link href="/missing-info" className="metric metric-link metric-blue"><div className="metric-top"><span>Missing info</span><i>?</i></div><strong>{missing.length}</strong><small>Incomplete profiles →</small></Link>
+        <Link href="/licenses" className="metric metric-link metric-indigo"><div className="metric-top"><span>Licenses ≤30d</span><i>⌁</i></div><strong>{expiring.length}</strong><small>Upcoming expirations →</small></Link>
       </section>
 
       <Suspense
@@ -156,8 +176,8 @@ export default async function Home() {
         <ContractingSourcesPanel />
       </Suspense>
 
-      <section className="panel">
-        <div className="panel-title"><div><span className="eyebrow">PIPELINE</span><h2>Agent journey</h2></div><span className="muted">Bottlenecks at a glance</span></div>
+      <section className="panel dashboard-panel pipeline-panel">
+        <div className="panel-title"><div><span className="eyebrow">PIPELINE</span><h2>Agent journey</h2></div><span className="panel-kicker">Bottlenecks at a glance</span></div>
         <div className="pipeline">
           {stages.map(stage => {
             const list = agents.filter(a=>a.stage===stage);
@@ -177,14 +197,14 @@ export default async function Home() {
       </section>
 
       <div className="two-col">
-        <section className="panel">
-          <div className="panel-title"><div><span className="eyebrow">ACTION QUEUE</span><h2>Attention needed</h2></div></div>
+        <section className="panel dashboard-panel action-panel">
+          <div className="panel-title"><div><span className="eyebrow">ACTION QUEUE</span><h2>Attention needed</h2></div><span className="panel-count">{attention.length}</span></div>
           <div className="table-head"><span>Agent</span><span>Age</span><span>Blocker</span><span>Info</span><span>License</span></div>
           {attention.map(a=><AgentRow key={a.id} agent={a}/>)}
         </section>
 
-        <section className="panel side">
-          <div className="panel-title"><div><span className="eyebrow">HEALTH</span><h2>Operational checks</h2></div></div>
+        <section className="panel side dashboard-panel health-panel">
+          <div className="panel-title"><div><span className="eyebrow">HEALTH</span><h2>Operational checks</h2></div><span className="health-pulse"><i /> Live</span></div>
           <div className="check"><span>Hierarchy not verified</span><strong>{agents.filter(a=>!a.hierarchyVerified && a.stage!=="Pre-Licensing" && a.stage!=="Exam").length}</strong></div>
           <div className="check"><span>Carrier delays</span><strong>{agents.filter(a=>a.blockerType==="Carrier Delay").length}</strong></div>
           <div className="check"><span>Agent action required</span><strong>{agents.filter(a=>a.blockerType==="Agent Action Required").length}</strong></div>

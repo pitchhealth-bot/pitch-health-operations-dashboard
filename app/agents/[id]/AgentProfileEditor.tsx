@@ -18,6 +18,7 @@ type AgentProfileValues = {
   ssn: string;
   discordUserId: string;
   residentState: string;
+  states: string;
 };
 
 function display(value?: string) {
@@ -315,6 +316,7 @@ export default function AgentProfileEditor({
           {field("Contracting Designation", "contractingDesignation", {
             select: ["Pitch Health", "IFG", "TrueCare"],
           })}
+          {field("States", "states", { placeholder: "Enter number of states" })}
         </div>
 
         {message ? <div className="profile-edit-message">{message}</div> : null}

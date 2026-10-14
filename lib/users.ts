@@ -1,3 +1,4 @@
+import { unstable_cache, revalidateTag } from "next/cache";
 import { getSupabaseAdmin } from "./supabase-admin";
 
 export type DashboardRole = "super_admin" | "admin" | "agent";
@@ -31,30 +32,46 @@ function mapRow(row: Record<string, unknown>): DashboardUser {
   };
 }
 
+const getDashboardUserCached = unstable_cache(
+  async (email: string) => {
+    const supabase = getSupabaseAdmin();
+
+    const { data, error } = await supabase
+      .from("dashboard_users")
+      .select("*")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return data ? mapRow(data) : null;
+  },
+  ["dashboard-user-by-email-v1"],
+  { revalidate: 60, tags: ["dashboard-users"] },
+);
+
+const listDashboardUsersCached = unstable_cache(
+  async () => {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from("dashboard_users")
+      .select("*")
+      .order("name", { ascending: true, nullsFirst: false })
+      .order("email", { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return (data || []).map(row => mapRow(row));
+  },
+  ["dashboard-users-list-v1"],
+  { revalidate: 60, tags: ["dashboard-users"] },
+);
+
 export async function getDashboardUserByEmail(email?: string | null) {
   if (!email) return null;
-  const supabase = getSupabaseAdmin();
-
-  const { data, error } = await supabase
-    .from("dashboard_users")
-    .select("*")
-    .eq("email", email.trim().toLowerCase())
-    .maybeSingle();
-
-  if (error) throw new Error(error.message);
-  return data ? mapRow(data) : null;
+  return getDashboardUserCached(email.trim().toLowerCase());
 }
 
 export async function listDashboardUsers() {
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("dashboard_users")
-    .select("*")
-    .order("name", { ascending: true, nullsFirst: false })
-    .order("email", { ascending: true });
-
-  if (error) throw new Error(error.message);
-  return (data || []).map(row => mapRow(row));
+  return listDashboardUsersCached();
 }
 
 export async function createDashboardUser(input: {
@@ -82,6 +99,7 @@ export async function createDashboardUser(input: {
     .single();
 
   if (error) throw new Error(error.message);
+  revalidateTag("dashboard-users", "max");
   return mapRow(data);
 }
 
@@ -117,6 +135,7 @@ export async function updateDashboardUser(
     .single();
 
   if (error) throw new Error(error.message);
+  revalidateTag("dashboard-users", "max");
   return mapRow(data);
 }
 
@@ -129,6 +148,8 @@ export async function touchLastLogin(email: string) {
       updated_at: new Date().toISOString(),
     })
     .eq("email", email.trim().toLowerCase());
+
+  revalidateTag("dashboard-users", "max");
 }
 
 
@@ -141,4 +162,5 @@ export async function deleteDashboardUser(id: string) {
     .eq("id", id);
 
   if (error) throw new Error(error.message);
+  revalidateTag("dashboard-users", "max");
 }

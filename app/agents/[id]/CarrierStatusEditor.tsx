@@ -1,5 +1,6 @@
 "use client";
 
+import EditIcon from "@/app/components/EditIcon";
 import { useMemo, useState } from "react";
 import type { CarrierStatus } from "@/lib/contracting";
 
@@ -150,8 +151,8 @@ export default function CarrierStatusEditor({
                 aria-label="Edit carrier status"
                 title="Edit Carrier Status"
               >
-                ✎
-              </button>
+                  <EditIcon />
+                </button>
             ) : (
               <>
                 <button

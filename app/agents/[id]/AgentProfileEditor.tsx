@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 type AgentProfileValues = {
   name: string;
@@ -36,13 +35,20 @@ export default function AgentProfileEditor({
   agentId: string;
   initialValues: AgentProfileValues;
 }) {
-  const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [values, setValues] = useState(initialValues);
+  const [savedValues, setSavedValues] = useState(initialValues);
 
-  const pristine = useMemo(() => initialValues, [initialValues]);
+  const pristine = useMemo(() => savedValues, [savedValues]);
+
+  useEffect(() => {
+    if (saveState !== "saved") return;
+    const timer = window.setTimeout(() => setSaveState("idle"), 2200);
+    return () => window.clearTimeout(timer);
+  }, [saveState]);
 
   function update<K extends keyof AgentProfileValues>(key: K, value: AgentProfileValues[K]) {
     setValues(current => ({ ...current, [key]: value }));
@@ -51,11 +57,13 @@ export default function AgentProfileEditor({
   function cancel() {
     setValues(pristine);
     setMessage("");
+    setSaveState("idle");
     setEditing(false);
   }
 
   async function save() {
     setSaving(true);
+    setSaveState("saving");
     setMessage("");
 
     try {
@@ -71,14 +79,16 @@ export default function AgentProfileEditor({
         throw new Error(json.error || "Could not save employee record.");
       }
 
+      setSavedValues(values);
       setMessage(
         json.changed
           ? `${json.changed} field${json.changed === 1 ? "" : "s"} updated in Airtable.`
           : "No changes to save.",
       );
+      setSaveState("saved");
       setEditing(false);
-      router.refresh();
     } catch (error) {
+      setSaveState("error");
       setMessage(error instanceof Error ? error.message : "Could not save employee record.");
     } finally {
       setSaving(false);
@@ -162,6 +172,22 @@ export default function AgentProfileEditor({
           </div>
 
           <div className="profile-edit-actions">
+            {saveState === "saving" ? (
+              <div className="profile-save-status saving" aria-live="polite">
+                <span className="profile-save-spinner" aria-hidden="true" />
+                Saving to Airtable...
+              </div>
+            ) : saveState === "saved" ? (
+              <div className="profile-save-status saved" aria-live="polite">
+                <span aria-hidden="true">✓</span>
+                Saved
+              </div>
+            ) : saveState === "error" && !editing ? (
+              <div className="profile-save-status error" aria-live="polite">
+                Save failed
+              </div>
+            ) : null}
+
             {!editing ? (
               <button
                 type="button"

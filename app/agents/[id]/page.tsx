@@ -177,6 +177,7 @@ export default async function AgentProfilePage({
                 ssn: agent.ssn || "",
                 discordUserId: agent.discordUserId || "",
                 residentState: agent.residentState || "",
+                states: agent.states || "",
               }}
             />
           ) : (
@@ -216,6 +217,7 @@ export default async function AgentProfilePage({
                   <Field label="Licensing Status" value={agent.licensingStatus} />
                   <Field label="Current Stage" value={agent.currentStage} />
                   <Field label="Contracting Designation" value={agent.contractingDesignation} />
+                  <Field label="States" value={agent.states} />
                   <Field label="NPN" value={agent.npn} />
                 </div>
               </section>

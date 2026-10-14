@@ -1774,3 +1774,21 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   font-weight:800;
   white-space:nowrap;
 }
+
+.section-heading-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.minimal-pencil-button{
+  width:34px;
+  height:34px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  color:#5b34d6;
+}
+.minimal-pencil-button svg{
+  display:block;
+}

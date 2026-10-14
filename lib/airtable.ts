@@ -182,6 +182,7 @@ async function loadDashboardData(): Promise<DashboardData> {
         ssn: asText(findFieldValue(f, ["SSN", "Social Security Number", "Social Security #"])),
         discordUserId: asText(findFieldValue(f, ["Discord User ID", "Discord ID", "Discord UserID", "Discord User Id"])),
         residentState: asText(findFieldValue(f, ["Resident State", "Resident state", "Resident-State"])),
+        states: asText(findFieldValue(f, ["States"])),
         status: asText(findFieldValue(f, ["Status"])),
         role: asText(findFieldValue(f, ["Role", "Position", "Job Role"])),
         currentStage: currentStageValue,
@@ -214,6 +215,6 @@ async function loadDashboardData(): Promise<DashboardData> {
 
 export const getDashboardData = unstable_cache(
   loadDashboardData,
-  ["pitch-dashboard-data-v8"],
+  ["pitch-dashboard-data-v9"],
   { revalidate: 300, tags: ["dashboard-data"] },
 );

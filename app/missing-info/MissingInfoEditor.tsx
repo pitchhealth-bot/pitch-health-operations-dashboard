@@ -1,5 +1,6 @@
 "use client";
 
+import EditIcon from "@/app/components/EditIcon";
 import { useState } from "react";
 
 type Row = {
@@ -309,7 +310,7 @@ export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; 
                   title="Edit missing information"
                   onClick={() => begin(row)}
                 >
-                  ✎
+                  <EditIcon />
                 </button>
               )}
             </div>

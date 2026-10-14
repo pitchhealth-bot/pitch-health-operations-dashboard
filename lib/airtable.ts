@@ -156,8 +156,18 @@ async function loadDashboardData(): Promise<DashboardData> {
 
     const agents: Agent[] = activeRecords.map(record => {
       const f = record.fields;
-      const rawStage = asText(f["Stage"] || f["Pipeline Stage"]) as PipelineStage;
-      const stage: PipelineStage = allowedStages.includes(rawStage) ? rawStage : "Pre-Licensing";
+      const currentStageValue = asText(
+        findFieldValue(f, ["Current Stage", "Stage", "Pipeline Stage"]),
+      ).trim();
+
+      const normalizedCurrentStage = currentStageValue.toLowerCase();
+
+      const stage: PipelineStage =
+        normalizedCurrentStage === "rts"
+          ? "RTS"
+          : allowedStages.find(
+              allowed => allowed.toLowerCase() === normalizedCurrentStage,
+            ) || "Pre-Licensing";
       const entered = asText(f["Stage Entered Date"]);
       const licensingStatus = findLicensingStatus(f);
 
@@ -174,7 +184,7 @@ async function loadDashboardData(): Promise<DashboardData> {
         residentState: asText(findFieldValue(f, ["Resident State", "Resident state", "Resident-State"])),
         status: asText(findFieldValue(f, ["Status"])),
         role: asText(findFieldValue(f, ["Role", "Position", "Job Role"])),
-        currentStage: asText(findFieldValue(f, ["Current Stage", "Stage", "Pipeline Stage"])),
+        currentStage: currentStageValue,
         contractingDesignation: asText(findFieldValue(f, ["Contracting Designation"])),
         startDate: asText(findFieldValue(f, ["(EDIT) Start Date", "EDIT Start Date", "Start Date"])),
         stage,
@@ -204,6 +214,6 @@ async function loadDashboardData(): Promise<DashboardData> {
 
 export const getDashboardData = unstable_cache(
   loadDashboardData,
-  ["pitch-dashboard-data-v6"],
+  ["pitch-dashboard-data-v7"],
   { revalidate: 60, tags: ["dashboard-data"] },
 );

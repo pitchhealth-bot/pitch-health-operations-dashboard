@@ -232,24 +232,28 @@ export async function getCarrierCertificatesForAgent(
   if (error) throw new Error(error.message);
 
   const rows = data || [];
+  if (!rows.length) return [];
 
-  return Promise.all(rows.map(async row => {
-    const { data: signed, error: signedError } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .createSignedUrl(row.storage_path, 60 * 60);
+  const paths = rows.map(row => row.storage_path);
+  const { data: signedRows, error: signedError } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrls(paths, 60 * 60);
 
-    if (signedError) throw new Error(signedError.message);
+  if (signedError) throw new Error(signedError.message);
 
-    return {
-      id: row.id,
-      carrier: row.carrier,
-      fileName: row.file_name,
-      contentType: row.content_type || undefined,
-      sizeBytes: row.size_bytes || undefined,
-      createdAt: row.created_at,
-      uploadedByEmail: row.uploaded_by_email,
-      url: signed.signedUrl,
-    };
+  const signedByPath = new Map(
+    (signedRows || []).map(item => [item.path, item.signedUrl]),
+  );
+
+  return rows.map(row => ({
+    id: row.id,
+    carrier: row.carrier,
+    fileName: row.file_name,
+    contentType: row.content_type || undefined,
+    sizeBytes: row.size_bytes || undefined,
+    createdAt: row.created_at,
+    uploadedByEmail: row.uploaded_by_email,
+    url: signedByPath.get(row.storage_path) || "",
   }));
 }
 

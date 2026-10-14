@@ -29,6 +29,7 @@ export type Agent = {
   ssn?: string;
   discordUserId?: string;
   residentState?: string;
+  states?: string;
   ahip2027?: AirtableAttachment[];
   stage: PipelineStage;
   subStage?: string;

@@ -126,7 +126,7 @@ export function displayLicenseState(value?: string) {
 export const getLicenseRecords = unstable_cache(
   loadLicenseRecords,
   ["pitch-license-records-v2"],
-  { revalidate: 60, tags: ["licenses-data"] },
+  { revalidate: 300, tags: ["licenses-data"] },
 );
 
 

@@ -6,7 +6,7 @@ import { getDashboardUserByEmail } from "@/lib/users";
 import { writeAuditEntry } from "@/lib/audit";
 
 const BASE_ID = "app5eoO1QYp4UAoaU";
-const TABLE_ID = process.env.AIRTABLE_TABLE_ID || process.env.AIRTABLE_AGENTS_TABLE || "tblx66f77FNlyJ3m4";
+const TABLE_ID = "tblx66f77FNlyJ3m4";
 
 const FIELD_MAP = {
   name: "Name",
@@ -168,5 +168,13 @@ export async function PATCH(
   return NextResponse.json({
     ok: true,
     changed: changes.length,
+    recordId: updated.id,
+    updatedFields: updated.fields,
+    target: {
+      baseId: BASE_ID,
+      tableId: TABLE_ID,
+      tableName: "Company Directory (Revamp)",
+      viewName: "UNFILTERED",
+    },
   });
 }

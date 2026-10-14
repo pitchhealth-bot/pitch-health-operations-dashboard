@@ -215,5 +215,5 @@ async function loadDashboardData(): Promise<DashboardData> {
 export const getDashboardData = unstable_cache(
   loadDashboardData,
   ["pitch-dashboard-data-v7"],
-  { revalidate: 60, tags: ["dashboard-data"] },
+  { revalidate: 300, tags: ["dashboard-data"] },
 );

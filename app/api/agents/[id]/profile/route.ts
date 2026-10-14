@@ -24,6 +24,7 @@ const FIELD_MAP = {
   ssn: "SSN",
   discordUserId: "Discord User ID",
   residentState: "Resident State",
+  states: "States",
 } as const;
 
 type EditableKey = keyof typeof FIELD_MAP;
@@ -91,14 +92,14 @@ export async function PATCH(
 
     if (oldValue === newValue) continue;
 
-    if (key === "npn") {
+    if (key === "npn" || key === "states") {
       if (!newValue) {
         fields[field] = null;
       } else {
         const parsed = Number(newValue.replace(/,/g, ""));
         if (!Number.isFinite(parsed)) {
           return NextResponse.json(
-            { error: "NPN must be a valid number." },
+            { error: key === "states" ? "States must be a valid number." : "NPN must be a valid number." },
             { status: 400 },
           );
         }

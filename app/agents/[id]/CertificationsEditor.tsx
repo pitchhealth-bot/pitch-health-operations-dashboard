@@ -1,5 +1,6 @@
 "use client";
 
+import EditIcon from "@/app/components/EditIcon";
 import { useMemo, useRef, useState } from "react";
 import type { RefObject } from "react";
 
@@ -250,8 +251,8 @@ export default function CertificationsEditor({
               title="Edit certifications"
               onClick={() => setEditing(true)}
             >
-              ✎
-            </button>
+                  <EditIcon />
+                </button>
           ) : editing ? (
             <>
               <button

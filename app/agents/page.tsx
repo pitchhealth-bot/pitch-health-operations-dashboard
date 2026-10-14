@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { getDashboardData } from "@/lib/airtable";
-import type { Agent } from "@/lib/types";
 import { requireRole } from "@/lib/session";
-import AgentsFilters from "./AgentsFilters";
+import ActiveAgentsClient from "./ActiveAgentsClient";
 
 export const dynamic = "force-dynamic";
 
@@ -14,56 +13,6 @@ type SortKey =
   | "currentStage"
   | "contractingDesignation"
   | "startDate";
-
-const columns: Array<{ key: SortKey; label: string }> = [
-  { key: "name", label: "Name" },
-  { key: "status", label: "Status" },
-  { key: "role", label: "Role" },
-  { key: "licensingStatus", label: "Licensing Status" },
-  { key: "currentStage", label: "Current Stage" },
-  { key: "contractingDesignation", label: "Contracting Designation" },
-  { key: "startDate", label: "Start Date" },
-];
-
-function valueForSort(agent: Agent, key: SortKey) {
-  return String(agent[key] || "").trim();
-}
-
-function sortAgents(agents: Agent[], key: SortKey, dir: "asc" | "desc") {
-  return [...agents].sort((a, b) => {
-    const av = valueForSort(a, key);
-    const bv = valueForSort(b, key);
-
-    if (key === "startDate") {
-      const at = av ? new Date(av).getTime() : 0;
-      const bt = bv ? new Date(bv).getTime() : 0;
-      return dir === "asc" ? at - bt : bt - at;
-    }
-
-    const result = av.localeCompare(bv, undefined, {
-      numeric: true,
-      sensitivity: "base",
-    });
-    return dir === "asc" ? result : -result;
-  });
-}
-
-function sortHref(
-  key: SortKey,
-  currentSort: SortKey,
-  currentDir: "asc" | "desc",
-  q: string,
-  licensing: string,
-  roleView: string,
-) {
-  const params = new URLSearchParams();
-  if (q) params.set("q", q);
-  if (licensing) params.set("licensing", licensing);
-  if (roleView) params.set("roleView", roleView);
-  params.set("sort", key);
-  params.set("dir", currentSort === key && currentDir === "asc" ? "desc" : "asc");
-  return `/agents?${params.toString()}`;
-}
 
 export default async function AgentsPage({
   searchParams,
@@ -78,66 +27,40 @@ export default async function AgentsPage({
   }>;
 }) {
   await requireRole(["admin", "super_admin"]);
-  const params = await searchParams;
-  const q = params.q || "";
-  const licensing = params.licensing || "";
-  const specialFilter = params.filter || "";
-  const roleView = params.roleView || "";
-  const sort = columns.some(c => c.key === params.sort)
-    ? (params.sort as SortKey)
-    : "name";
-  const dir: "asc" | "desc" = params.dir === "desc" ? "desc" : "asc";
 
+  const params = await searchParams;
   const { agents, source, error } = await getDashboardData();
 
-  const query = q.trim().toLowerCase();
-  const filtered = agents.filter(agent => {
-    const matchesQuery =
-      !query ||
-      [
-        agent.name,
-        agent.status,
-        agent.role,
-        agent.licensingStatus,
-        agent.currentStage,
-        agent.contractingDesignation,
-        agent.startDate,
-        agent.email,
-        agent.personalEmail,
-      ]
-        .filter(Boolean)
-        .some(value => String(value).toLowerCase().includes(query));
+  const safeSort: SortKey = [
+    "name",
+    "status",
+    "role",
+    "licensingStatus",
+    "currentStage",
+    "contractingDesignation",
+    "startDate",
+  ].includes(params.sort || "")
+    ? (params.sort as SortKey)
+    : "name";
 
-    const matchesLicensing =
-      !licensing ||
-      (agent.licensingStatus || "").toLowerCase() === licensing.toLowerCase();
+  const safeDir: "asc" | "desc" = params.dir === "desc" ? "desc" : "asc";
 
-    const normalizedRole = (agent.role || "").trim().toLowerCase();
-    const matchesRole =
-      !roleView ||
-      (roleView === "admin" && normalizedRole === "admin") ||
-      (roleView === "bootcamp-direct" && normalizedRole === "bootcamp direct") ||
-      (roleView === "medicare-agent" && normalizedRole === "medicare agent") ||
-      (roleView === "no-role" && !normalizedRole);
-
-    const licenseDays = (() => {
-      if (!agent.licenseExpiry) return null;
-      const date = new Date(agent.licenseExpiry);
-      if (Number.isNaN(date.getTime())) return null;
-      return Math.ceil((date.getTime() - Date.now()) / 86400000);
-    })();
-
-    const matchesSpecial =
-      !specialFilter ||
-      (specialFilter === "stuck" && agent.daysInStage >= 7) ||
-      (specialFilter === "blocked" && Boolean(agent.blocker)) ||
-      (specialFilter === "missing" && agent.missingFields.length > 0) ||
-      (specialFilter === "expiring" && licenseDays !== null && licenseDays <= 30);
-
-    return matchesQuery && matchesLicensing && matchesRole && matchesSpecial;
-  });
-
-  const sorted = sortAgents(filtered, sort, dir);
+  const listAgents = agents.map(agent => ({
+    id: agent.id,
+    name: agent.name,
+    status: agent.status,
+    role: agent.role,
+    licensingStatus: agent.licensingStatus,
+    currentStage: agent.currentStage,
+    contractingDesignation: agent.contractingDesignation,
+    startDate: agent.startDate,
+    email: agent.email,
+    personalEmail: agent.personalEmail,
+    daysInStage: agent.daysInStage,
+    blocker: agent.blocker,
+    missingCount: agent.missingFields.length,
+    licenseExpiry: agent.licenseExpiry,
+  }));
 
   return (
     <main>
@@ -145,7 +68,7 @@ export default async function AgentsPage({
         <div>
           <div className="eyebrow">PITCH HEALTH SOLUTIONS</div>
           <h1>Active Agents</h1>
-          <div className="muted">{sorted.length} of {agents.length} active agents</div>
+          <div className="muted">{agents.length} active agents</div>
         </div>
         <Link className="back-link" href="/">← Dashboard</Link>
       </header>
@@ -157,89 +80,15 @@ export default async function AgentsPage({
         </section>
       )}
 
-      <section className="panel">
-        <div className="agent-role-tabs">
-          {[
-            ["", "All"],
-            ["admin", "ADMIN"],
-            ["bootcamp-direct", "Bootcamp Direct"],
-            ["medicare-agent", "Medicare Agent"],
-            ["no-role", "No Role"],
-          ].map(([value, label]) => {
-            const tabParams = new URLSearchParams();
-            if (q) tabParams.set("q", q);
-            if (licensing) tabParams.set("licensing", licensing);
-            if (sort) tabParams.set("sort", sort);
-            if (dir) tabParams.set("dir", dir);
-            if (specialFilter) tabParams.set("filter", specialFilter);
-            if (value) tabParams.set("roleView", value);
-
-            return (
-              <Link
-                key={label}
-                href={tabParams.toString() ? `/agents?${tabParams.toString()}` : "/agents"}
-                className={`agent-role-tab${roleView === value ? " active" : ""}`}
-              >
-                {label}
-              </Link>
-            );
-          })}
-        </div>
-
-        <AgentsFilters
-          initialQuery={q}
-          initialLicensing={licensing}
-          sort={sort}
-          dir={dir}
-          specialFilter={specialFilter}
-          roleView={roleView}
-        />
-      </section>
-
-      <section className="panel agents-list-panel">
-        <div className="agents-table-head active-agents-seven">
-          {columns.map(column => (
-            <Link
-              key={column.key}
-              href={sortHref(column.key, sort, dir, q, licensing, roleView)}
-              className="sort-header"
-            >
-              <span>{column.label}</span>
-              {sort === column.key && (
-                <span className="sort-arrow">{dir === "asc" ? "↑" : "↓"}</span>
-              )}
-            </Link>
-          ))}
-        </div>
-
-        {sorted.length ? sorted.map(agent => (
-          <div className="agents-table-row active-agents-seven" key={agent.id}>
-            <div>
-              <Link href={`/agents/${agent.id}`} className="agent-name-link">
-                <strong>{agent.name}</strong>
-              </Link>
-            </div>
-            <div><span className="pill success">{agent.status || "Active"}</span></div>
-            <div>{agent.role || "—"}</div>
-            <div>
-              <span className={
-                agent.licensingStatus === "Licensed"
-                  ? "pill success"
-                  : agent.licensingStatus === "Non-licensed"
-                    ? "pill warning"
-                    : "pill"
-              }>
-                {agent.licensingStatus || "—"}
-              </span>
-            </div>
-            <div>{agent.currentStage || "—"}</div>
-            <div>{agent.contractingDesignation || "—"}</div>
-            <div>{agent.startDate || "—"}</div>
-          </div>
-        )) : (
-          <div className="empty" style={{ minHeight: 140 }}>No active agents match these filters.</div>
-        )}
-      </section>
+      <ActiveAgentsClient
+        agents={listAgents}
+        initialQuery={params.q || ""}
+        initialLicensing={params.licensing || ""}
+        initialSpecialFilter={params.filter || ""}
+        initialRoleView={params.roleView || ""}
+        initialSort={safeSort}
+        initialDir={safeDir}
+      />
     </main>
   );
 }

@@ -174,6 +174,9 @@ export default async function AgentProfilePage({
                 currentStage: agent.currentStage || "",
                 contractingDesignation: agent.contractingDesignation || "",
                 npn: agent.npn || "",
+                ssn: agent.ssn || "",
+                discordUserId: agent.discordUserId || "",
+                residentState: agent.residentState || "",
               }}
             />
           ) : (
@@ -193,6 +196,9 @@ export default async function AgentProfilePage({
                   <Field label="Phone Number" value={formatPhone(agent.phoneNumber)} />
                   <Field label="Date of Birth" value={formatDate(agent.dateOfBirth)} />
                   <Field label="Start Date" value={formatDate(agent.startDate)} />
+                  <Field label="SSN" value={agent.ssn ? `•••-••-${agent.ssn.slice(-4)}` : ""} />
+                  <Field label="Discord User ID" value={agent.discordUserId} />
+                  <Field label="Resident State" value={agent.residentState} />
                 </div>
               </section>
 

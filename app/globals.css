@@ -3772,3 +3772,51 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .employee-notes-aside .employee-notes-textarea{
   min-height:170px;
 }
+
+/* Direct employee-record navigation */
+.journey-card-primary-link{
+  display:block;
+  color:inherit;
+  text-decoration:none;
+}
+.journey-agent-record-link{
+  display:inline-flex;
+  align-items:center;
+  margin-top:9px;
+  color:#5b34d6;
+  font-size:7px;
+  font-weight:850;
+  text-decoration:none;
+}
+.journey-agent-record-link:hover{
+  text-decoration:underline;
+}
+.journey-detail-nav-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.agent-record-link{
+  display:inline-flex;
+  align-items:center;
+  min-height:36px;
+  padding:0 12px;
+  border:1px solid #d9cef7;
+  border-radius:10px;
+  background:#f7f3ff;
+  color:#5b34d6;
+  font-size:8px;
+  font-weight:850;
+  text-decoration:none;
+}
+.agent-record-link:hover{
+  background:#efe8ff;
+}
+.movement-agent-link{
+  color:#2a2334;
+  text-decoration:none;
+}
+.movement-agent-link:hover{
+  color:#5b34d6;
+  text-decoration:underline;
+}

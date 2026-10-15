@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 
 const COOKIE_NAME = "phs_ops_session";
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+const MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 function secret() {
   const value = process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY;

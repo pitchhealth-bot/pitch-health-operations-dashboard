@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 const stages = [
@@ -113,23 +114,41 @@ export default function AgentJourneySearch({
               </div>
 
               <div className="stage-body">
-                {visibleList.length ? visibleList.map(agent => (
-                  <div
-                    className={`agent-card journey-agent-card${normalizedQuery ? " journey-agent-match" : ""}`}
-                    key={agent.id}
-                  >
-                    <div className="card-top">
-                      <strong>{agent.name}</strong>
-                    </div>
-                    <div className="muted">
-                      {agent.role || "—"}
-                    </div>
-                    <div className="card-foot">
-                      <span>{agent.status || "No status"}</span>
-                      {agent.npn && agent.npn !== "0" ? <span>NPN ✓</span> : null}
-                    </div>
-                  </div>
-                )) : (
+                {visibleList.length ? visibleList.map(agent => {
+                  const initials = agent.name
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .map(part => part[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase();
+
+                  return (
+                    <Link
+                      href={`/agent-journey/${agent.id}`}
+                      className={`agent-card journey-agent-card journey-agent-link${normalizedQuery ? " journey-agent-match" : ""}`}
+                      key={agent.id}
+                    >
+                      <div className="journey-card-main">
+                        <div className="journey-card-avatar">{initials || "A"}</div>
+                        <div className="journey-card-copy">
+                          <strong>{agent.name}</strong>
+                          <span>{agent.role || "No role"}</span>
+                        </div>
+                        <span className="journey-card-arrow" aria-hidden="true">→</span>
+                      </div>
+
+                      <div className="journey-card-meta">
+                        <span className="journey-stage-chip">{agent.journeyStage}</span>
+                        {agent.npn && agent.npn !== "0" ? (
+                          <span className="journey-npn-chip">NPN ✓</span>
+                        ) : (
+                          <span className="journey-npn-chip muted">No NPN</span>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                }) : (
                   <div className="empty">
                     {normalizedQuery ? "No match" : "No agents"}
                   </div>

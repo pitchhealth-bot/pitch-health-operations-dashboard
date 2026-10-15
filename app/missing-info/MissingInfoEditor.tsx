@@ -262,17 +262,20 @@ export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; 
         <span></span>
       </div>
 
-      {filteredRows.map(row => {
+      {filteredRows.map((row, index) => {
         const editing = editingId === row.id;
         const draft = draftFor(row);
 
         return (
           <div className={`missing-info-table-row${editing ? " editing" : ""}`} key={row.id}>
-            <div>
-              <a href={"/agents/" + row.id} className="agent-name-link">
-                <strong>{row.name}</strong>
-              </a>
-              <div className="muted">{row.email || "No work email"}</div>
+            <div className="missing-agent-sticky-cell">
+              <span className="missing-row-number">{index + 1}</span>
+              <div className="missing-agent-identity">
+                <a href={"/agents/" + row.id} className="agent-name-link">
+                  <strong>{row.name}</strong>
+                </a>
+                <div className="muted">{row.email || "No work email"}</div>
+              </div>
             </div>
 
             <div>

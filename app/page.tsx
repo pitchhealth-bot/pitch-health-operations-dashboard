@@ -247,9 +247,26 @@ export default async function Home() {
           <div className="executive-metric-head"><span>Licensed</span><i>✓</i></div>
           <strong>{licensed.length}</strong>
           <small>{agents.length ? Math.round((licensed.length / agents.length) * 100) : 0}% of active agents</small>
-          <div className="mini-line" aria-hidden="true">
-            <span /><span /><span /><span /><span /><span />
-          </div>
+          <svg className="metric-sparkline" viewBox="0 0 220 42" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="licensedSparkFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="currentColor" stopOpacity=".18" />
+                <stop offset="100%" stopColor="currentColor" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M2 31 L35 18 L68 24 L101 10 L134 20 L167 14 L218 11 L218 42 L2 42 Z"
+              fill="url(#licensedSparkFill)"
+            />
+            <polyline
+              points="2,31 35,18 68,24 101,10 134,20 167,14 218,11"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
         </Link>
 
         <Link href="/licenses" className="executive-metric-card">

@@ -7,6 +7,7 @@ import { getContractingSources, getLicensingStageMilestones } from "@/lib/contra
 import { getLicenseRecords, daysUntil } from "@/lib/licenses";
 import type { Agent } from "@/lib/types";
 import { requireRole } from "@/lib/session";
+import AgentJourneySearch from "@/app/components/AgentJourneySearch";
 
 
 const journeyStages = [
@@ -466,52 +467,16 @@ export default async function Home() {
         <ContractingSourcesPanel />
       </Suspense>
 
-      <section className="panel dashboard-panel pipeline-panel journey-panel">
-        <div className="panel-title">
-          <div>
-            <span className="eyebrow">PIPELINE</span>
-            <h2>Agent journey</h2>
-          </div>
-          <span className="panel-kicker">{journeyAgents.length} agents mapped</span>
-        </div>
-
-        <div className="pipeline journey-pipeline">
-          {journeyStages.map(stage => {
-            const list = journeyAgents.filter(agent => agent.journeyStage === stage);
-
-            return (
-              <div className="stage journey-stage" key={stage}>
-                <div className="stage-head">
-                  <strong>{stage}</strong>
-                  <span>{list.length}</span>
-                </div>
-
-                <div className="stage-body">
-                  {list.length ? list.map(agent => (
-                    <div
-                      className="agent-card journey-agent-card"
-                      key={agent.id}
-                    >
-                      <div className="card-top">
-                        <strong>{agent.name}</strong>
-                      </div>
-                      <div className="muted">
-                        {agent.role || agent.licensingStatus || "—"}
-                      </div>
-                      <div className="card-foot">
-                        <span>{agent.status || "No status"}</span>
-                        {agent.npn ? <span>NPN ✓</span> : null}
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="empty">No agents</div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+      <AgentJourneySearch
+        agents={journeyAgents.map(agent => ({
+          id: agent.id,
+          name: agent.name,
+          role: agent.role,
+          status: agent.status,
+          npn: agent.npn,
+          journeyStage: agent.journeyStage,
+        }))}
+      />
 
       <div className="two-col">
         <section className="panel dashboard-panel action-panel">

@@ -216,7 +216,9 @@ export default async function Home() {
       .map(item => [normalizeJourneyKey(item.name), item]),
   );
 
-  const journeyAgents = journeyDirectory.records.flatMap(agent => {
+  const journeyAgents = journeyDirectory.records
+    .filter(agent => normalizeJourneyKey(agent.status) === "active")
+    .flatMap(agent => {
     const milestone =
       (agent.npn ? milestoneByNpn.get(normalizeJourneyKey(agent.npn)) : undefined) ||
       (agent.email ? milestoneByEmail.get(normalizeJourneyKey(agent.email)) : undefined) ||

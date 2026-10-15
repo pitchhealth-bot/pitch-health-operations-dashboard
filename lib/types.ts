@@ -80,6 +80,7 @@ export type JourneyDirectoryRecord = {
   licensingStatus?: string;
   bootcampUpdate?: string;
   startDate?: string;
+  notes?: string;
 };
 
 export type JourneyDirectoryData = {

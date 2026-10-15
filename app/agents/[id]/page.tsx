@@ -178,6 +178,7 @@ export default async function AgentProfilePage({
                 discordUserId: agent.discordUserId || "",
                 residentState: agent.residentState || "",
                 states: agent.states || "",
+                notes: agent.notes || "",
               }}
             />
           ) : (

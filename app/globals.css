@@ -3754,3 +3754,21 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
     grid-template-columns:1fr;
   }
 }
+
+/* Stack Certifications and Notes cleanly in employee record sidebar */
+.employee-layout>aside{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  align-self:start;
+}
+.employee-notes-aside{
+  margin:0;
+}
+.employee-notes-aside .employee-notes-display{
+  min-height:170px;
+  max-height:260px;
+}
+.employee-notes-aside .employee-notes-textarea{
+  min-height:170px;
+}

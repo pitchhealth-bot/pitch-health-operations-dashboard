@@ -3072,3 +3072,299 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
     white-space:normal;
   }
 }
+
+/* Polished Agent Journey cards */
+.journey-agent-link{
+  display:block;
+  padding:12px;
+  color:inherit;
+  text-decoration:none;
+  border:1px solid #ece7f5;
+  border-radius:14px;
+  background:
+    linear-gradient(180deg,#fff 0%,#fdfcff 100%);
+  box-shadow:0 4px 12px rgba(41,29,79,.035);
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    box-shadow .15s ease,
+    background .15s ease;
+}
+.journey-agent-link:hover{
+  transform:translateY(-2px);
+  border-color:#cdbef7;
+  box-shadow:0 9px 20px rgba(68,43,139,.09);
+  background:#fcfaff;
+}
+.journey-card-main{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:10px;
+}
+.journey-card-avatar{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:linear-gradient(135deg,#eee8ff,#ddd0ff);
+  color:#5b34d6;
+  font-size:9px;
+  font-weight:900;
+}
+.journey-card-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.journey-card-copy strong{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:9px;
+}
+.journey-card-copy span{
+  color:#8f8799;
+  font-size:7.5px;
+}
+.journey-card-arrow{
+  width:26px;
+  height:26px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:#f3effc;
+  color:#5b34d6;
+  font-size:12px;
+  font-weight:900;
+  transition:transform .15s ease,background .15s ease;
+}
+.journey-agent-link:hover .journey-card-arrow{
+  transform:translateX(2px);
+  background:#ebe3ff;
+}
+.journey-card-meta{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  margin-top:10px;
+  padding-top:9px;
+  border-top:1px solid #f0edf5;
+}
+.journey-stage-chip,
+.journey-npn-chip{
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:0 7px;
+  border-radius:999px;
+  font-size:6.8px;
+  font-weight:850;
+}
+.journey-stage-chip{
+  max-width:145px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  background:#f1ecff;
+  color:#5b34d6;
+}
+.journey-npn-chip{
+  margin-left:auto;
+  background:#eaf7f1;
+  color:#14805a;
+}
+.journey-npn-chip.muted{
+  background:#f3f1f5;
+  color:#9a93a1;
+}
+
+/* Agent Journey detail / pre-licensing checklist */
+.journey-detail-page{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.journey-detail-hero{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:16px;
+  padding:20px;
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 88% 15%,rgba(255,255,255,.17),transparent 24%),
+    linear-gradient(135deg,#3519a9,#6845df);
+  color:#fff;
+  box-shadow:0 12px 28px rgba(66,40,158,.12);
+}
+.journey-detail-avatar{
+  width:64px;
+  height:64px;
+  display:grid;
+  place-items:center;
+  border-radius:18px;
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.2);
+  font-size:22px;
+  font-weight:900;
+}
+.journey-detail-hero .eyebrow{
+  color:#ded6ff;
+}
+.journey-detail-hero h2{
+  margin:4px 0 2px;
+  color:#fff;
+  font-size:22px;
+}
+.journey-detail-hero p{
+  margin:0;
+  max-width:650px;
+  color:rgba(255,255,255,.72);
+  font-size:8.5px;
+}
+.journey-detail-summary{
+  display:flex;
+  gap:8px;
+}
+.journey-detail-summary>div{
+  min-width:88px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.11);
+  border:1px solid rgba(255,255,255,.14);
+}
+.journey-detail-summary strong{
+  display:block;
+  font-size:20px;
+}
+.journey-detail-summary span{
+  color:rgba(255,255,255,.7);
+  font-size:7px;
+}
+.journey-agent-overview{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  padding:14px;
+}
+.journey-overview-item{
+  min-height:68px;
+  padding:11px 12px;
+  border:1px solid #ebe7f2;
+  border-radius:12px;
+  background:#fbfafc;
+}
+.journey-overview-item span{
+  display:block;
+  color:#918a9b;
+  font-size:7px;
+}
+.journey-overview-item strong{
+  display:block;
+  margin-top:6px;
+  font-size:9px;
+}
+.journey-tracker-warning{
+  padding:18px;
+  border-color:#f0d8a8;
+  background:#fffcf5;
+}
+.journey-tracker-warning p{
+  margin:5px 0 0;
+  color:#8d8495;
+  font-size:8px;
+}
+.journey-checklist-panel{
+  padding:18px;
+}
+.journey-checklist-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+.journey-check-item{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:10px;
+  min-height:66px;
+  padding:11px 12px;
+  border:1px solid #ece8f2;
+  border-radius:12px;
+  background:#fff;
+}
+.journey-check-item.complete{
+  border-color:#d9eee4;
+  background:#fbfefc;
+}
+.journey-check-item.missing{
+  border-color:#f3ddd8;
+  background:#fffafa;
+}
+.journey-check-item.pending{
+  border-color:#eadfbd;
+  background:#fffdf8;
+}
+.journey-check-icon{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  font-size:11px;
+  font-weight:900;
+}
+.journey-check-item.complete .journey-check-icon{
+  background:#e8f7f0;
+  color:#11825a;
+}
+.journey-check-item.missing .journey-check-icon{
+  background:#fff0ed;
+  color:#c53b31;
+}
+.journey-check-item.pending .journey-check-icon{
+  background:#fff5dc;
+  color:#9c6900;
+}
+.journey-check-copy{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.journey-check-copy strong{
+  font-size:8.5px;
+}
+.journey-check-copy span{
+  color:#948c9f;
+  font-size:7.5px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.journey-check-status{
+  font-size:7px;
+  font-weight:850;
+  white-space:nowrap;
+}
+.journey-check-item.complete .journey-check-status{color:#11825a}
+.journey-check-item.missing .journey-check-status{color:#c53b31}
+.journey-check-item.pending .journey-check-status{color:#9c6900}
+
+@media(max-width:850px){
+  .journey-detail-hero{
+    grid-template-columns:auto 1fr;
+  }
+  .journey-detail-summary{
+    grid-column:1 / -1;
+  }
+  .journey-agent-overview{
+    grid-template-columns:1fr 1fr;
+  }
+  .journey-checklist-grid{
+    grid-template-columns:1fr;
+  }
+}

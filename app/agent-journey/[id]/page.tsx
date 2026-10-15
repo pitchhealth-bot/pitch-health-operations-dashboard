@@ -7,6 +7,7 @@ import {
 } from "@/lib/contracting";
 import { requireRole } from "@/lib/session";
 import LicensingJourneyEditor from "./LicensingJourneyEditor";
+import AgentJourneyNotes from "./AgentJourneyNotes";
 
 export const dynamic = "force-dynamic";
 
@@ -124,13 +125,19 @@ export default async function AgentJourneyDetailPage({
           </p>
         </section>
       ) : (
-        <LicensingJourneyEditor
-          agentId={agent.id}
-          agentName={agent.name}
-          trackerRecordId={tracker.recordId}
-          initialValues={initialValues}
-          fieldConfig={fieldConfig}
-        />
+        <>
+          <LicensingJourneyEditor
+            agentId={agent.id}
+            agentName={agent.name}
+            trackerRecordId={tracker.recordId}
+            initialValues={initialValues}
+            fieldConfig={fieldConfig}
+          />
+          <AgentJourneyNotes
+            agentId={agent.id}
+            initialNotes={agent.notes || ""}
+          />
+        </>
       )}
     </main>
   );

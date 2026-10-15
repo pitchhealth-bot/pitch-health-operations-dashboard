@@ -75,8 +75,10 @@ const getTable1Records = unstable_cache(
 );
 
 const getTable2Records = unstable_cache(
-  async () => fetchAllRecords(process.env.AIRTABLE_TABLE_ID_CONTRACTING_2),
-  ["pitch-contracting-table-2-v2"],
+  async () => fetchAllRecords(
+    process.env.AIRTABLE_TABLE_ID_CONTRACTING_2 || "tblAi2SDsNAqmvJuH",
+  ),
+  ["pitch-contracting-table-2-v3"],
   { revalidate: 300, tags: ["contracting-data", "contracting-table-2"] },
 );
 
@@ -826,8 +828,8 @@ function findJourneyField(
 
 async function getLicensingStagesSchema(): Promise<AirtableFieldSchema[]> {
   const token = process.env.AIRTABLE_PAT;
-  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
-  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_2;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING || "app7KT6sXkBqdwoO9";
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_2 || "tblAi2SDsNAqmvJuH";
 
   if (!token || !baseId || !tableId) return [];
 

@@ -2416,3 +2416,327 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   border-radius:15px;
   box-shadow:0 6px 18px rgba(33,24,67,.035);
 }
+
+/* My Account */
+.account-page{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  max-width:1320px;
+}
+.account-page-heading{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+}
+.account-page-heading h1{
+  margin-top:4px;
+}
+.account-status-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:34px;
+  padding:0 12px;
+  border:1px solid #dfe9e4;
+  border-radius:999px;
+  background:#fff;
+  color:#177b58;
+  font-size:8.5px;
+  font-weight:850;
+  box-shadow:0 5px 14px rgba(29,21,56,.04);
+}
+.account-status-chip i{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#20b77a;
+  box-shadow:0 0 0 4px rgba(32,183,122,.11);
+}
+.account-hero-card{
+  position:relative;
+  overflow:hidden;
+  min-height:190px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding:26px 28px;
+  border-radius:20px;
+  background:
+    radial-gradient(circle at 88% 18%,rgba(255,255,255,.16),transparent 26%),
+    linear-gradient(135deg,#3218a4 0%,#5430d3 50%,#7350e9 100%);
+  color:#fff;
+  box-shadow:0 14px 34px rgba(69,42,165,.14);
+}
+.account-hero-card::after{
+  content:"";
+  position:absolute;
+  width:300px;
+  height:300px;
+  right:-105px;
+  bottom:-175px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:
+    0 0 0 34px rgba(255,255,255,.028),
+    0 0 0 70px rgba(255,255,255,.02);
+}
+.account-avatar-large{
+  position:relative;
+  z-index:2;
+  width:82px;
+  height:82px;
+  flex:0 0 82px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:22px;
+  background:rgba(255,255,255,.14);
+  font-size:28px;
+  font-weight:900;
+  backdrop-filter:blur(10px);
+}
+.account-hero-copy{
+  position:relative;
+  z-index:2;
+  min-width:0;
+}
+.account-hero-copy .eyebrow{
+  color:#ded6ff;
+}
+.account-hero-copy h2{
+  margin:5px 0 4px;
+  color:#fff;
+  font-size:28px;
+  letter-spacing:-.03em;
+}
+.account-hero-copy p{
+  margin:0;
+  color:rgba(255,255,255,.73);
+  font-size:10px;
+}
+.account-hero-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:15px;
+}
+.account-hero-tags span{
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:0 10px;
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:999px;
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  font-size:8px;
+  font-weight:800;
+}
+.account-hero-mark{
+  position:absolute;
+  right:32px;
+  top:50%;
+  z-index:1;
+  transform:translateY(-50%);
+  font-size:118px;
+  line-height:1;
+  font-weight:900;
+  color:rgba(255,255,255,.07);
+}
+.account-dashboard-grid{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:14px;
+  align-items:start;
+}
+.account-section-card{
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 6px 18px rgba(33,24,67,.035);
+}
+.account-section-heading{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:16px;
+}
+.account-section-heading h2{
+  margin-top:3px;
+  font-size:17px;
+}
+.account-detail-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.account-detail-item{
+  min-height:88px;
+  padding:14px;
+  border:1px solid #ebe7f2;
+  border-radius:13px;
+  background:#fbfafc;
+}
+.account-detail-item span{
+  display:block;
+  color:#938c9d;
+  font-size:8px;
+}
+.account-detail-item strong{
+  display:block;
+  margin-top:8px;
+  color:#1b1723;
+  font-size:10px;
+}
+.account-security-icon{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  background:#ecf8f2;
+  color:#0d8a5a;
+  font-weight:900;
+}
+.account-security-list{
+  display:flex;
+  flex-direction:column;
+}
+.account-security-list>div{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  min-height:54px;
+  border-bottom:1px solid #f0edf4;
+}
+.account-security-list>div:last-child{
+  border-bottom:0;
+}
+.account-security-list span{
+  color:#8e8798;
+  font-size:8.5px;
+}
+.account-security-list strong{
+  text-align:right;
+  font-size:8.5px;
+}
+.account-linked-card,
+.account-actions-card{
+  grid-column:1 / -1;
+}
+.account-linked-content{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:14px;
+  padding:16px;
+  border:1px solid #ebe7f3;
+  border-radius:13px;
+  background:#fbfaff;
+}
+.account-linked-icon{
+  width:40px;
+  height:40px;
+  display:grid;
+  place-items:center;
+  border-radius:11px;
+  background:#eee8ff;
+  color:#5b34d6;
+  font-weight:900;
+}
+.account-linked-icon.muted{
+  background:#f1eff4;
+  color:#9b95a3;
+}
+.account-linked-content strong{
+  display:block;
+  font-size:9px;
+}
+.account-linked-content p,
+.account-action-copy p{
+  margin:3px 0 0;
+  color:#948d9f;
+  font-size:8px;
+}
+.account-linked-button{
+  display:inline-flex;
+  align-items:center;
+  min-height:34px;
+  padding:0 12px;
+  border-radius:10px;
+  background:#5b34d6;
+  color:#fff;
+  text-decoration:none;
+  font-size:8px;
+  font-weight:850;
+}
+.account-action-copy{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:16px;
+  border:1px solid #f0e2e0;
+  border-radius:13px;
+  background:#fffafa;
+}
+.account-action-copy strong{
+  font-size:9px;
+}
+.account-actions{
+  margin:0;
+  padding:0;
+  border:0;
+}
+.account-actions .user-delete-button{
+  min-height:36px;
+  padding:0 13px;
+  border-radius:10px;
+}
+@media(max-width:900px){
+  .account-dashboard-grid{
+    grid-template-columns:1fr;
+  }
+  .account-linked-card,
+  .account-actions-card{
+    grid-column:auto;
+  }
+}
+@media(max-width:620px){
+  .account-page-heading{
+    flex-direction:column;
+  }
+  .account-hero-card{
+    padding:22px;
+  }
+  .account-avatar-large{
+    width:64px;
+    height:64px;
+    flex-basis:64px;
+    border-radius:18px;
+    font-size:22px;
+  }
+  .account-hero-copy h2{
+    font-size:22px;
+  }
+  .account-hero-mark{
+    display:none;
+  }
+  .account-detail-grid{
+    grid-template-columns:1fr;
+  }
+  .account-linked-content{
+    grid-template-columns:auto 1fr;
+  }
+  .account-linked-button{
+    grid-column:1 / -1;
+    justify-content:center;
+  }
+  .account-action-copy{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}

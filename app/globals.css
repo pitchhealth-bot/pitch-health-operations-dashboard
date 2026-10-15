@@ -3662,3 +3662,29 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
     align-items:stretch;
   }
 }
+
+/* Compact Active State Licenses with an internal scrollbar */
+.license-detail-body-scroll{
+  max-height:460px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:#c6b8ef #f4f1fa;
+}
+.license-detail-body-scroll::-webkit-scrollbar{
+  width:10px;
+}
+.license-detail-body-scroll::-webkit-scrollbar-track{
+  background:#f4f1fa;
+}
+.license-detail-body-scroll::-webkit-scrollbar-thumb{
+  background:#c6b8ef;
+  border:2px solid #f4f1fa;
+  border-radius:999px;
+}
+.license-detail-body-scroll::-webkit-scrollbar-thumb:hover{
+  background:#a995e4;
+}
+.license-detail-body-scroll .license-detail-row:first-child{
+  border-top:0;
+}

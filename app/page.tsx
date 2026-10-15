@@ -376,7 +376,9 @@ export default async function Home() {
               <span className="eyebrow">WORKFORCE TREND</span>
               <h2>Starts vs Terminations</h2>
             </div>
-            <span className="panel-kicker">Last 7 days</span>
+            <Link href="/workforce-movement?days=7" className="panel-kicker panel-kicker-link">
+              Last 7 days · Open history →
+            </Link>
           </div>
 
           <div className="movement-chart-legend">

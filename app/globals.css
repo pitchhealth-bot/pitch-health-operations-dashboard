@@ -3820,3 +3820,139 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   color:#5b34d6;
   text-decoration:underline;
 }
+
+/* Workforce History */
+.workforce-history-controls{
+  padding:16px;
+  margin-bottom:12px;
+}
+.workforce-history-control-head,
+.workforce-list-title{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:14px;
+}
+.workforce-quick-ranges{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.workforce-quick-ranges a{
+  min-height:32px;
+  display:inline-flex;
+  align-items:center;
+  padding:0 10px;
+  border:1px solid #e3ddec;
+  border-radius:9px;
+  background:#fbfafc;
+  color:#5b34d6;
+  font-size:7.5px;
+  font-weight:800;
+  text-decoration:none;
+}
+.workforce-quick-ranges a:hover{
+  background:#f4efff;
+}
+.workforce-date-form{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) minmax(180px,1fr) auto;
+  gap:10px;
+  align-items:end;
+}
+.workforce-date-form label{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.workforce-date-form label span{
+  color:#807889;
+  font-size:7px;
+  font-weight:850;
+}
+.workforce-date-form input{
+  min-height:40px;
+  padding:0 11px;
+  border:1px solid #ddd7e7;
+  border-radius:10px;
+  background:#fff;
+  color:#1c1824;
+  font:inherit;
+  font-size:8.5px;
+}
+.workforce-date-form button{
+  min-height:40px;
+  padding:0 14px;
+  border:0;
+  border-radius:10px;
+  background:linear-gradient(135deg,#4f2ed1,#6847df);
+  color:#fff;
+  font:inherit;
+  font-size:8px;
+  font-weight:850;
+  cursor:pointer;
+}
+.workforce-status-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+  margin-bottom:12px;
+}
+.workforce-status-card{
+  min-height:82px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  padding:13px;
+  border:1px solid #e9e4f1;
+  border-radius:13px;
+  background:#fff;
+  color:#292331;
+  text-decoration:none;
+  transition:border-color .15s ease,transform .15s ease,background .15s ease;
+}
+.workforce-status-card:hover{
+  transform:translateY(-1px);
+  border-color:#cbbdf2;
+  background:#fcfaff;
+}
+.workforce-status-card.active{
+  border-color:#a98fee;
+  box-shadow:0 0 0 3px rgba(91,52,214,.07);
+}
+.workforce-status-card span{
+  color:#746d7d;
+  font-size:7.5px;
+  font-weight:800;
+}
+.workforce-status-card strong{
+  font-size:20px;
+}
+.workforce-list-title h2{
+  margin-top:4px;
+}
+@media(max-width:900px){
+  .workforce-status-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .workforce-date-form{
+    grid-template-columns:1fr 1fr;
+  }
+  .workforce-date-form button{
+    grid-column:1 / -1;
+  }
+}
+@media(max-width:560px){
+  .workforce-history-control-head,
+  .workforce-list-title{
+    flex-direction:column;
+  }
+  .workforce-status-grid,
+  .workforce-date-form{
+    grid-template-columns:1fr;
+  }
+  .workforce-date-form button{
+    grid-column:auto;
+  }
+}

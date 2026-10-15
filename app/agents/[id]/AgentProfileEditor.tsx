@@ -20,6 +20,7 @@ type AgentProfileValues = {
   discordUserId: string;
   residentState: string;
   states: string;
+  notes: string;
 };
 
 function display(value?: string) {
@@ -40,7 +41,7 @@ export default function AgentProfileEditor({
   agentId: string;
   initialValues: AgentProfileValues;
 }) {
-  const [editingSection, setEditingSection] = useState<"personal" | "required" | "employment" | null>(null);
+  const [editingSection, setEditingSection] = useState<"personal" | "required" | "notes" | "employment" | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -52,6 +53,7 @@ export default function AgentProfileEditor({
   const sectionKeys = {
     personal: ["name", "email", "personalEmail", "phoneNumber", "dateOfBirth", "startDate"],
     required: ["ssn", "dateOfBirth", "npn", "discordUserId", "residentState"],
+    notes: ["notes"],
     employment: ["status", "role", "licensingStatus", "currentStage", "contractingDesignation", "states"],
   } as const;
 
@@ -68,7 +70,7 @@ export default function AgentProfileEditor({
     setValues(current => ({ ...current, [key]: value }));
   }
 
-  function cancel(section: "personal" | "required" | "employment") {
+  function cancel(section: "personal" | "required" | "notes" | "employment") {
     setValues(current => {
       const next = { ...current };
       for (const key of sectionKeys[section]) {
@@ -81,7 +83,7 @@ export default function AgentProfileEditor({
     setEditingSection(null);
   }
 
-  async function save(section: "personal" | "required" | "employment") {
+  async function save(section: "personal" | "required" | "notes" | "employment") {
     setSaving(true);
     setSaveState("saving");
     setMessage("");
@@ -191,7 +193,7 @@ export default function AgentProfileEditor({
     );
   };
 
-  function SectionActions({ section }: { section: "personal" | "required" | "employment" }) {
+  function SectionActions({ section }: { section: "personal" | "required" | "notes" | "employment" }) {
     const isEditing = editingSection === section;
 
     if (!isEditing) {
@@ -286,33 +288,59 @@ export default function AgentProfileEditor({
         </div>
       </section>
 
-      <section className="panel employee-section required-profile-section">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow">REQUIRED PROFILE</div>
-            <h2>Profile Information</h2>
+      <div className="profile-notes-row">
+        <section className="panel employee-section required-profile-section">
+          <div className="section-heading">
+            <div>
+              <div className="eyebrow">REQUIRED PROFILE</div>
+              <h2>Profile Information</h2>
+            </div>
+            <div className="section-heading-actions">
+              <div className="required-profile-note">Tracked in Missing Info</div>
+              <SectionActions section="required" />
+            </div>
           </div>
-          <div className="section-heading-actions">
-            <div className="required-profile-note">Tracked in Missing Info</div>
-            <SectionActions section="required" />
-          </div>
-        </div>
 
-        <div className="record-grid">
-          {field("SSN", "ssn", { type: editingSection === "required" ? "password" : "text", placeholder: "Enter SSN" }, editingSection === "required")}
-          {field("Date of Birth", "dateOfBirth", { type: "date" }, editingSection === "required")}
-          {field("NPN", "npn", { placeholder: "Enter NPN" }, editingSection === "required")}
-          {field("Discord User ID", "discordUserId", { placeholder: "Enter Discord User ID" }, editingSection === "required")}
-          {field("Resident State", "residentState", {
-            select: [
-              "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS",
-              "KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY",
-              "NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV",
-              "WI","WY","DC"
-            ],
-          }, editingSection === "required")}
-        </div>
-      </section>
+          <div className="record-grid">
+            {field("SSN", "ssn", { type: editingSection === "required" ? "password" : "text", placeholder: "Enter SSN" }, editingSection === "required")}
+            {field("Date of Birth", "dateOfBirth", { type: "date" }, editingSection === "required")}
+            {field("NPN", "npn", { placeholder: "Enter NPN" }, editingSection === "required")}
+            {field("Discord User ID", "discordUserId", { placeholder: "Enter Discord User ID" }, editingSection === "required")}
+            {field("Resident State", "residentState", {
+              select: [
+                "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS",
+                "KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY",
+                "NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV",
+                "WI","WY","DC"
+              ],
+            }, editingSection === "required")}
+          </div>
+        </section>
+
+        <section className="panel employee-section employee-notes-section">
+          <div className="section-heading">
+            <div>
+              <div className="eyebrow">INTERNAL NOTES</div>
+              <h2>Notes</h2>
+            </div>
+            <SectionActions section="notes" />
+          </div>
+
+          {editingSection === "notes" ? (
+            <textarea
+              className="employee-notes-textarea"
+              value={values.notes}
+              onChange={event => update("notes", event.target.value)}
+              placeholder="Add notes about this employee..."
+              rows={10}
+            />
+          ) : (
+            <div className="employee-notes-display">
+              {values.notes?.trim() ? values.notes : "No notes yet."}
+            </div>
+          )}
+        </section>
+      </div>
 
       <section className="panel employee-section">
         <div className="section-heading">

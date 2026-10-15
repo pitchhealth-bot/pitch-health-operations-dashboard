@@ -699,3 +699,75 @@ export async function getLicensingStageMilestones(): Promise<LicensingStageMiles
     return [];
   }
 }
+
+
+export type LicensingStageTrackerRecord = {
+  recordId: string;
+  name: string;
+  email: string;
+  npn: string;
+  fields: Record<string, string>;
+};
+
+function displayTrackerValue(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return String(value).trim();
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map(item => {
+        if (typeof item === "string" || typeof item === "number" || typeof item === "boolean") {
+          return String(item);
+        }
+        if (item && typeof item === "object" && "name" in item) {
+          return String((item as { name?: unknown }).name || "");
+        }
+        return "";
+      })
+      .filter(Boolean)
+      .join(", ");
+  }
+  if (typeof value === "object") {
+    if ("name" in value) return String((value as { name?: unknown }).name || "");
+    return "";
+  }
+  return "";
+}
+
+export async function getLicensingStageTrackerRecords(): Promise<LicensingStageTrackerRecord[]> {
+  try {
+    const records = await getTable2Records();
+
+    return records.map(record => {
+      const fields = record.fields;
+      const displayFields: Record<string, string> = {};
+
+      for (const [key, value] of Object.entries(fields)) {
+        displayFields[key] = displayTrackerValue(value);
+      }
+
+      return {
+        recordId: record.id,
+        name: textValue(
+          fields["Name"] ||
+          fields["Agent Name"] ||
+          fields["Full Name"],
+        ),
+        email: textValue(
+          fields["PHS Email"] ||
+          fields["Work Email"] ||
+          fields["Email"],
+        ),
+        npn: textValue(
+          fields["NPN"] ||
+          fields["National Producer Number"],
+        ),
+        fields: displayFields,
+      };
+    });
+  } catch (error) {
+    console.error("Licensing Stages (Tracker) record load failed", error);
+    return [];
+  }
+}

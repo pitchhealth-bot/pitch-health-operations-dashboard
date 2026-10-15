@@ -183,6 +183,7 @@ async function loadDashboardData(): Promise<DashboardData> {
         discordUserId: asText(findFieldValue(f, ["Discord User ID", "Discord ID", "Discord UserID", "Discord User Id"])),
         residentState: asText(findFieldValue(f, ["Resident State", "Resident state", "Resident-State"])),
         states: asText(findFieldValue(f, ["States"])),
+        notes: asText(findFieldValue(f, ["Notes"])),
         status: asText(findFieldValue(f, ["Status"])),
         role: asText(findFieldValue(f, ["Role", "Position", "Job Role"])),
         currentStage: currentStageValue,

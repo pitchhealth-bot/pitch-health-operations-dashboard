@@ -67,3 +67,22 @@ export type WorkforceMovementData = {
   source: "airtable" | "sample" | "error";
   error?: string;
 };
+
+
+export type JourneyDirectoryRecord = {
+  id: string;
+  name: string;
+  email?: string;
+  personalEmail?: string;
+  npn?: string;
+  status?: string;
+  role?: string;
+  licensingStatus?: string;
+  bootcampUpdate?: string;
+};
+
+export type JourneyDirectoryData = {
+  records: JourneyDirectoryRecord[];
+  source: "airtable" | "sample" | "error";
+  error?: string;
+};

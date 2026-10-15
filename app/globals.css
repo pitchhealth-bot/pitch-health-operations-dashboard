@@ -4072,3 +4072,34 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
     grid-template-columns:1fr;
   }
 }
+
+/* Keep long workforce result sets contained */
+.workforce-results-scroll{
+  max-height:520px;
+  overflow:auto;
+  scrollbar-width:thin;
+  scrollbar-color:#c7b9ef #f4f1fa;
+  border-top:1px solid #eee9f5;
+}
+.workforce-results-scroll::-webkit-scrollbar{
+  width:10px;
+  height:10px;
+}
+.workforce-results-scroll::-webkit-scrollbar-track{
+  background:#f4f1fa;
+}
+.workforce-results-scroll::-webkit-scrollbar-thumb{
+  background:#c7b9ef;
+  border:2px solid #f4f1fa;
+  border-radius:999px;
+}
+.workforce-results-scroll::-webkit-scrollbar-thumb:hover{
+  background:#a994e4;
+}
+.workforce-results-scroll .movement-detail-head{
+  position:sticky;
+  top:0;
+  z-index:3;
+  background:#fff;
+  box-shadow:0 1px 0 #eee9f5;
+}

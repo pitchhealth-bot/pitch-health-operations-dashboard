@@ -170,6 +170,7 @@ export default async function Home() {
 
     return {
       label: date.toLocaleDateString("en-US", { weekday: "short" }),
+      date: key,
       starts,
       terminations,
     };
@@ -228,19 +229,19 @@ export default async function Home() {
           </div>
         </Link>
 
-        <div className="executive-metric-card">
+        <Link href="/workforce-movement?type=start&days=7&status=active" className="executive-metric-card">
           <div className="executive-metric-head"><span>Newly Active</span><i>＋</i></div>
           <strong>{newlyActive.length}</strong>
           <small>Started in the last 7 days</small>
           <div className="metric-delta positive">↑ workforce growth</div>
-        </div>
+        </Link>
 
-        <div className="executive-metric-card">
+        <Link href="/workforce-movement?type=termination&days=7" className="executive-metric-card">
           <div className="executive-metric-head"><span>Terminated</span><i>−</i></div>
           <strong>{recentlyTerminated.length}</strong>
           <small>Last 7 days</small>
           <div className="metric-delta negative">Recent exits</div>
-        </div>
+        </Link>
 
         <Link href="/agents?licensing=Licensed" className="executive-metric-card">
           <div className="executive-metric-head"><span>Licensed</span><i>✓</i></div>
@@ -280,8 +281,28 @@ export default async function Home() {
               return (
                 <div className="movement-day" key={day.label}>
                   <div className="movement-bars-pair">
-                    <span className="movement-bar starts" style={{height:`${Math.max(8,(day.starts/maxValue)*100)}%`}} title={`${day.starts} starts`} />
-                    <span className="movement-bar terms" style={{height:`${Math.max(8,(day.terminations/maxValue)*100)}%`}} title={`${day.terminations} terminations`} />
+                    <Link
+                      href={`/workforce-movement?type=start&date=${day.date}`}
+                      className="movement-bar starts movement-bar-link"
+                      style={{height:`${Math.max(8,(day.starts/maxValue)*100)}%`}}
+                      aria-label={`${day.label}: ${day.starts} starts`}
+                    >
+                      <span className="movement-hover-tooltip">
+                        <strong>{day.starts}</strong>
+                        <small>{day.label} starts</small>
+                      </span>
+                    </Link>
+                    <Link
+                      href={`/workforce-movement?type=termination&date=${day.date}`}
+                      className="movement-bar terms movement-bar-link"
+                      style={{height:`${Math.max(8,(day.terminations/maxValue)*100)}%`}}
+                      aria-label={`${day.label}: ${day.terminations} terminations`}
+                    >
+                      <span className="movement-hover-tooltip">
+                        <strong>{day.terminations}</strong>
+                        <small>{day.label} terminations</small>
+                      </span>
+                    </Link>
                   </div>
                   <small>{day.label}</small>
                 </div>
@@ -296,7 +317,7 @@ export default async function Home() {
               <span className="eyebrow">RECENT MOVEMENT</span>
               <h2>Starts & Terminations</h2>
             </div>
-            <span className="panel-kicker">Last 14 days</span>
+            <Link href="/workforce-movement?days=14" className="panel-kicker panel-kicker-link">View all · Last 14 days</Link>
           </div>
 
           <div className="movement-table-head">
@@ -304,7 +325,11 @@ export default async function Home() {
           </div>
 
           {recentMovement.length ? recentMovement.map(record => (
-            <div className="movement-table-row" key={record.id}>
+            <Link
+              href={`/workforce-movement?record=${record.id}`}
+              className="movement-table-row movement-table-row-link"
+              key={record.id}
+            >
               <div>
                 <strong>{record.name}</strong>
                 <span>{record.role || "No role"}</span>
@@ -312,7 +337,7 @@ export default async function Home() {
               <div><span className={`pill ${(record.status || "").toLowerCase() === "active" ? "success" : "critical"}`}>{record.status || "—"}</span></div>
               <div>{record.startDate || "—"}</div>
               <div>{record.terminationDate || "—"}</div>
-            </div>
+            </Link>
           )) : <div className="empty">No recent starts or terminations.</div>}
         </div>
       </section>

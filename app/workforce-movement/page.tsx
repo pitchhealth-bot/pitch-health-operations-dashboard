@@ -314,35 +314,37 @@ export default async function WorkforceMovementPage({
           <div className="muted">{from} → {to} · {filtered.length} of {cohort.length} starters</div>
         </div>
 
-        <div className="movement-detail-head">
-          <span>Agent</span>
-          <span>Role</span>
-          <span>Status</span>
-          <span>Start Date</span>
-          <span>Termination Date</span>
-        </div>
+        <div className="workforce-results-scroll">
+          <div className="movement-detail-head">
+            <span>Agent</span>
+            <span>Role</span>
+            <span>Status</span>
+            <span>Start Date</span>
+            <span>Termination Date</span>
+          </div>
 
-        {filtered.length ? filtered.map(record => (
-          <div className="movement-detail-row" key={record.id}>
-            <div>
-              <Link href={`/agents/${record.id}`} className="movement-agent-link">
-                <strong>{record.name}</strong>
-              </Link>
+          {filtered.length ? filtered.map(record => (
+            <div className="movement-detail-row" key={record.id}>
+              <div>
+                <Link href={`/agents/${record.id}`} className="movement-agent-link">
+                  <strong>{record.name}</strong>
+                </Link>
+              </div>
+              <div>{record.role || "No role"}</div>
+              <div>
+                <span className={`pill ${pillClass(record.status)}`}>
+                  {record.status || "—"}
+                </span>
+              </div>
+              <div>{record.startDate || "—"}</div>
+              <div>{record.terminationDate || "—"}</div>
             </div>
-            <div>{record.role || "No role"}</div>
-            <div>
-              <span className={`pill ${pillClass(record.status)}`}>
-                {record.status || "—"}
-              </span>
+          )) : (
+            <div className="empty" style={{minHeight:180}}>
+              No workforce records match this range and status.
             </div>
-            <div>{record.startDate || "—"}</div>
-            <div>{record.terminationDate || "—"}</div>
-          </div>
-        )) : (
-          <div className="empty" style={{minHeight:180}}>
-            No workforce records match this range and status.
-          </div>
-        )}
+          )}
+        </div>
       </section>
     </main>
   );

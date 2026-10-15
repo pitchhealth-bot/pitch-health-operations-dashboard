@@ -25,6 +25,7 @@ const FIELD_MAP = {
   discordUserId: "Discord User ID",
   residentState: "Resident State",
   states: "States",
+  notes: "Notes",
 } as const;
 
 type EditableKey = keyof typeof FIELD_MAP;

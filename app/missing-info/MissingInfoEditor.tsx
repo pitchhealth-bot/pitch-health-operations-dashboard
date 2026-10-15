@@ -12,6 +12,7 @@ const RESIDENT_STATE_OPTIONS = [
   "Colorado - CO",
   "Connecticut - CT",
   "Delaware - DE",
+  "District of Columbia - DC",
   "Florida - FL",
   "Georgia - GA",
   "Hawaii - HI",
@@ -53,8 +54,7 @@ const RESIDENT_STATE_OPTIONS = [
   "Washington - WA",
   "West Virginia - WV",
   "Wisconsin - WI",
-  "Wyoming - WY",
-  "District of Columbia - DC"
+  "Wyoming - WY"
 ] as const;
 
 type Row = {

@@ -124,19 +124,23 @@ export default function AgentJourneySearch({
                     .toUpperCase();
 
                   return (
-                    <Link
-                      href={`/agent-journey/${agent.id}`}
+                    <div
                       className={`agent-card journey-agent-card journey-agent-link${normalizedQuery ? " journey-agent-match" : ""}`}
                       key={agent.id}
                     >
-                      <div className="journey-card-main">
-                        <div className="journey-card-avatar">{initials || "A"}</div>
-                        <div className="journey-card-copy">
-                          <strong>{agent.name}</strong>
-                          <span>{agent.role || "No role"}</span>
+                      <Link
+                        href={`/agent-journey/${agent.id}`}
+                        className="journey-card-primary-link"
+                      >
+                        <div className="journey-card-main">
+                          <div className="journey-card-avatar">{initials || "A"}</div>
+                          <div className="journey-card-copy">
+                            <strong>{agent.name}</strong>
+                            <span>{agent.role || "No role"}</span>
+                          </div>
+                          <span className="journey-card-arrow" aria-hidden="true">→</span>
                         </div>
-                        <span className="journey-card-arrow" aria-hidden="true">→</span>
-                      </div>
+                      </Link>
 
                       <div className="journey-card-meta">
                         <span className="journey-stage-chip">{agent.journeyStage}</span>
@@ -146,7 +150,14 @@ export default function AgentJourneySearch({
                           <span className="journey-npn-chip muted">No NPN</span>
                         )}
                       </div>
-                    </Link>
+
+                      <Link
+                        href={`/agents/${agent.id}`}
+                        className="journey-agent-record-link"
+                      >
+                        Go to Agent Record →
+                      </Link>
+                    </div>
                   );
                 }) : (
                   <div className="empty">

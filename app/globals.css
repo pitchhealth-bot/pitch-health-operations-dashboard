@@ -1909,3 +1909,12 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   text-overflow:ellipsis;
   white-space:nowrap;
 }
+
+.missing-info-table-head > span:first-child{
+  border-right:1px solid #ddd7ea;
+  box-shadow:8px 0 14px -14px rgba(45,30,88,.55);
+}
+.missing-info-table-row > .missing-agent-sticky-cell{
+  border-right:1px solid #e2dcea;
+  box-shadow:8px 0 14px -14px rgba(45,30,88,.5);
+}

@@ -14,6 +14,27 @@ function normalize(value?: string) {
   return (value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
+function formatStartDate(value?: string) {
+  if (!value) return "Not set";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function daysSinceStart(value?: string) {
+  if (!value) return null;
+  const start = new Date(value);
+  if (Number.isNaN(start.getTime())) return null;
+  const today = new Date();
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  return Math.max(0, Math.floor((todayDay.getTime() - startDay.getTime()) / 86400000));
+}
+
 export default async function AgentJourneyDetailPage({
   params,
 }: {
@@ -58,6 +79,8 @@ export default async function AgentJourneyDetailPage({
     ]),
   );
 
+  const daysFromStart = daysSinceStart(agent.startDate);
+
   return (
     <main className="journey-detail-page">
       <header className="topbar">
@@ -79,6 +102,17 @@ export default async function AgentJourneyDetailPage({
           <p>
             Update the agent&apos;s required licensing milestones from Licensing Stages (Tracker).
           </p>
+        </div>
+
+        <div className="journey-start-summary">
+          <div>
+            <span>Start Date</span>
+            <strong>{formatStartDate(agent.startDate)}</strong>
+          </div>
+          <div>
+            <span>Days Since Start</span>
+            <strong>{daysFromStart === null ? "—" : `${daysFromStart} days`}</strong>
+          </div>
         </div>
       </section>
 

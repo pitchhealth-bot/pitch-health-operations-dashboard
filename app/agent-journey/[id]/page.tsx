@@ -92,7 +92,10 @@ export default async function AgentJourneyDetailPage({
             {agent.role || "No role"} · {agent.status || "No status"}
           </div>
         </div>
-        <Link href="/#agent-journey" className="back-link">← Agent Journey</Link>
+        <div className="journey-detail-nav-actions">
+          <Link href={`/agents/${agent.id}`} className="agent-record-link">Agent Record →</Link>
+          <Link href="/#agent-journey" className="back-link">← Agent Journey</Link>
+        </div>
       </header>
 
       <section className="journey-detail-hero">

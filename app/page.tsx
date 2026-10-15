@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Suspense } from "react";
-import { getDashboardData } from "@/lib/airtable";
+import { getDashboardData, getWorkforceMovementData } from "@/lib/airtable";
 import { getContractingSources } from "@/lib/contracting";
 import { getLicenseRecords, daysUntil } from "@/lib/licenses";
 import type { Agent, PipelineStage } from "@/lib/types";
@@ -66,9 +66,10 @@ async function ContractingSourcesPanel() {
 export default async function Home() {
   await requireRole(["admin", "super_admin"]);
 
-  const [{ agents, source, error }, licenseData] = await Promise.all([
+  const [{ agents, source, error }, licenseData, workforceData] = await Promise.all([
     getDashboardData(),
     getLicenseRecords(),
+    getWorkforceMovementData(),
   ]);
 
   if (licenseData.records.length) {
@@ -107,6 +108,73 @@ export default async function Home() {
       if (upcoming.length) agent.licenseExpiry = upcoming[0].value;
     }
   }
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const parseDateOnly = (value?: string) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+
+  const daysAgo = (value?: string) => {
+    const date = parseDateOnly(value);
+    if (!date) return null;
+    return Math.floor((startOfToday.getTime() - new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()) / 86400000);
+  };
+
+  const newlyActive = workforceData.records.filter(record => {
+    const d = daysAgo(record.startDate);
+    return d !== null && d >= 0 && d <= 6 && (record.status || "").trim().toLowerCase() === "active";
+  });
+
+  const recentlyTerminated = workforceData.records.filter(record => {
+    const d = daysAgo(record.terminationDate);
+    return d !== null && d >= 0 && d <= 6;
+  });
+
+  const recentMovement = workforceData.records
+    .filter(record => {
+      const startAge = daysAgo(record.startDate);
+      const terminationAge = daysAgo(record.terminationDate);
+      return (startAge !== null && startAge >= 0 && startAge <= 13) ||
+        (terminationAge !== null && terminationAge >= 0 && terminationAge <= 13);
+    })
+    .sort((a, b) => {
+      const ad = Math.max(
+        parseDateOnly(a.startDate)?.getTime() || 0,
+        parseDateOnly(a.terminationDate)?.getTime() || 0,
+      );
+      const bd = Math.max(
+        parseDateOnly(b.startDate)?.getTime() || 0,
+        parseDateOnly(b.terminationDate)?.getTime() || 0,
+      );
+      return bd - ad;
+    })
+    .slice(0, 8);
+
+  const movementByDay = Array.from({ length: 7 }, (_, offset) => {
+    const date = new Date(startOfToday);
+    date.setDate(startOfToday.getDate() - (6 - offset));
+    const key = date.toISOString().slice(0, 10);
+
+    const starts = workforceData.records.filter(record => {
+      const d = parseDateOnly(record.startDate);
+      return d ? d.toISOString().slice(0, 10) === key : false;
+    }).length;
+
+    const terminations = workforceData.records.filter(record => {
+      const d = parseDateOnly(record.terminationDate);
+      return d ? d.toISOString().slice(0, 10) === key : false;
+    }).length;
+
+    return {
+      label: date.toLocaleDateString("en-US", { weekday: "short" }),
+      starts,
+      terminations,
+    };
+  });
+
   const licensed = agents.filter(a => a.licensingStatus === "Licensed");
   const nonLicensed = agents.filter(a => a.licensingStatus === "Non-licensed");
   const stagnant = agents.filter(a => a.daysInStage >= 7);
@@ -150,14 +218,103 @@ export default async function Home() {
 
       {source === "error" && <section className="panel"><strong>Airtable connection error</strong><div className="muted" style={{marginTop:8}}>{error}</div></section>}
 
-      <section className="metric-grid dashboard-metrics">
-        <Link href="/agents" className="metric metric-link metric-purple"><div className="metric-top"><span>Active agents</span><i>↗</i></div><strong>{agents.length}</strong><small>View all agents →</small></Link>
-        <Link href="/agents?licensing=Licensed" className="metric metric-link metric-green"><div className="metric-top"><span>Licensed</span><i>✓</i></div><strong>{licensed.length}</strong><small>Ready for contracting →</small></Link>
-        <Link href="/agents?licensing=Non-licensed" className="metric metric-link metric-amber"><div className="metric-top"><span>Non-licensed</span><i>◷</i></div><strong>{nonLicensed.length}</strong><small>Licensing in progress →</small></Link>
-        <Link href="/agents?filter=stuck" className="metric metric-link metric-red"><div className="metric-top"><span>Stuck 7+ days</span><i>!</i></div><strong>{stagnant.length}</strong><small>{agents.filter(a=>a.daysInStage>=14).length} critical →</small></Link>
-        <Link href="/agents?filter=blocked" className="metric metric-link metric-orange"><div className="metric-top"><span>Active blockers</span><i>⚑</i></div><strong>{blocked.length}</strong><small>Needs attention →</small></Link>
-        <Link href="/missing-info" className="metric metric-link metric-blue"><div className="metric-top"><span>Missing info</span><i>?</i></div><strong>{missing.length}</strong><small>Incomplete profiles →</small></Link>
-        <Link href="/licenses" className="metric metric-link metric-indigo"><div className="metric-top"><span>Licenses ≤30d</span><i>⌁</i></div><strong>{expiring.length}</strong><small>Upcoming expirations →</small></Link>
+      <section className="executive-metrics">
+        <Link href="/agents" className="executive-metric-card">
+          <div className="executive-metric-head"><span>Active Agents</span><i>↗</i></div>
+          <strong>{agents.length}</strong>
+          <small>Current workforce</small>
+          <div className="mini-bars" aria-hidden="true">
+            {[38,52,46,64,58,72,68].map((h,i)=><span key={i} style={{height:`${h}%`}} />)}
+          </div>
+        </Link>
+
+        <div className="executive-metric-card">
+          <div className="executive-metric-head"><span>Newly Active</span><i>＋</i></div>
+          <strong>{newlyActive.length}</strong>
+          <small>Started in the last 7 days</small>
+          <div className="metric-delta positive">↑ workforce growth</div>
+        </div>
+
+        <div className="executive-metric-card">
+          <div className="executive-metric-head"><span>Terminated</span><i>−</i></div>
+          <strong>{recentlyTerminated.length}</strong>
+          <small>Last 7 days</small>
+          <div className="metric-delta negative">Recent exits</div>
+        </div>
+
+        <Link href="/agents?licensing=Licensed" className="executive-metric-card">
+          <div className="executive-metric-head"><span>Licensed</span><i>✓</i></div>
+          <strong>{licensed.length}</strong>
+          <small>{agents.length ? Math.round((licensed.length / agents.length) * 100) : 0}% of active agents</small>
+          <div className="mini-line" aria-hidden="true">
+            <span /><span /><span /><span /><span /><span />
+          </div>
+        </Link>
+
+        <Link href="/licenses" className="executive-metric-card">
+          <div className="executive-metric-head"><span>Licenses ≤30d</span><i>◷</i></div>
+          <strong>{expiring.length}</strong>
+          <small>Upcoming expirations</small>
+          <div className="metric-delta warning">Needs monitoring</div>
+        </Link>
+      </section>
+
+      <section className="dashboard-insights-grid">
+        <div className="panel dashboard-panel movement-chart-panel">
+          <div className="panel-title">
+            <div>
+              <span className="eyebrow">WORKFORCE TREND</span>
+              <h2>Starts vs Terminations</h2>
+            </div>
+            <span className="panel-kicker">Last 7 days</span>
+          </div>
+
+          <div className="movement-chart-legend">
+            <span><i className="movement-dot starts" /> Starts</span>
+            <span><i className="movement-dot terms" /> Terminations</span>
+          </div>
+
+          <div className="movement-bar-chart">
+            {movementByDay.map(day => {
+              const maxValue = Math.max(...movementByDay.flatMap(item => [item.starts, item.terminations]), 1);
+              return (
+                <div className="movement-day" key={day.label}>
+                  <div className="movement-bars-pair">
+                    <span className="movement-bar starts" style={{height:`${Math.max(8,(day.starts/maxValue)*100)}%`}} title={`${day.starts} starts`} />
+                    <span className="movement-bar terms" style={{height:`${Math.max(8,(day.terminations/maxValue)*100)}%`}} title={`${day.terminations} terminations`} />
+                  </div>
+                  <small>{day.label}</small>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="panel dashboard-panel recent-movement-panel">
+          <div className="panel-title">
+            <div>
+              <span className="eyebrow">RECENT MOVEMENT</span>
+              <h2>Starts & Terminations</h2>
+            </div>
+            <span className="panel-kicker">Last 14 days</span>
+          </div>
+
+          <div className="movement-table-head">
+            <span>Agent</span><span>Status</span><span>Start Date</span><span>Termination</span>
+          </div>
+
+          {recentMovement.length ? recentMovement.map(record => (
+            <div className="movement-table-row" key={record.id}>
+              <div>
+                <strong>{record.name}</strong>
+                <span>{record.role || "No role"}</span>
+              </div>
+              <div><span className={`pill ${(record.status || "").toLowerCase() === "active" ? "success" : "critical"}`}>{record.status || "—"}</span></div>
+              <div>{record.startDate || "—"}</div>
+              <div>{record.terminationDate || "—"}</div>
+            </div>
+          )) : <div className="empty">No recent starts or terminations.</div>}
+        </div>
       </section>
 
       <Suspense

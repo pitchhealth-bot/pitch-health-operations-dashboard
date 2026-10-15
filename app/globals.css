@@ -2898,3 +2898,32 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
     padding-top:12px;
   }
 }
+
+/* Agent Journey milestone board */
+.journey-pipeline{
+  grid-template-columns:repeat(9,minmax(245px,1fr));
+  min-width:2250px;
+}
+.journey-panel{
+  overflow:hidden;
+}
+.journey-panel .pipeline{
+  overflow-x:auto;
+  padding-bottom:10px;
+  scrollbar-width:thin;
+  scrollbar-color:#c9bcef #f4f1fa;
+}
+.journey-stage{
+  min-width:245px;
+}
+.journey-stage .stage-head{
+  min-height:70px;
+  align-items:flex-start;
+}
+.journey-stage .stage-head strong{
+  max-width:175px;
+  line-height:1.25;
+}
+.journey-agent-card{
+  cursor:default;
+}

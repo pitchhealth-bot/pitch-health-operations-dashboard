@@ -4128,3 +4128,35 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   font-weight:750;
   line-height:1.45;
 }
+
+.login-password-wrap{
+  position:relative;
+  width:100%;
+}
+.login-password-input{
+  padding-right:48px !important;
+}
+.login-password-toggle{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  width:30px;
+  height:30px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:0;
+  background:transparent;
+  color:#6f6679;
+  cursor:pointer;
+  border-radius:8px;
+}
+.login-password-toggle:hover{
+  background:#f4efff;
+  color:#5b34d6;
+}
+.login-password-toggle svg{
+  width:18px;
+  height:18px;
+}

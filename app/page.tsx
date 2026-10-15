@@ -2,13 +2,27 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { Suspense } from "react";
-import { getDashboardData, getWorkforceMovementData } from "@/lib/airtable";
-import { getContractingSources } from "@/lib/contracting";
+import { getDashboardData, getWorkforceMovementData, getJourneyDirectoryData } from "@/lib/airtable";
+import { getContractingSources, getLicensingStageMilestones } from "@/lib/contracting";
 import { getLicenseRecords, daysUntil } from "@/lib/licenses";
 import type { Agent, PipelineStage } from "@/lib/types";
 import { requireRole } from "@/lib/session";
 
 const stages: PipelineStage[] = ["Pre-Licensing","Exam","Pre-Contracting","Contracting","RTS"];
+
+const journeyStages = [
+  "Pre-Licensing",
+  "Purchased Licensing Course",
+  "Purchased Licensing Exam",
+  "Purchased Resident States",
+  "Purchased Non-resident States",
+  "Contracting",
+  "In Bootcamp",
+  "Bootcamp Ready",
+  "Active Medicare Agents",
+] as const;
+
+type JourneyStage = (typeof journeyStages)[number];
 
 function expiringInDays(date?: string) {
   if (!date) return null;
@@ -66,10 +80,18 @@ async function ContractingSourcesPanel() {
 export default async function Home() {
   await requireRole(["admin", "super_admin"]);
 
-  const [{ agents, source, error }, licenseData, workforceData] = await Promise.all([
+  const [
+    { agents, source, error },
+    licenseData,
+    workforceData,
+    journeyDirectory,
+    licensingMilestones,
+  ] = await Promise.all([
     getDashboardData(),
     getLicenseRecords(),
     getWorkforceMovementData(),
+    getJourneyDirectoryData(),
+    getLicensingStageMilestones(),
   ]);
 
   if (licenseData.records.length) {
@@ -174,6 +196,73 @@ export default async function Home() {
       starts,
       terminations,
     };
+  });
+
+  const normalizeJourneyKey = (value?: string) =>
+    (value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const milestoneByNpn = new Map(
+    licensingMilestones
+      .filter(item => item.npn)
+      .map(item => [normalizeJourneyKey(item.npn), item]),
+  );
+  const milestoneByEmail = new Map(
+    licensingMilestones
+      .filter(item => item.email)
+      .map(item => [normalizeJourneyKey(item.email), item]),
+  );
+  const milestoneByName = new Map(
+    licensingMilestones
+      .filter(item => item.name)
+      .map(item => [normalizeJourneyKey(item.name), item]),
+  );
+
+  const journeyAgents = journeyDirectory.records.flatMap(agent => {
+    const milestone =
+      (agent.npn ? milestoneByNpn.get(normalizeJourneyKey(agent.npn)) : undefined) ||
+      (agent.email ? milestoneByEmail.get(normalizeJourneyKey(agent.email)) : undefined) ||
+      (agent.personalEmail ? milestoneByEmail.get(normalizeJourneyKey(agent.personalEmail)) : undefined) ||
+      milestoneByName.get(normalizeJourneyKey(agent.name));
+
+    const status = normalizeJourneyKey(agent.status);
+    const role = normalizeJourneyKey(agent.role);
+    const licensing = normalizeJourneyKey(agent.licensingStatus);
+    const bootcamp = normalizeJourneyKey(agent.bootcampUpdate);
+    const hasNpn = Boolean((agent.npn || "").trim());
+
+    const coursePurchased =
+      normalizeJourneyKey(milestone?.purchasedLicensingCourse) === "yes";
+    const examPurchased =
+      normalizeJourneyKey(milestone?.purchasedLicensingExam) === "yes";
+    const residentPurchased =
+      normalizeJourneyKey(milestone?.purchasedResidentStates) === "completed";
+    const nonResidentPurchased =
+      normalizeJourneyKey(milestone?.purchasedNonResidentStates) === "completed";
+
+    let stage: JourneyStage | null = null;
+
+    // Furthest applicable stage wins so an agent only appears once.
+    if (status === "active" && role === "medicareagent") {
+      stage = "Active Medicare Agents";
+    } else if (bootcamp === "bootcampready") {
+      stage = "Bootcamp Ready";
+    } else if (bootcamp === "inbootcamp") {
+      stage = "In Bootcamp";
+    } else if (hasNpn) {
+      stage = "Contracting";
+    } else if (nonResidentPurchased) {
+      stage = "Purchased Non-resident States";
+    } else if (residentPurchased) {
+      stage = "Purchased Resident States";
+    } else if (examPurchased) {
+      stage = "Purchased Licensing Exam";
+    } else if (coursePurchased) {
+      stage = "Purchased Licensing Course";
+    } else if (licensing === "nonlicensed") {
+      stage = "Pre-Licensing";
+    }
+
+    return stage ? [{ ...agent, journeyStage: stage }] : [];
   });
 
   const licensed = agents.filter(a => a.licensingStatus === "Licensed");
@@ -375,22 +464,50 @@ export default async function Home() {
         <ContractingSourcesPanel />
       </Suspense>
 
-      <section className="panel dashboard-panel pipeline-panel">
-        <div className="panel-title"><div><span className="eyebrow">PIPELINE</span><h2>Agent journey</h2></div><span className="panel-kicker">Bottlenecks at a glance</span></div>
-        <div className="pipeline">
-          {stages.map(stage => {
-            const list = agents.filter(a=>a.stage===stage);
-            return <div className="stage" key={stage}>
-              <div className="stage-head"><strong>{stage}</strong><span>{list.length}</span></div>
-              <div className="stage-body">
-                {list.length ? list.map(a=><div className="agent-card" key={a.id}>
-                  <div className="card-top"><strong>{a.name}</strong><span className={a.daysInStage>=14?"age critical-text":a.daysInStage>=7?"age warning-text":"age"}>{a.daysInStage}d</span></div>
-                  <div className="muted">{a.subStage || "—"}</div>
-                  {a.blocker && <div className="blocker">⚑ {a.blocker}</div>}
-                  <div className="card-foot"><span>{a.owner || "Unassigned"}</span>{a.missingFields.length>0 && <span>⚠ {a.missingFields.length} missing</span>}</div>
-                </div>) : <div className="empty">No agents</div>}
+      <section className="panel dashboard-panel pipeline-panel journey-panel">
+        <div className="panel-title">
+          <div>
+            <span className="eyebrow">PIPELINE</span>
+            <h2>Agent journey</h2>
+          </div>
+          <span className="panel-kicker">{journeyAgents.length} agents mapped</span>
+        </div>
+
+        <div className="pipeline journey-pipeline">
+          {journeyStages.map(stage => {
+            const list = journeyAgents.filter(agent => agent.journeyStage === stage);
+
+            return (
+              <div className="stage journey-stage" key={stage}>
+                <div className="stage-head">
+                  <strong>{stage}</strong>
+                  <span>{list.length}</span>
+                </div>
+
+                <div className="stage-body">
+                  {list.length ? list.map(agent => (
+                    <Link
+                      href={`/agents/${agent.id}`}
+                      className="agent-card journey-agent-card"
+                      key={agent.id}
+                    >
+                      <div className="card-top">
+                        <strong>{agent.name}</strong>
+                      </div>
+                      <div className="muted">
+                        {agent.role || agent.licensingStatus || "—"}
+                      </div>
+                      <div className="card-foot">
+                        <span>{agent.status || "No status"}</span>
+                        {agent.npn ? <span>NPN ✓</span> : null}
+                      </div>
+                    </Link>
+                  )) : (
+                    <div className="empty">No agents</div>
+                  )}
+                </div>
               </div>
-            </div>
+            );
           })}
         </div>
       </section>

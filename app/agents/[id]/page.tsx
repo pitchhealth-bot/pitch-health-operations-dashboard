@@ -8,6 +8,7 @@ import CarrierStatusEditor from "./CarrierStatusEditor";
 import CarrierCertificateUpload from "./CarrierCertificateUpload";
 import AgentProfileEditor from "./AgentProfileEditor";
 import CertificationsEditor from "./CertificationsEditor";
+import EmployeeNotesEditor from "./EmployeeNotesEditor";
 import { getCarrierCertificatesForAgent } from "@/lib/carrier-certificates";
 
 export const dynamic = "force-dynamic";
@@ -178,7 +179,6 @@ export default async function AgentProfilePage({
                 discordUserId: agent.discordUserId || "",
                 residentState: agent.residentState || "",
                 states: agent.states || "",
-                notes: agent.notes || "",
               }}
             />
           ) : (
@@ -231,6 +231,11 @@ export default async function AgentProfilePage({
             agentId={agent.id}
             initialAhip={ahip}
             initialSunfire={sunFireReports}
+            editable={canEdit(current.role)}
+          />
+          <EmployeeNotesEditor
+            agentId={agent.id}
+            initialNotes={agent.notes || ""}
             editable={canEdit(current.role)}
           />
         </aside>

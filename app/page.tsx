@@ -229,7 +229,8 @@ export default async function Home() {
     const role = normalizeJourneyKey(agent.role);
     const licensing = normalizeJourneyKey(agent.licensingStatus);
     const bootcamp = normalizeJourneyKey(agent.bootcampUpdate);
-    const hasNpn = Boolean((agent.npn || "").trim());
+    const npnValue = (agent.npn || "").trim();
+    const hasNpn = Boolean(npnValue) && npnValue !== "0" && Number(npnValue) > 0;
 
     const coursePurchased =
       normalizeJourneyKey(milestone?.purchasedLicensingCourse) === "yes";

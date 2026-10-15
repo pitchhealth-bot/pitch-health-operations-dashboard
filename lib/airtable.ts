@@ -234,6 +234,7 @@ async function loadWorkforceMovementData(): Promise<WorkforceMovementData> {
         role: agent.role,
         status: agent.status,
         startDate: agent.startDate,
+        notes: "",
       })),
       source: "sample",
     };
@@ -317,6 +318,7 @@ async function loadJourneyDirectoryData(): Promise<JourneyDirectoryData> {
             licensingStatus: findLicensingStatus(f),
             bootcampUpdate: asText(findFieldValue(f, ["Bootcamp Update", "Bootcamp Status"])),
             startDate: asText(findFieldValue(f, ["(EDIT) Start Date", "EDIT Start Date", "Start Date"])),
+            notes: asText(findFieldValue(f, ["Notes"])),
           };
         })
         .filter(record => record.name && record.name !== "Unnamed agent"),

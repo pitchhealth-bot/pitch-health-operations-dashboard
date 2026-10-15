@@ -2740,3 +2740,141 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
     flex-direction:column;
   }
 }
+
+/* Compact My Account layout */
+.account-page{
+  gap:10px;
+  max-width:1180px;
+}
+.account-page-heading{
+  gap:14px;
+}
+.account-page-heading h1{
+  font-size:28px;
+  margin-top:2px;
+}
+.account-page-heading .page-subtitle{
+  margin-top:3px;
+  font-size:9px;
+}
+.account-status-chip{
+  min-height:30px;
+  padding:0 10px;
+  font-size:8px;
+}
+
+.account-hero-card{
+  min-height:126px;
+  gap:14px;
+  padding:18px 20px;
+  border-radius:16px;
+}
+.account-avatar-large{
+  width:58px;
+  height:58px;
+  flex-basis:58px;
+  border-radius:16px;
+  font-size:20px;
+}
+.account-hero-copy h2{
+  margin:3px 0;
+  font-size:22px;
+}
+.account-hero-copy p{
+  font-size:8.5px;
+}
+.account-hero-tags{
+  gap:5px;
+  margin-top:10px;
+}
+.account-hero-tags span{
+  min-height:24px;
+  padding:0 8px;
+  font-size:7.5px;
+}
+.account-hero-mark{
+  right:24px;
+  font-size:86px;
+}
+
+.account-dashboard-grid{
+  grid-template-columns:1.15fr .85fr;
+  gap:10px;
+}
+.account-section-card{
+  padding:14px;
+  border-radius:14px;
+}
+.account-section-heading{
+  gap:10px;
+  margin-bottom:10px;
+}
+.account-section-heading h2{
+  font-size:14px;
+}
+.account-detail-grid{
+  gap:8px;
+}
+.account-detail-item{
+  min-height:62px;
+  padding:10px 11px;
+  border-radius:11px;
+}
+.account-detail-item span{
+  font-size:7px;
+}
+.account-detail-item strong{
+  margin-top:5px;
+  font-size:8.5px;
+}
+
+.account-security-icon{
+  width:30px;
+  height:30px;
+  border-radius:9px;
+}
+.account-security-list>div{
+  min-height:42px;
+  gap:12px;
+}
+.account-security-list span,
+.account-security-list strong{
+  font-size:7.5px;
+}
+
+.account-linked-content{
+  gap:10px;
+  padding:11px 12px;
+  border-radius:11px;
+}
+.account-linked-icon{
+  width:34px;
+  height:34px;
+  border-radius:9px;
+}
+.account-linked-content strong,
+.account-action-copy strong{
+  font-size:8px;
+}
+.account-linked-content p,
+.account-action-copy p{
+  font-size:7px;
+}
+.account-linked-button{
+  min-height:30px;
+  padding:0 10px;
+  border-radius:9px;
+  font-size:7.5px;
+}
+
+.account-action-copy{
+  gap:12px;
+  padding:11px 12px;
+  border-radius:11px;
+}
+.account-actions .user-delete-button{
+  min-height:32px;
+  padding:0 11px;
+  border-radius:9px;
+  font-size:7.5px;
+}

@@ -4103,3 +4103,28 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   background:#fff;
   box-shadow:0 1px 0 #eee9f5;
 }
+
+.login-reset-link{
+  margin-top:10px;
+  border:0;
+  background:transparent;
+  color:#5b34d6;
+  font:inherit;
+  font-size:8px;
+  font-weight:850;
+  cursor:pointer;
+}
+.login-reset-link:disabled{
+  opacity:.45;
+  cursor:default;
+}
+.login-reset-message{
+  margin-top:8px;
+  padding:10px 12px;
+  border-radius:10px;
+  background:#f4efff;
+  color:#5b34d6;
+  font-size:8px;
+  font-weight:750;
+  line-height:1.45;
+}

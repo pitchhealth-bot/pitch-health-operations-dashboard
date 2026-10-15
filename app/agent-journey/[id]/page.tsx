@@ -107,6 +107,10 @@ export default async function AgentJourneyDetailPage({
 
         <div className="journey-start-summary">
           <div>
+            <span>Role</span>
+            <strong>{agent.role || "No role"}</strong>
+          </div>
+          <div>
             <span>Start Date</span>
             <strong>{formatStartDate(agent.startDate)}</strong>
           </div>

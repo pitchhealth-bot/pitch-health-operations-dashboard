@@ -2263,3 +2263,156 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
     display:none;
   }
 }
+
+/* Compact CRM-style analytics surface */
+.executive-metrics{
+  gap:10px;
+  margin:14px 0;
+}
+.executive-metric-card{
+  min-height:126px;
+  padding:14px 15px 13px;
+  border-radius:14px;
+  border-color:#ece8f2;
+  box-shadow:0 5px 14px rgba(36,25,72,.035);
+  transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease;
+}
+.executive-metric-card:hover{
+  transform:translateY(-1px);
+  border-color:#d8cff0;
+  box-shadow:0 8px 18px rgba(44,30,92,.06);
+}
+.executive-metric-head span{
+  font-size:8.5px;
+}
+.executive-metric-head i{
+  width:28px;
+  height:28px;
+  border-radius:8px;
+  font-size:12px;
+}
+.executive-metric-card>strong{
+  margin-top:10px;
+  font-size:27px;
+}
+.executive-metric-card>small{
+  margin-top:5px;
+  font-size:7.5px;
+}
+.metric-delta{
+  margin-top:12px;
+  font-size:7.5px;
+}
+.mini-bars{
+  left:15px;
+  right:15px;
+  bottom:12px;
+  height:24px;
+  gap:4px;
+}
+.metric-sparkline{
+  position:absolute;
+  left:15px;
+  right:15px;
+  bottom:10px;
+  width:calc(100% - 30px);
+  height:34px;
+  color:#6b4ce2;
+  overflow:visible;
+}
+
+.dashboard-insights-grid{
+  grid-template-columns:.82fr 1.28fr;
+  gap:12px;
+  align-items:start;
+  margin-bottom:14px;
+}
+.movement-chart-panel,
+.recent-movement-panel{
+  min-height:0;
+  height:auto;
+  border-radius:15px;
+  box-shadow:0 6px 18px rgba(36,25,72,.04);
+}
+.movement-chart-panel{
+  align-self:start;
+  padding:17px 18px 16px;
+}
+.recent-movement-panel{
+  padding:17px 18px 12px;
+}
+.movement-chart-panel .panel-title,
+.recent-movement-panel .panel-title{
+  margin-bottom:10px;
+}
+.movement-chart-panel .panel-title h2,
+.recent-movement-panel .panel-title h2{
+  font-size:17px;
+}
+.movement-chart-legend{
+  margin:0 0 8px;
+  font-size:7.5px;
+}
+.movement-bar-chart{
+  position:relative;
+  height:220px;
+  gap:10px;
+  padding:14px 2px 0;
+  border-top:1px solid #eeeaf4;
+  background:
+    linear-gradient(to bottom, transparent 24%, #f3f0f7 25%, transparent 26%),
+    linear-gradient(to bottom, transparent 49%, #f3f0f7 50%, transparent 51%),
+    linear-gradient(to bottom, transparent 74%, #f3f0f7 75%, transparent 76%);
+}
+.movement-day{
+  gap:6px;
+}
+.movement-bars-pair{
+  height:176px;
+  gap:4px;
+}
+.movement-bar{
+  width:10px;
+  border-radius:4px 4px 1px 1px;
+}
+.movement-day small{
+  font-size:7px;
+}
+.panel-kicker{
+  padding:7px 10px;
+  border-radius:999px;
+  background:#f7f4fb;
+  font-size:7px;
+  font-weight:750;
+}
+.movement-table-head{
+  padding:8px 0;
+}
+.movement-table-row{
+  min-height:43px;
+}
+.movement-table-row strong{
+  font-size:8px;
+}
+.movement-table-row>div:first-child span{
+  font-size:7px;
+}
+
+/* make the dashboard feel like a single composed surface rather than floating cards */
+.dashboard-hero{
+  min-height:174px;
+  margin-bottom:14px;
+  padding:24px 26px;
+  border-radius:18px;
+  box-shadow:0 12px 28px rgba(62,32,160,.12);
+}
+.dashboard-hero h1{
+  font-size:36px;
+}
+.dashboard-hero-meta{
+  margin-top:16px;
+}
+.dashboard-panel{
+  border-radius:15px;
+  box-shadow:0 6px 18px rgba(33,24,67,.035);
+}

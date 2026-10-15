@@ -292,6 +292,7 @@ async function loadJourneyDirectoryData(): Promise<JourneyDirectoryData> {
         status: agent.status,
         role: agent.role,
         licensingStatus: agent.licensingStatus,
+        startDate: agent.startDate,
       })),
       source: "sample",
     };
@@ -315,6 +316,7 @@ async function loadJourneyDirectoryData(): Promise<JourneyDirectoryData> {
             role: asText(findFieldValue(f, ["Role", "Position", "Job Role"])),
             licensingStatus: findLicensingStatus(f),
             bootcampUpdate: asText(findFieldValue(f, ["Bootcamp Update", "Bootcamp Status"])),
+            startDate: asText(findFieldValue(f, ["(EDIT) Start Date", "EDIT Start Date", "Start Date"])),
           };
         })
         .filter(record => record.name && record.name !== "Unnamed agent"),

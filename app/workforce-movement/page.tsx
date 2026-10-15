@@ -102,7 +102,11 @@ export default async function WorkforceMovementPage({
 
         {filtered.length ? filtered.map(record => (
           <div className="movement-detail-row" key={record.id}>
-            <div><strong>{record.name}</strong></div>
+            <div>
+              <Link href={`/agents/${record.id}`} className="movement-agent-link">
+                <strong>{record.name}</strong>
+              </Link>
+            </div>
             <div>{record.role || "No role"}</div>
             <div>
               <span className={`pill ${(record.status || "").toLowerCase() === "active" ? "success" : "critical"}`}>

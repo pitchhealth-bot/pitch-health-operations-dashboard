@@ -2878,3 +2878,23 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   border-radius:9px;
   font-size:7.5px;
 }
+
+/* Center My Account within the workspace */
+.account-page{
+  width:min(1120px, calc(100% - 48px));
+  margin:0 auto;
+  padding:20px 0 34px;
+}
+
+@media(max-width:1100px){
+  .account-page{
+    width:min(100% - 32px, 1040px);
+  }
+}
+
+@media(max-width:720px){
+  .account-page{
+    width:calc(100% - 20px);
+    padding-top:12px;
+  }
+}

@@ -3559,3 +3559,37 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   opacity:.48;
   box-shadow:none;
 }
+
+.journey-start-summary{
+  margin-left:auto;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(120px,1fr));
+  gap:8px;
+  min-width:270px;
+}
+.journey-start-summary>div{
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:12px;
+  background:rgba(255,255,255,.1);
+}
+.journey-start-summary span{
+  display:block;
+  color:rgba(255,255,255,.68);
+  font-size:7px;
+  font-weight:800;
+}
+.journey-start-summary strong{
+  display:block;
+  margin-top:4px;
+  color:#fff;
+  font-size:10px;
+}
+@media(max-width:900px){
+  .journey-start-summary{
+    grid-column:1 / -1;
+    margin-left:0;
+    width:100%;
+    min-width:0;
+  }
+}

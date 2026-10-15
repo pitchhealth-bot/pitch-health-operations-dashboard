@@ -782,6 +782,7 @@ export async function getLicensingStageTrackerRecords(): Promise<LicensingStageT
 
 export type LicensingJourneyFieldConfig = {
   name: string;
+  actualName: string;
   type: string;
   options: Array<{ name: string; color?: string }>;
 };
@@ -797,6 +798,31 @@ const JOURNEY_TRACKER_FIELDS = [
   "Purchased Non-Resident States?",
   "Unresponsive??",
 ] as const;
+
+const JOURNEY_TRACKER_FIELD_ALIASES: Record<string, string[]> = {
+  "Purchased Licensing Course?": ["Purchased Licensing Course"],
+  "Purchased Licensing Exam?": ["Purchased Licensing Exam"],
+  "Exam Date": ["Licensing Exam Date"],
+  "Passed Licensing exam?": ["Passed Licensing Exam?", "Passed Licensing exam"],
+  "2nd Exam Date": ["Second Exam Date", "2nd Licensing Exam Date"],
+  "Completed FingerPrints?": ["Completed Fingerprints?", "Completed Finger Prints?"],
+  "Purchased Resident States?": ["Purchased Resident States"],
+  "Purchased Non-Resident States?": [
+    "Purchased Non-resident States?",
+    "Purchased Nonresident States?",
+    "Purchased Non-Resident States",
+    "Purchased Non-resident States",
+  ],
+  "Unresponsive??": ["Unresponsive?", "Unresponsive"],
+};
+
+function findJourneyField(
+  schema: AirtableFieldSchema[],
+  canonicalName: string,
+) {
+  const names = [canonicalName, ...(JOURNEY_TRACKER_FIELD_ALIASES[canonicalName] || [])];
+  return schema.find(field => names.includes(field.name));
+}
 
 async function getLicensingStagesSchema(): Promise<AirtableFieldSchema[]> {
   const token = process.env.AIRTABLE_PAT;
@@ -853,10 +879,11 @@ export async function getLicensingJourneyFieldConfig(): Promise<LicensingJourney
   };
 
   return JOURNEY_TRACKER_FIELDS.map(name => {
-    const field = schema.find(item => item.name === name);
+    const field = findJourneyField(schema, name);
 
     return {
       name,
+      actualName: field?.name || name,
       type: field?.type || (name.toLowerCase().includes("date") ? "date" : "singleSelect"),
       options: field?.options?.choices?.map(choice => ({
         name: choice.name,
@@ -879,11 +906,13 @@ export async function updateLicensingStageTrackerRecord(
   }
 
   const allowed = new Set<string>(JOURNEY_TRACKER_FIELDS);
+  const schema = await getLicensingStagesSchema();
   const fields: Record<string, string | null> = {};
 
   for (const [field, value] of Object.entries(updates)) {
     if (!allowed.has(field)) continue;
-    fields[field] = value && value.trim() ? value.trim() : null;
+    const actualField = findJourneyField(schema, field)?.name || field;
+    fields[actualField] = value && value.trim() ? value.trim() : null;
   }
 
   if (!Object.keys(fields).length) {

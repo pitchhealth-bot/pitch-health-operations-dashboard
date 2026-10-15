@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import type { Agent, DashboardData, PipelineStage, WorkforceMovementData } from "./types";
+import type { Agent, DashboardData, PipelineStage, WorkforceMovementData, JourneyDirectoryData } from "./types";
 import { sampleAgents } from "./mock-data";
 
 const allowedStages: PipelineStage[] = ["Pre-Licensing","Exam","Pre-Contracting","Contracting","RTS"];
@@ -271,5 +271,66 @@ async function loadWorkforceMovementData(): Promise<WorkforceMovementData> {
 export const getWorkforceMovementData = unstable_cache(
   loadWorkforceMovementData,
   ["pitch-workforce-movement-v1"],
+  { revalidate: 300, tags: ["dashboard-data"] },
+);
+
+
+async function loadJourneyDirectoryData(): Promise<JourneyDirectoryData> {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = "app5eoO1QYp4UAoaU";
+  const table = process.env.AIRTABLE_TABLE_ID || process.env.AIRTABLE_AGENTS_TABLE || "tblx66f77FNlyJ3m4";
+  const viewId = process.env.AIRTABLE_VIEW_ID || "viwpOLkjUUwe9tviQ";
+
+  if (!token) {
+    return {
+      records: sampleAgents.map(agent => ({
+        id: agent.id,
+        name: agent.name,
+        email: agent.email,
+        personalEmail: agent.personalEmail,
+        npn: agent.npn,
+        status: agent.status,
+        role: agent.role,
+        licensingStatus: agent.licensingStatus,
+      })),
+      source: "sample",
+    };
+  }
+
+  try {
+    const records = await fetchAllAirtableRecords(baseId, table, token, viewId);
+
+    return {
+      source: "airtable",
+      records: records
+        .map(record => {
+          const f = record.fields;
+          return {
+            id: record.id,
+            name: asText(f["Name"] || f["Agent Name"]) || "Unnamed agent",
+            email: asText(findFieldValue(f, ["PHS Email", "Work Email"])),
+            personalEmail: asText(findFieldValue(f, ["Email", "Personal Email", "Personal email"])),
+            npn: asText(findFieldValue(f, ["NPN", "National Producer Number"])),
+            status: asText(findFieldValue(f, ["Status"])),
+            role: asText(findFieldValue(f, ["Role", "Position", "Job Role"])),
+            licensingStatus: findLicensingStatus(f),
+            bootcampUpdate: asText(findFieldValue(f, ["Bootcamp Update", "Bootcamp Status"])),
+          };
+        })
+        .filter(record => record.name && record.name !== "Unnamed agent"),
+    };
+  } catch (error) {
+    console.error("Airtable journey directory load failed", error);
+    return {
+      records: [],
+      source: "error",
+      error: error instanceof Error ? error.message : "Unknown Airtable error",
+    };
+  }
+}
+
+export const getJourneyDirectoryData = unstable_cache(
+  loadJourneyDirectoryData,
+  ["pitch-journey-directory-v1"],
   { revalidate: 300, tags: ["dashboard-data"] },
 );

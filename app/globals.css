@@ -1861,3 +1861,51 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
   font-size:8.5px;
   font-weight:700;
 }
+
+/* Missing Info sticky agent column */
+.missing-info-table-head > span:first-child{
+  position:sticky;
+  left:0;
+  z-index:8;
+  background:#faf9fc;
+  box-shadow:10px 0 18px -18px rgba(36,24,72,.45);
+}
+.missing-info-table-row > .missing-agent-sticky-cell{
+  position:sticky;
+  left:0;
+  z-index:6;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  background:#fff;
+  box-shadow:10px 0 18px -18px rgba(36,24,72,.45);
+}
+.missing-info-table-row.editing > .missing-agent-sticky-cell{
+  background:#fbf9ff;
+}
+.missing-row-number{
+  flex:0 0 24px;
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:#f1edfb;
+  color:#6e5f8c;
+  font-size:8px;
+  font-weight:850;
+}
+.missing-agent-identity{
+  min-width:0;
+}
+.missing-agent-identity .agent-name-link{
+  display:block;
+  min-width:0;
+}
+.missing-agent-identity strong{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}

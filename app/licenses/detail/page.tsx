@@ -42,11 +42,13 @@ function LicenseSection({
   eyebrow,
   rows,
   emptyMessage,
+  scrollable = false,
 }: {
   title: string;
   eyebrow: string;
   rows: ExpiringLicenseRow[];
   emptyMessage: string;
+  scrollable?: boolean;
 }) {
   return (
     <section className="panel agents-list-panel license-priority-section">
@@ -65,39 +67,41 @@ function LicenseSection({
         <span>Expired?</span>
       </div>
 
-      {rows.length ? rows.map(({ license, days, expired }) => (
-        <div className="license-detail-row" key={license.id}>
-          <strong>{displayLicenseState(license.state) || "—"}</strong>
-          <span>{license.licenseNumber || "—"}</span>
-          <div>
-            <strong>{formatDate(license.expirationDate)}</strong>
-            <div className="muted">
-              {expired
-                ? `${Math.abs(days ?? 0)}d expired`
-                : `${days ?? 0}d remaining`}
+      <div className={scrollable ? "license-detail-body license-detail-body-scroll" : "license-detail-body"}>
+        {rows.length ? rows.map(({ license, days, expired }) => (
+          <div className="license-detail-row" key={license.id}>
+            <strong>{displayLicenseState(license.state) || "—"}</strong>
+            <span>{license.licenseNumber || "—"}</span>
+            <div>
+              <strong>{formatDate(license.expirationDate)}</strong>
+              <div className="muted">
+                {expired
+                  ? `${Math.abs(days ?? 0)}d expired`
+                  : `${days ?? 0}d remaining`}
+              </div>
+            </div>
+            <div>
+              <span className={
+                expired
+                  ? "pill critical"
+                  : days !== null && days >= 0 && days <= 30
+                    ? "pill warning"
+                    : "pill"
+              }>
+                {expired
+                  ? "Yes"
+                  : days !== null && days >= 0 && days <= 30
+                    ? "Almost"
+                    : "No"}
+              </span>
             </div>
           </div>
-          <div>
-            <span className={
-              expired
-                ? "pill critical"
-                : days !== null && days >= 0 && days <= 30
-                  ? "pill warning"
-                  : "pill"
-            }>
-              {expired
-                ? "Yes"
-                : days !== null && days >= 0 && days <= 30
-                  ? "Almost"
-                  : "No"}
-            </span>
+        )) : (
+          <div className="empty" style={{ minHeight: 110 }}>
+            {emptyMessage}
           </div>
-        </div>
-      )) : (
-        <div className="empty" style={{ minHeight: 110 }}>
-          {emptyMessage}
-        </div>
-      )}
+        )}
+      </div>
     </section>
   );
 }
@@ -243,6 +247,7 @@ export default async function LicenseDetailPage({
           title="Active State Licenses"
           rows={activeLicenses}
           emptyMessage="No active state licenses were found."
+          scrollable
         />
       </div>
     </main>

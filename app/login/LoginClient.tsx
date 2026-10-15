@@ -5,6 +5,7 @@ import { useState } from "react";
 export default function LoginClient() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
   const [message, setMessage] = useState("");
   const [resetting, setResetting] = useState(false);
@@ -88,17 +89,37 @@ export default function LoginClient() {
           autoComplete="email"
         />
 
-        <input
-          className="login-email-input"
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={event => setPassword(event.target.value)}
-          autoComplete="current-password"
-          onKeyDown={event => {
-            if (event.key === "Enter" && email && password && !signingIn) signIn();
-          }}
-        />
+        <div className="login-password-wrap">
+          <input
+            className="login-email-input login-password-input"
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={event => setPassword(event.target.value)}
+            autoComplete="current-password"
+            onKeyDown={event => {
+              if (event.key === "Enter" && email && password && !signingIn) signIn();
+            }}
+          />
+          <button
+            type="button"
+            className="login-password-toggle"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            title={showPassword ? "Hide password" : "Show password"}
+            onClick={() => setShowPassword(value => !value)}
+          >
+            {showPassword ? (
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 4.2A10.7 10.7 0 0112 4c5.2 0 9.5 4.3 10 8-.2 1.5-1.1 3.2-2.5 4.6M6.6 6.6C4.1 8.1 2.4 10.2 2 12c.5 3.7 4.8 8 10 8 1.5 0 2.9-.4 4.1-1" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12c.5-3.7 4.8-8 10-8s9.5 4.3 10 8c-.5 3.7-4.8 8-10 8S2.5 15.7 2 12z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.8"/>
+              </svg>
+            )}
+          </button>
+        </div>
 
         <button
           className="google-login"

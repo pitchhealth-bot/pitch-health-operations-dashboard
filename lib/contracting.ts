@@ -325,6 +325,13 @@ type AirtableFieldSchema = {
   id: string;
   name: string;
   type: string;
+  options?: {
+    choices?: Array<{
+      id?: string;
+      name: string;
+      color?: string;
+    }>;
+  };
 };
 
 async function getTable3Schema(): Promise<AirtableFieldSchema[]> {
@@ -770,4 +777,136 @@ export async function getLicensingStageTrackerRecords(): Promise<LicensingStageT
     console.error("Licensing Stages (Tracker) record load failed", error);
     return [];
   }
+}
+
+
+export type LicensingJourneyFieldConfig = {
+  name: string;
+  type: string;
+  options: Array<{ name: string; color?: string }>;
+};
+
+const JOURNEY_TRACKER_FIELDS = [
+  "Purchased Licensing Course?",
+  "Purchased Licensing Exam?",
+  "Exam Date",
+  "Passed Licensing exam?",
+  "2nd Exam Date",
+  "Completed FingerPrints?",
+  "Purchased Resident States?",
+  "Purchased Non-Resident States?",
+  "Unresponsive??",
+] as const;
+
+async function getLicensingStagesSchema(): Promise<AirtableFieldSchema[]> {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_2;
+
+  if (!token || !baseId || !tableId) return [];
+
+  const response = await fetch(
+    `https://api.airtable.com/v0/meta/bases/${baseId}/tables`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) return [];
+
+  const json = await response.json() as {
+    tables?: Array<{
+      id: string;
+      fields?: AirtableFieldSchema[];
+    }>;
+  };
+
+  return json.tables?.find(table => table.id === tableId)?.fields || [];
+}
+
+export async function getLicensingJourneyFieldConfig(): Promise<LicensingJourneyFieldConfig[]> {
+  const schema = await getLicensingStagesSchema();
+
+  const fallbackOptions: Record<string, Array<{ name: string }>> = {
+    "Purchased Licensing Course?": [{ name: "Yes" }, { name: "No" }],
+    "Purchased Licensing Exam?": [{ name: "Yes" }, { name: "No" }],
+    "Passed Licensing exam?": [{ name: "Yes" }, { name: "No" }],
+    "Completed FingerPrints?": [
+      { name: "Completed" },
+      { name: "Didn't Schedule yet" },
+      { name: "Pending Appointment Date" },
+      { name: "Not Applicable" },
+    ],
+    "Purchased Resident States?": [
+      { name: "Completed" },
+    ],
+    "Purchased Non-Resident States?": [
+      { name: "Completed" },
+    ],
+    "Unresponsive??": [
+      { name: "Unresponsive-Mel" },
+      { name: "Unresponsive-Jos" },
+      { name: "Spoke with Agent" },
+      { name: "LVM" },
+    ],
+  };
+
+  return JOURNEY_TRACKER_FIELDS.map(name => {
+    const field = schema.find(item => item.name === name);
+
+    return {
+      name,
+      type: field?.type || (name.toLowerCase().includes("date") ? "date" : "singleSelect"),
+      options: field?.options?.choices?.map(choice => ({
+        name: choice.name,
+        color: choice.color,
+      })) || fallbackOptions[name] || [],
+    };
+  });
+}
+
+export async function updateLicensingStageTrackerRecord(
+  recordId: string,
+  updates: Record<string, string | null>,
+) {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_2;
+
+  if (!token || !baseId || !tableId) {
+    throw new Error("Licensing Stages Airtable configuration is incomplete.");
+  }
+
+  const allowed = new Set<string>(JOURNEY_TRACKER_FIELDS);
+  const fields: Record<string, string | null> = {};
+
+  for (const [field, value] of Object.entries(updates)) {
+    if (!allowed.has(field)) continue;
+    fields[field] = value && value.trim() ? value.trim() : null;
+  }
+
+  if (!Object.keys(fields).length) {
+    throw new Error("No supported Licensing Stages fields were supplied.");
+  }
+
+  const response = await fetch(
+    `https://api.airtable.com/v0/${baseId}/${tableId}/${recordId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fields }),
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Airtable Licensing Stages update failed (${response.status}): ${detail}`);
+  }
+
+  return await response.json() as AirtableRecord;
 }

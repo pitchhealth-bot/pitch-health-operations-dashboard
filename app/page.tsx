@@ -5,10 +5,9 @@ import { Suspense } from "react";
 import { getDashboardData, getWorkforceMovementData, getJourneyDirectoryData } from "@/lib/airtable";
 import { getContractingSources, getLicensingStageMilestones } from "@/lib/contracting";
 import { getLicenseRecords, daysUntil } from "@/lib/licenses";
-import type { Agent, PipelineStage } from "@/lib/types";
+import type { Agent } from "@/lib/types";
 import { requireRole } from "@/lib/session";
 
-const stages: PipelineStage[] = ["Pre-Licensing","Exam","Pre-Contracting","Contracting","RTS"];
 
 const journeyStages = [
   "Pre-Licensing",
@@ -486,8 +485,7 @@ export default async function Home() {
 
                 <div className="stage-body">
                   {list.length ? list.map(agent => (
-                    <Link
-                      href={`/agents/${agent.id}`}
+                    <div
                       className="agent-card journey-agent-card"
                       key={agent.id}
                     >
@@ -501,7 +499,7 @@ export default async function Home() {
                         <span>{agent.status || "No status"}</span>
                         {agent.npn ? <span>NPN ✓</span> : null}
                       </div>
-                    </Link>
+                    </div>
                   )) : (
                     <div className="empty">No agents</div>
                   )}

@@ -79,6 +79,7 @@ export type JourneyDirectoryRecord = {
   role?: string;
   licensingStatus?: string;
   bootcampUpdate?: string;
+  startDate?: string;
 };
 
 export type JourneyDirectoryData = {

@@ -15,6 +15,41 @@ function dateKey(value?: string) {
   return date ? date.toISOString().slice(0, 10) : "";
 }
 
+function normalizeStatus(value?: string) {
+  return (value || "").trim().toLowerCase();
+}
+
+function inRange(value: string | undefined, from: string, to: string) {
+  const key = dateKey(value);
+  if (!key) return false;
+  return key >= from && key <= to;
+}
+
+function statusMatches(view: string, status?: string) {
+  const normalized = normalizeStatus(status);
+  if (view === "active") return normalized === "active";
+  if (view === "terminated") return normalized === "terminated";
+  if (view === "resigned") return normalized === "resigned";
+  if (view === "disqualified") return normalized === "disqualified";
+  if (view === "trainee") return normalized === "trainee";
+  if (view === "moved") return normalized === "moved to pitch perfect";
+  if (view === "non-active") return normalized !== "active";
+  return true;
+}
+
+function pillClass(status?: string) {
+  const normalized = normalizeStatus(status);
+  if (normalized === "active") return "success";
+  if (normalized === "trainee") return "warning";
+  if (normalized === "resigned" || normalized === "terminated" || normalized === "disqualified") return "critical";
+  return "";
+}
+
+function buildHref(view: string, from: string, to: string) {
+  const params = new URLSearchParams({ view, from, to });
+  return `/workforce-movement?${params.toString()}`;
+}
+
 export default async function WorkforceMovementPage({
   searchParams,
 }: {
@@ -24,6 +59,9 @@ export default async function WorkforceMovementPage({
     date?: string;
     status?: string;
     record?: string;
+    view?: string;
+    from?: string;
+    to?: string;
   }>;
 }) {
   await requireRole(["admin", "super_admin"]);
@@ -31,54 +69,120 @@ export default async function WorkforceMovementPage({
   const params = await searchParams;
   const { records, source, error } = await getWorkforceMovementData();
 
-  const type = params.type === "termination" ? "termination" : params.type === "start" ? "start" : "";
-  const days = Math.max(1, Math.min(90, Number(params.days || 14)));
   const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayKey = today.toISOString().slice(0, 10);
+  const defaultFromDate = new Date(today);
+  defaultFromDate.setDate(defaultFromDate.getDate() - 6);
+  const defaultFrom = defaultFromDate.toISOString().slice(0, 10);
+
+  const legacyDays = Math.max(1, Math.min(90, Number(params.days || 7)));
+  const legacyFromDate = new Date(today);
+  legacyFromDate.setDate(legacyFromDate.getDate() - (legacyDays - 1));
+  const legacyFrom = legacyFromDate.toISOString().slice(0, 10);
+
+  const from = params.from || (params.days ? legacyFrom : defaultFrom);
+  const to = params.to || params.date || todayKey;
+
+  let view = params.view || "";
+  if (!view && params.type === "start") view = "added";
+  if (!view && params.type === "termination") view = "terminated";
+  if (!view && params.status) {
+    const s = params.status.toLowerCase();
+    view = s === "active" ? "active" : s;
+  }
+  if (!view) view = "all";
 
   const filtered = records.filter(record => {
     if (params.record && record.id !== params.record) return false;
 
-    if (params.status && (record.status || "").trim().toLowerCase() !== params.status.toLowerCase()) {
-      return false;
-    }
-
     if (params.date) {
-      const value = type === "termination" ? record.terminationDate : record.startDate;
-      return dateKey(value) === params.date;
+      if (view === "terminated" || view === "resigned" || view === "disqualified" || view === "non-active") {
+        return dateKey(record.terminationDate) === params.date && statusMatches(view, record.status);
+      }
+      if (view === "added") {
+        return dateKey(record.startDate) === params.date;
+      }
     }
 
-    if (type) {
-      const value = type === "termination" ? record.terminationDate : record.startDate;
-      const date = parseDate(value);
-      if (!date) return false;
-      const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      const age = Math.floor((todayStart.getTime() - day.getTime()) / 86400000);
-      return age >= 0 && age < days;
+    if (view === "added") {
+      return inRange(record.startDate, from, to);
     }
 
-    return Boolean(record.startDate || record.terminationDate);
+    if (view === "active") {
+      const started = parseDate(record.startDate);
+      const termination = parseDate(record.terminationDate);
+      const end = new Date(`${to}T23:59:59`);
+      return normalizeStatus(record.status) === "active" &&
+        (!started || started <= end) &&
+        (!termination || termination > end);
+    }
+
+    if (["terminated", "resigned", "disqualified", "trainee", "moved", "non-active"].includes(view)) {
+      if (!statusMatches(view, record.status)) return false;
+
+      if (record.terminationDate) {
+        return inRange(record.terminationDate, from, to);
+      }
+
+      return inRange(record.startDate, from, to);
+    }
+
+    return inRange(record.startDate, from, to) || inRange(record.terminationDate, from, to);
   }).sort((a, b) => {
     const av = Math.max(parseDate(a.startDate)?.getTime() || 0, parseDate(a.terminationDate)?.getTime() || 0);
     const bv = Math.max(parseDate(b.startDate)?.getTime() || 0, parseDate(b.terminationDate)?.getTime() || 0);
     return bv - av;
   });
 
-  const title =
-    params.record ? "Movement Record" :
-    type === "start" ? "Recent Starts" :
-    type === "termination" ? "Recent Terminations" :
-    "Workforce Movement";
+  const summary = {
+    added: records.filter(record => inRange(record.startDate, from, to)).length,
+    active: records.filter(record => {
+      const started = parseDate(record.startDate);
+      const termination = parseDate(record.terminationDate);
+      const end = new Date(`${to}T23:59:59`);
+      return normalizeStatus(record.status) === "active" &&
+        (!started || started <= end) &&
+        (!termination || termination > end);
+    }).length,
+    terminated: records.filter(record => normalizeStatus(record.status) === "terminated" && (record.terminationDate ? inRange(record.terminationDate, from, to) : inRange(record.startDate, from, to))).length,
+    resigned: records.filter(record => normalizeStatus(record.status) === "resigned" && (record.terminationDate ? inRange(record.terminationDate, from, to) : inRange(record.startDate, from, to))).length,
+    disqualified: records.filter(record => normalizeStatus(record.status) === "disqualified" && (record.terminationDate ? inRange(record.terminationDate, from, to) : inRange(record.startDate, from, to))).length,
+    trainee: records.filter(record => normalizeStatus(record.status) === "trainee" && inRange(record.startDate, from, to)).length,
+    moved: records.filter(record => normalizeStatus(record.status) === "moved to pitch perfect" && (record.terminationDate ? inRange(record.terminationDate, from, to) : inRange(record.startDate, from, to))).length,
+    nonActive: records.filter(record => normalizeStatus(record.status) !== "active" && (record.terminationDate ? inRange(record.terminationDate, from, to) : inRange(record.startDate, from, to))).length,
+  };
+
+  const views = [
+    ["all", "All"],
+    ["added", "Added"],
+    ["active", "Remained Active"],
+    ["terminated", "Terminated"],
+    ["resigned", "Resigned"],
+    ["disqualified", "Disqualified"],
+    ["trainee", "Trainee"],
+    ["moved", "Moved to Pitch Perfect"],
+    ["non-active", "Non-Active"],
+  ] as const;
+
+  const counts: Record<string, number> = {
+    added: summary.added,
+    active: summary.active,
+    terminated: summary.terminated,
+    resigned: summary.resigned,
+    disqualified: summary.disqualified,
+    trainee: summary.trainee,
+    moved: summary.moved,
+    "non-active": summary.nonActive,
+  };
 
   return (
     <main>
       <header className="topbar">
         <div>
           <div className="eyebrow">WORKFORCE ANALYTICS</div>
-          <h1>{title}</h1>
+          <h1>Workforce History</h1>
           <div className="muted">
-            {filtered.length} record{filtered.length === 1 ? "" : "s"}
-            {params.date ? ` · ${params.date}` : type ? ` · last ${days} days` : ""}
+            Track starts, active workforce, and exits from Main Company Directory.
           </div>
         </div>
         <Link className="back-link" href="/">← Dashboard</Link>
@@ -91,7 +195,55 @@ export default async function WorkforceMovementPage({
         </section>
       ) : null}
 
+      <section className="panel workforce-history-controls">
+        <div className="workforce-history-control-head">
+          <div>
+            <span className="eyebrow">DATE RANGE</span>
+            <h2>Choose a period</h2>
+          </div>
+          <div className="workforce-quick-ranges">
+            <Link href="/workforce-movement?days=7">Last 7 days</Link>
+            <Link href="/workforce-movement?days=14">Last 14 days</Link>
+            <Link href="/workforce-movement?days=30">Last 30 days</Link>
+          </div>
+        </div>
+
+        <form className="workforce-date-form" method="get">
+          <input type="hidden" name="view" value={view} />
+          <label>
+            <span>From</span>
+            <input type="date" name="from" defaultValue={from} />
+          </label>
+          <label>
+            <span>To</span>
+            <input type="date" name="to" defaultValue={to} />
+          </label>
+          <button type="submit">Apply Range</button>
+        </form>
+      </section>
+
+      <section className="workforce-status-grid">
+        {views.filter(([key]) => key !== "all").map(([key, label]) => (
+          <Link
+            key={key}
+            href={buildHref(key, from, to)}
+            className={`workforce-status-card${view === key ? " active" : ""}`}
+          >
+            <span>{label}</span>
+            <strong>{counts[key] ?? 0}</strong>
+          </Link>
+        ))}
+      </section>
+
       <section className="panel workforce-movement-list">
+        <div className="workforce-list-title">
+          <div>
+            <span className="eyebrow">RESULTS</span>
+            <h2>{views.find(([key]) => key === view)?.[1] || "All"}</h2>
+          </div>
+          <div className="muted">{from} → {to} · {filtered.length} record{filtered.length === 1 ? "" : "s"}</div>
+        </div>
+
         <div className="movement-detail-head">
           <span>Agent</span>
           <span>Role</span>
@@ -109,7 +261,7 @@ export default async function WorkforceMovementPage({
             </div>
             <div>{record.role || "No role"}</div>
             <div>
-              <span className={`pill ${(record.status || "").toLowerCase() === "active" ? "success" : "critical"}`}>
+              <span className={`pill ${pillClass(record.status)}`}>
                 {record.status || "—"}
               </span>
             </div>
@@ -118,7 +270,7 @@ export default async function WorkforceMovementPage({
           </div>
         )) : (
           <div className="empty" style={{minHeight:180}}>
-            No workforce movement records match this view.
+            No workforce records match this range and status.
           </div>
         )}
       </section>

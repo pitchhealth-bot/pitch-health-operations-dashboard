@@ -3956,3 +3956,119 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
     grid-column:auto;
   }
 }
+
+/* Workforce cohort charts */
+.workforce-status-card small{
+  margin-top:4px;
+  color:#9a93a2;
+  font-size:7px;
+  font-weight:700;
+}
+.workforce-cohort-charts{
+  display:grid;
+  grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);
+  gap:12px;
+  margin-bottom:12px;
+}
+.workforce-chart-card{
+  padding:16px;
+  min-width:0;
+}
+.cohort-start-chart{
+  display:flex;
+  align-items:flex-end;
+  gap:7px;
+  min-height:250px;
+  padding:14px 4px 0;
+  overflow-x:auto;
+  scrollbar-width:thin;
+  scrollbar-color:#cbbdf2 #f5f2fb;
+}
+.cohort-start-column{
+  min-width:42px;
+  flex:1 0 42px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  color:#756e80;
+  text-decoration:none;
+}
+.cohort-start-column small{
+  font-size:7px;
+  white-space:nowrap;
+}
+.cohort-start-bar-track{
+  position:relative;
+  width:100%;
+  height:190px;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  border-bottom:1px solid #ece7f3;
+}
+.cohort-start-bar{
+  width:58%;
+  min-height:2px;
+  border-radius:8px 8px 3px 3px;
+  background:linear-gradient(180deg,#8f73ef,#5b34d6);
+  transition:transform .15s ease,filter .15s ease;
+}
+.cohort-start-column:hover .cohort-start-bar{
+  transform:translateY(-2px);
+  filter:brightness(1.03);
+}
+.cohort-start-bar-track b{
+  position:absolute;
+  top:-2px;
+  color:#1d1826;
+  font-size:7px;
+  opacity:.75;
+}
+.cohort-status-chart{
+  display:flex;
+  flex-direction:column;
+  gap:13px;
+  padding-top:8px;
+}
+.cohort-status-row{
+  display:block;
+  color:inherit;
+  text-decoration:none;
+}
+.cohort-status-label{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:6px;
+}
+.cohort-status-label span{
+  color:#625b6d;
+  font-size:8px;
+  font-weight:750;
+}
+.cohort-status-label strong{
+  font-size:9px;
+}
+.cohort-status-track{
+  height:10px;
+  border-radius:999px;
+  background:#f1edf7;
+  overflow:hidden;
+}
+.cohort-status-track span{
+  display:block;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg,#aa94ee,#5b34d6);
+  transition:width .2s ease;
+}
+.cohort-status-row:hover .cohort-status-track span{
+  filter:brightness(.97);
+}
+@media(max-width:980px){
+  .workforce-cohort-charts{
+    grid-template-columns:1fr;
+  }
+}

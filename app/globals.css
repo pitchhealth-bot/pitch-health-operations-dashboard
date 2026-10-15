@@ -1801,3 +1801,63 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .minimal-pencil-button svg{
   display:block;
 }
+
+.missing-required-card-button{
+  position:relative;
+  appearance:none;
+  width:100%;
+  text-align:left;
+  cursor:pointer;
+  font:inherit;
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    box-shadow .15s ease,
+    background .15s ease;
+}
+.missing-required-card-button:hover{
+  transform:translateY(-2px);
+  border-color:#cfc0f8;
+  box-shadow:0 10px 22px rgba(64,42,135,.08);
+}
+.missing-required-card-button.active{
+  border-color:#8f72ec;
+  background:linear-gradient(180deg,#f8f5ff 0%,#f1ebff 100%);
+  box-shadow:0 0 0 3px rgba(91,52,214,.08);
+}
+.missing-required-card-button i{
+  position:absolute;
+  right:18px;
+  bottom:18px;
+  color:#8f80b6;
+  font-style:normal;
+  font-size:14px;
+  transition:transform .15s ease,color .15s ease;
+}
+.missing-required-card-button:hover i,
+.missing-required-card-button.active i{
+  transform:translateX(3px);
+  color:#5b34d6;
+}
+.missing-filter-clear{
+  appearance:none;
+  border:1px solid #ded6f3;
+  background:#fff;
+  color:#5b34d6;
+  border-radius:999px;
+  min-height:34px;
+  padding:0 12px;
+  font:inherit;
+  font-size:8.5px;
+  font-weight:850;
+  cursor:pointer;
+}
+.missing-filter-clear:hover{
+  background:#f7f4ff;
+}
+.missing-filter-status{
+  margin-top:14px;
+  color:#8b8596;
+  font-size:8.5px;
+  font-weight:700;
+}

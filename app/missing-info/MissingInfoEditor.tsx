@@ -3,6 +3,16 @@
 import EditIcon from "@/app/components/EditIcon";
 import { useState } from "react";
 
+const REQUIRED_FIELDS = [
+  "SSN",
+  "Date of Birth",
+  "NPN",
+  "Discord User ID",
+  "Resident State",
+] as const;
+
+type RequiredField = (typeof REQUIRED_FIELDS)[number];
+
 const RESIDENT_STATE_OPTIONS = [
   "Alabama - AL",
   "Alaska - AK",
@@ -85,6 +95,11 @@ export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; 
   const [savingId, setSavingId] = useState("");
   const [message, setMessage] = useState("");
   const [drafts, setDrafts] = useState<Record<string, Partial<Row>>>({});
+  const [activeFilter, setActiveFilter] = useState<RequiredField | null>(null);
+
+  const filteredRows = activeFilter
+    ? localRows.filter(row => row.missingFields.includes(activeFilter))
+    : localRows;
 
   function draftFor(row: Row) {
     return {
@@ -180,6 +195,57 @@ export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; 
 
   return (
     <>
+      <section className="panel missing-info-summary">
+        <div className="panel-title">
+          <div>
+            <span className="eyebrow">REQUIRED FIELDS</span>
+            <h2>Profile completeness</h2>
+          </div>
+
+          {activeFilter ? (
+            <button
+              type="button"
+              className="missing-filter-clear"
+              onClick={() => setActiveFilter(null)}
+            >
+              Show all missing
+            </button>
+          ) : null}
+        </div>
+
+        <div className="missing-required-grid">
+          {REQUIRED_FIELDS.map(field => {
+            const count = localRows.filter(row =>
+              row.missingFields.includes(field),
+            ).length;
+            const active = activeFilter === field;
+
+            return (
+              <button
+                type="button"
+                className={`missing-required-card missing-required-card-button${active ? " active" : ""}`}
+                key={field}
+                onClick={() => setActiveFilter(current => current === field ? null : field)}
+                aria-pressed={active}
+              >
+                <span>{field}</span>
+                <strong>{count}</strong>
+                <small>{active ? "showing agents" : "missing"}</small>
+                <i aria-hidden="true">→</i>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="missing-filter-status">
+          {activeFilter
+            ? `Showing ${filteredRows.length} agent${filteredRows.length === 1 ? "" : "s"} missing ${activeFilter}`
+            : `Showing all ${localRows.length} agents with missing information`}
+        </div>
+      </section>
+
+      <section className="panel agents-list-panel missing-info-panel">
+        <div className="missing-info-scroll">
       {message ? <div className="missing-info-save-message">{message}</div> : null}
 
       <div className="missing-info-table-head">
@@ -196,7 +262,7 @@ export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; 
         <span></span>
       </div>
 
-      {localRows.map(row => {
+      {filteredRows.map(row => {
         const editing = editingId === row.id;
         const draft = draftFor(row);
 
@@ -383,6 +449,14 @@ export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; 
           </div>
         );
       })}
+
+      {!filteredRows.length ? (
+        <div className="empty" style={{ minHeight: 150 }}>
+          No active agents are missing {activeFilter || "required information"}.
+        </div>
+      ) : null}
+        </div>
+      </section>
     </>
   );
 }

@@ -2944,3 +2944,38 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .journey-agent-card{
   cursor:default;
 }
+
+/* Keep each Agent Journey stage compact with its own vertical scroll */
+.journey-stage{
+  display:flex;
+  flex-direction:column;
+  height:540px;
+}
+.journey-stage .stage-head{
+  flex:0 0 auto;
+}
+.journey-stage .stage-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  align-content:start;
+  padding:10px;
+  scrollbar-width:thin;
+  scrollbar-color:#c8baf0 #f4f1fa;
+}
+.journey-stage .stage-body::-webkit-scrollbar{
+  width:9px;
+}
+.journey-stage .stage-body::-webkit-scrollbar-track{
+  background:#f4f1fa;
+  border-radius:999px;
+}
+.journey-stage .stage-body::-webkit-scrollbar-thumb{
+  background:#c8baf0;
+  border:2px solid #f4f1fa;
+  border-radius:999px;
+}
+.journey-stage .stage-body::-webkit-scrollbar-thumb:hover{
+  background:#ab98e6;
+}

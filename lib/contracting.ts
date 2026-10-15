@@ -638,3 +638,64 @@ export async function updateCertificationDocumentForAgent(input: {
     attachments: attachmentList(updated.fields[fieldName], fieldName),
   };
 }
+
+
+export type LicensingStageMilestone = {
+  recordId: string;
+  name: string;
+  email: string;
+  npn: string;
+  purchasedLicensingCourse: string;
+  purchasedLicensingExam: string;
+  purchasedResidentStates: string;
+  purchasedNonResidentStates: string;
+};
+
+export async function getLicensingStageMilestones(): Promise<LicensingStageMilestone[]> {
+  try {
+    const records = await getTable2Records();
+
+    return records.map(record => {
+      const fields = record.fields;
+      return {
+        recordId: record.id,
+        name: textValue(
+          fields["Name"] ||
+          fields["Agent Name"] ||
+          fields["Full Name"],
+        ),
+        email: textValue(
+          fields["PHS Email"] ||
+          fields["Work Email"] ||
+          fields["Email"],
+        ),
+        npn: textValue(
+          fields["NPN"] ||
+          fields["National Producer Number"],
+        ),
+        purchasedLicensingCourse: textValue(
+          fields["Purchased Licensing Course?"] ??
+          fields["Purchased Licensing Course"],
+        ),
+        purchasedLicensingExam: textValue(
+          fields["Purchased Licensing Exam?"] ??
+          fields["Purchased Licensing Exam"],
+        ),
+        purchasedResidentStates: textValue(
+          fields["Purchased Resident States?"] ??
+          fields["Purchased Resident States"],
+        ),
+        purchasedNonResidentStates: textValue(
+          fields["Purchased Non-resident States?"] ??
+          fields["Purchased Non-Resident States?"] ??
+          fields["Purchased Nonresident States?"] ??
+          fields["Purchased Non-resident States"] ??
+          fields["Purchased Non-Resident States"],
+        ),
+      };
+    });
+  } catch (error) {
+    console.error("Licensing Stages (Tracker) milestone load failed", error);
+    return [];
+  }
+}

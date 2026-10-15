@@ -7,6 +7,8 @@ export default function LoginClient() {
   const [password, setPassword] = useState("");
   const [signingIn, setSigningIn] = useState(false);
   const [message, setMessage] = useState("");
+  const [resetting, setResetting] = useState(false);
+  const [resetMessage, setResetMessage] = useState("");
 
   async function signIn() {
     setSigningIn(true);
@@ -34,6 +36,38 @@ export default function LoginClient() {
       setMessage(error instanceof Error ? error.message : "Could not sign in.");
     } finally {
       setSigningIn(false);
+    }
+  }
+
+  async function resetPassword() {
+    if (!email || resetting) return;
+
+    setResetting(true);
+    setResetMessage("");
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json.error || "Could not send reset email.");
+      }
+
+      setResetMessage(
+        "Check your email for a secure link to create a new password.",
+      );
+    } catch (error) {
+      setResetMessage(
+        error instanceof Error ? error.message : "Could not send reset email.",
+      );
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -75,6 +109,20 @@ export default function LoginClient() {
         </button>
 
         {message && <div className="login-message">{message}</div>}
+
+        <button
+          type="button"
+          className="login-reset-link"
+          onClick={resetPassword}
+          disabled={!email || resetting}
+        >
+          {resetting ? "Sending reset link..." : "Forgot password?"}
+        </button>
+
+        {resetMessage && (
+          <div className="login-reset-message">{resetMessage}</div>
+        )}
+
         <small>First time here? Use the invite email from your Super Admin to create your password.</small>
       </section>
     </main>

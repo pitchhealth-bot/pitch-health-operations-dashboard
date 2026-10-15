@@ -60,32 +60,7 @@ export default async function MissingInfoPage() {
         </section>
       )}
 
-      <section className="panel missing-info-summary">
-        <div className="panel-title">
-          <div>
-            <span className="eyebrow">REQUIRED FIELDS</span>
-            <h2>Profile completeness</h2>
-          </div>
-        </div>
-
-        <div className="missing-required-grid">
-          {REQUIRED_FIELDS.map(field => {
-            const count = incomplete.filter(agent => agent.missingFields.includes(field)).length;
-            return (
-              <div className="missing-required-card" key={field}>
-                <span>{field}</span>
-                <strong>{count}</strong>
-                <small>missing</small>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="panel agents-list-panel missing-info-panel">
-        <div className="missing-info-scroll">
-        {incomplete.length ? (
-          <MissingInfoEditor
+      <MissingInfoEditor
             roleOptions={roleOptions}
             rows={incomplete.map(agent => ({
               id: agent.id,
@@ -102,13 +77,6 @@ export default async function MissingInfoPage() {
               missingFields: agent.missingFields,
             }))}
           />
-        ) : (
-          <div className="empty" style={{ minHeight: 160 }}>
-            All active agents have the five required profile items.
-          </div>
-        )}
-        </div>
-      </section>
     </main>
   );
 }

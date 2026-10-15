@@ -1,56 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getJourneyDirectoryData } from "@/lib/airtable";
-import { getLicensingStageTrackerRecords } from "@/lib/contracting";
+import {
+  getLicensingJourneyFieldConfig,
+  getLicensingStageTrackerRecords,
+} from "@/lib/contracting";
 import { requireRole } from "@/lib/session";
+import LicensingJourneyEditor from "./LicensingJourneyEditor";
 
 export const dynamic = "force-dynamic";
 
-const IDENTITY_FIELDS = new Set([
-  "name",
-  "agent name",
-  "full name",
-  "first name",
-  "last name",
-  "email",
-  "phs email",
-  "work email",
-  "personal email",
-  "npn",
-  "national producer number",
-  "record id",
-  "airtable record id",
-]);
-
 function normalize(value?: string) {
   return (value || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function isCompleteValue(value: string) {
-  const v = value.trim().toLowerCase();
-  return [
-    "yes",
-    "completed",
-    "complete",
-    "done",
-    "passed",
-    "approved",
-    "purchased",
-    "licensed",
-    "ready",
-    "true",
-  ].includes(v);
-}
-
-function fieldPriority(name: string) {
-  const n = name.toLowerCase();
-  if (n.includes("course")) return 10;
-  if (n.includes("exam")) return 20;
-  if (n.includes("resident")) return 30;
-  if (n.includes("non-resident") || n.includes("nonresident")) return 40;
-  if (n.includes("background") || n.includes("fingerprint")) return 50;
-  if (n.includes("license")) return 60;
-  return 100;
 }
 
 export default async function AgentJourneyDetailPage({
@@ -61,16 +22,17 @@ export default async function AgentJourneyDetailPage({
   await requireRole(["admin", "super_admin"]);
 
   const { id } = await params;
-  const [directory, trackerRecords] = await Promise.all([
+  const [directory, trackerRecords, fieldConfig] = await Promise.all([
     getJourneyDirectoryData(),
     getLicensingStageTrackerRecords(),
+    getLicensingJourneyFieldConfig(),
   ]);
 
   const agent = directory.records.find(record => record.id === id);
   if (!agent) notFound();
 
   const tracker =
-    (agent.npn
+    (agent.npn && agent.npn !== "0"
       ? trackerRecords.find(record => normalize(record.npn) === normalize(agent.npn))
       : undefined) ||
     (agent.email
@@ -81,26 +43,6 @@ export default async function AgentJourneyDetailPage({
       : undefined) ||
     trackerRecords.find(record => normalize(record.name) === normalize(agent.name));
 
-  const allTrackerFields = Array.from(
-    new Set(trackerRecords.flatMap(record => Object.keys(record.fields))),
-  )
-    .filter(field => !IDENTITY_FIELDS.has(field.trim().toLowerCase()))
-    .filter(field => !/^created|^modified|record id|airtable/i.test(field))
-    .sort((a, b) => fieldPriority(a) - fieldPriority(b) || a.localeCompare(b));
-
-  const checklist = allTrackerFields.map(field => {
-    const value = tracker?.fields[field] || "";
-    const complete = Boolean(value) && isCompleteValue(value);
-    return {
-      field,
-      value,
-      complete,
-      missing: !value,
-    };
-  });
-
-  const completedCount = checklist.filter(item => item.complete).length;
-  const missingCount = checklist.filter(item => item.missing).length;
   const initials = agent.name
     .split(/\s+/)
     .filter(Boolean)
@@ -108,6 +50,13 @@ export default async function AgentJourneyDetailPage({
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+  const initialValues = Object.fromEntries(
+    fieldConfig.map(field => [
+      field.name,
+      tracker?.fields[field.actualName] || "",
+    ]),
+  );
 
   return (
     <main className="journey-detail-page">
@@ -125,21 +74,11 @@ export default async function AgentJourneyDetailPage({
       <section className="journey-detail-hero">
         <div className="journey-detail-avatar">{initials || "A"}</div>
         <div>
-          <span className="eyebrow">PRE-LICENSING READINESS</span>
+          <span className="eyebrow">PRE-LICENSING</span>
           <h2>{agent.name}</h2>
           <p>
-            Review the requirements pulled from Licensing Stages (Tracker) and see what still needs attention.
+            Update the agent&apos;s required licensing milestones from Licensing Stages (Tracker).
           </p>
-        </div>
-        <div className="journey-detail-summary">
-          <div>
-            <strong>{completedCount}</strong>
-            <span>Completed</span>
-          </div>
-          <div>
-            <strong>{missingCount}</strong>
-            <span>Missing</span>
-          </div>
         </div>
       </section>
 
@@ -151,58 +90,13 @@ export default async function AgentJourneyDetailPage({
           </p>
         </section>
       ) : (
-        <>
-          <section className="panel journey-agent-overview">
-            <div className="journey-overview-item">
-              <span>Licensing Status</span>
-              <strong>{agent.licensingStatus || "—"}</strong>
-            </div>
-            <div className="journey-overview-item">
-              <span>NPN</span>
-              <strong>{agent.npn && agent.npn !== "0" ? agent.npn : "Not assigned"}</strong>
-            </div>
-            <div className="journey-overview-item">
-              <span>Bootcamp Update</span>
-              <strong>{agent.bootcampUpdate || "—"}</strong>
-            </div>
-            <div className="journey-overview-item">
-              <span>Tracker Record</span>
-              <strong>Connected</strong>
-            </div>
-          </section>
-
-          <section className="panel journey-checklist-panel">
-            <div className="panel-title">
-              <div>
-                <span className="eyebrow">LICENSING STAGES TRACKER</span>
-                <h2>Pre-Licensing Checklist</h2>
-              </div>
-              <span className="panel-kicker">{checklist.length} tracked items</span>
-            </div>
-
-            <div className="journey-checklist-grid">
-              {checklist.map(item => (
-                <div
-                  className={`journey-check-item ${item.complete ? "complete" : item.missing ? "missing" : "pending"}`}
-                  key={item.field}
-                >
-                  <div className="journey-check-icon" aria-hidden="true">
-                    {item.complete ? "✓" : item.missing ? "!" : "•"}
-                  </div>
-                  <div className="journey-check-copy">
-                    <strong>{item.field}</strong>
-                    <span>
-                      {item.value || "Not completed"}
-                    </span>
-                  </div>
-                  <div className="journey-check-status">
-                    {item.complete ? "Complete" : item.missing ? "Missing" : "In progress"}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        </>
+        <LicensingJourneyEditor
+          agentId={agent.id}
+          agentName={agent.name}
+          trackerRecordId={tracker.recordId}
+          initialValues={initialValues}
+          fieldConfig={fieldConfig}
+        />
       )}
     </main>
   );

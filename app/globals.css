@@ -3530,3 +3530,32 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
     grid-template-columns:1fr;
   }
 }
+
+/* Agent Journey save button */
+.journey-editor-actions .primary-button{
+  min-height:38px;
+  padding:0 16px;
+  border:0;
+  border-radius:10px;
+  background:linear-gradient(135deg,#4f2ed1,#6847df);
+  color:#fff;
+  font:inherit;
+  font-size:8.5px;
+  font-weight:850;
+  letter-spacing:.01em;
+  box-shadow:0 7px 16px rgba(82,48,190,.16);
+  cursor:pointer;
+  transition:transform .15s ease,box-shadow .15s ease,opacity .15s ease;
+}
+.journey-editor-actions .primary-button:hover:not(:disabled){
+  transform:translateY(-1px);
+  box-shadow:0 10px 20px rgba(82,48,190,.2);
+}
+.journey-editor-actions .primary-button:active:not(:disabled){
+  transform:translateY(0);
+}
+.journey-editor-actions .primary-button:disabled{
+  cursor:default;
+  opacity:.48;
+  box-shadow:none;
+}

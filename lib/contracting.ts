@@ -900,10 +900,10 @@ export async function updateLicensingStageTrackerRecord(
   updates: Record<string, string | null>,
 ) {
   const token = process.env.AIRTABLE_PAT;
-  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING;
-  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_2;
+  const baseId = process.env.AIRTABLE_BASE_ID_CONTRACTING || "app7KT6sXkBqdwoO9";
+  const tableId = process.env.AIRTABLE_TABLE_ID_CONTRACTING_2 || "tblAi2SDsNAqmvJuH";
 
-  if (!token || !baseId || !tableId) {
+  if (!token) {
     throw new Error("Licensing Stages Airtable configuration is incomplete.");
   }
 

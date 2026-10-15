@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import type { Agent, DashboardData, PipelineStage } from "./types";
+import type { Agent, DashboardData, PipelineStage, WorkforceMovementData } from "./types";
 import { sampleAgents } from "./mock-data";
 
 const allowedStages: PipelineStage[] = ["Pre-Licensing","Exam","Pre-Contracting","Contracting","RTS"];
@@ -216,5 +216,60 @@ async function loadDashboardData(): Promise<DashboardData> {
 export const getDashboardData = unstable_cache(
   loadDashboardData,
   ["pitch-dashboard-data-v9"],
+  { revalidate: 300, tags: ["dashboard-data"] },
+);
+
+
+async function loadWorkforceMovementData(): Promise<WorkforceMovementData> {
+  const token = process.env.AIRTABLE_PAT;
+  const baseId = "app5eoO1QYp4UAoaU";
+  const table = process.env.AIRTABLE_TABLE_ID || process.env.AIRTABLE_AGENTS_TABLE || "tblx66f77FNlyJ3m4";
+  const viewId = process.env.AIRTABLE_VIEW_ID || "viwpOLkjUUwe9tviQ";
+
+  if (!token) {
+    return {
+      records: sampleAgents.map(agent => ({
+        id: agent.id,
+        name: agent.name,
+        role: agent.role,
+        status: agent.status,
+        startDate: agent.startDate,
+      })),
+      source: "sample",
+    };
+  }
+
+  try {
+    const records = await fetchAllAirtableRecords(baseId, table, token, viewId);
+
+    return {
+      source: "airtable",
+      records: records.map(record => {
+        const f = record.fields;
+        return {
+          id: record.id,
+          name: asText(f["Name"] || f["Agent Name"]) || "Unnamed agent",
+          role: asText(findFieldValue(f, ["Role", "Position", "Job Role"])),
+          status: asText(findFieldValue(f, ["Status"])),
+          startDate: asText(findFieldValue(f, ["(EDIT) Start Date", "EDIT Start Date", "Start Date"])),
+          terminationDate: asText(findFieldValue(f, [
+            "Termination Date",
+            "Termination date",
+            "Terminated Date",
+            "End Date",
+          ])),
+        };
+      }),
+    };
+  } catch (error) {
+    console.error("Airtable workforce movement load failed", error);
+    const message = error instanceof Error ? error.message : "Unknown Airtable error";
+    return { records: [], source: "error", error: message };
+  }
+}
+
+export const getWorkforceMovementData = unstable_cache(
+  loadWorkforceMovementData,
+  ["pitch-workforce-movement-v1"],
   { revalidate: 300, tags: ["dashboard-data"] },
 );

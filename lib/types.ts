@@ -51,3 +51,19 @@ export type DashboardData = {
   source: "airtable" | "sample" | "error";
   error?: string;
 };
+
+
+export type WorkforceMovementRecord = {
+  id: string;
+  name: string;
+  role?: string;
+  status?: string;
+  startDate?: string;
+  terminationDate?: string;
+};
+
+export type WorkforceMovementData = {
+  records: WorkforceMovementRecord[];
+  source: "airtable" | "sample" | "error";
+  error?: string;
+};

@@ -2900,18 +2900,35 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 }
 
 /* Agent Journey milestone board */
-.journey-pipeline{
-  grid-template-columns:repeat(9,minmax(245px,1fr));
-  min-width:2250px;
-}
 .journey-panel{
   overflow:hidden;
 }
-.journey-panel .pipeline{
+.journey-panel .journey-pipeline{
+  width:100%;
+  min-width:0;
+  grid-template-columns:repeat(9,245px);
   overflow-x:auto;
-  padding-bottom:10px;
-  scrollbar-width:thin;
-  scrollbar-color:#c9bcef #f4f1fa;
+  overflow-y:hidden;
+  padding:0 2px 12px;
+  scrollbar-width:auto;
+  scrollbar-color:#b9a8ea #f1edf8;
+  overscroll-behavior-x:contain;
+  scroll-behavior:smooth;
+}
+.journey-panel .journey-pipeline::-webkit-scrollbar{
+  height:12px;
+}
+.journey-panel .journey-pipeline::-webkit-scrollbar-track{
+  background:#f1edf8;
+  border-radius:999px;
+}
+.journey-panel .journey-pipeline::-webkit-scrollbar-thumb{
+  background:#b9a8ea;
+  border:3px solid #f1edf8;
+  border-radius:999px;
+}
+.journey-panel .journey-pipeline::-webkit-scrollbar-thumb:hover{
+  background:#9c86df;
 }
 .journey-stage{
   min-width:245px;

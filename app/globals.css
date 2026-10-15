@@ -2979,3 +2979,96 @@ h2{font-size:17px;letter-spacing:-.015em;margin:4px 0}
 .journey-stage .stage-body::-webkit-scrollbar-thumb:hover{
   background:#ab98e6;
 }
+
+/* Agent Journey search */
+.journey-search-wrap{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin:0 0 12px;
+}
+.journey-search-box{
+  position:relative;
+  width:min(420px,100%);
+  display:flex;
+  align-items:center;
+}
+.journey-search-box svg{
+  position:absolute;
+  left:13px;
+  width:16px;
+  height:16px;
+  color:#8d8599;
+  pointer-events:none;
+}
+.journey-search-box input{
+  width:100%;
+  height:40px;
+  padding:0 38px 0 38px;
+  border:1px solid #e2ddec;
+  border-radius:12px;
+  background:#fff;
+  color:#1e1928;
+  font:inherit;
+  font-size:9px;
+  outline:none;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.journey-search-box input:focus{
+  border-color:#9c85eb;
+  box-shadow:0 0 0 3px rgba(91,52,214,.08);
+}
+.journey-search-clear{
+  position:absolute;
+  right:10px;
+  width:26px;
+  height:26px;
+  border:0;
+  border-radius:8px;
+  background:#f3effc;
+  color:#7257d5;
+  cursor:pointer;
+  font-size:15px;
+  line-height:1;
+}
+.journey-search-result{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-height:36px;
+  padding:0 12px;
+  border-radius:10px;
+  background:#f7f4ff;
+  color:#6f667b;
+  font-size:8px;
+  white-space:nowrap;
+}
+.journey-search-result strong{
+  color:#1d1827;
+}
+.journey-search-result b{
+  color:#5b34d6;
+}
+.journey-stage-match{
+  border-color:#a58cef;
+  box-shadow:0 0 0 3px rgba(91,52,214,.08);
+}
+.journey-stage-match .stage-head{
+  background:#f7f3ff;
+}
+.journey-agent-match{
+  border-color:#cdbef7;
+  background:#fdfcff;
+}
+@media(max-width:760px){
+  .journey-search-wrap{
+    align-items:stretch;
+    flex-direction:column;
+  }
+  .journey-search-box{
+    width:100%;
+  }
+  .journey-search-result{
+    white-space:normal;
+  }
+}

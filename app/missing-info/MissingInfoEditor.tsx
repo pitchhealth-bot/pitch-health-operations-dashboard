@@ -3,6 +3,60 @@
 import EditIcon from "@/app/components/EditIcon";
 import { useState } from "react";
 
+const RESIDENT_STATE_OPTIONS = [
+  "Alabama - AL",
+  "Alaska - AK",
+  "Arizona - AZ",
+  "Arkansas - AR",
+  "California - CA",
+  "Colorado - CO",
+  "Connecticut - CT",
+  "Delaware - DE",
+  "Florida - FL",
+  "Georgia - GA",
+  "Hawaii - HI",
+  "Idaho - ID",
+  "Illinois - IL",
+  "Indiana - IN",
+  "Iowa - IA",
+  "Kansas - KS",
+  "Kentucky - KY",
+  "Louisiana - LA",
+  "Maine - ME",
+  "Maryland - MD",
+  "Massachusetts - MA",
+  "Michigan - MI",
+  "Minnesota - MN",
+  "Mississippi - MS",
+  "Missouri - MO",
+  "Montana - MT",
+  "Nebraska - NE",
+  "Nevada - NV",
+  "New Hampshire - NH",
+  "New Jersey - NJ",
+  "New Mexico - NM",
+  "New York - NY",
+  "North Carolina - NC",
+  "North Dakota - ND",
+  "Ohio - OH",
+  "Oklahoma - OK",
+  "Oregon - OR",
+  "Pennsylvania - PA",
+  "Rhode Island - RI",
+  "South Carolina - SC",
+  "South Dakota - SD",
+  "Tennessee - TN",
+  "Texas - TX",
+  "Utah - UT",
+  "Vermont - VT",
+  "Virginia - VA",
+  "Washington - WA",
+  "West Virginia - WV",
+  "Wisconsin - WI",
+  "Wyoming - WY",
+  "District of Columbia - DC"
+] as const;
+
 type Row = {
   id: string;
   name: string;
@@ -266,11 +320,23 @@ export default function MissingInfoEditor({ rows, roleOptions }: { rows: Row[]; 
 
             <div>
               {editing ? (
-                <input
+                <select
                   className="missing-inline-input"
                   value={String(draft.residentState || "")}
                   onChange={event => update(row.id, "residentState", event.target.value)}
-                />
+                >
+                  <option value="">Select resident state</option>
+                  {!RESIDENT_STATE_OPTIONS.includes(
+                    String(draft.residentState || "") as (typeof RESIDENT_STATE_OPTIONS)[number],
+                  ) && String(draft.residentState || "") ? (
+                    <option value={String(draft.residentState || "")}>
+                      {String(draft.residentState || "")}
+                    </option>
+                  ) : null}
+                  {RESIDENT_STATE_OPTIONS.map(state => (
+                    <option key={state} value={state}>{state}</option>
+                  ))}
+                </select>
               ) : (
                 <span className={row.missingFields.includes("Resident State") ? "pill critical" : "pill success"}>
                   {row.missingFields.includes("Resident State") ? "Missing" : "Complete"}
